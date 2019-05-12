@@ -26,6 +26,7 @@ TESTS/tst_vector.cpp)
 
 set(tst_tensor_src
 Tensor.h
+Vector.h
 TESTS/doctest.h
 TESTS/tst_tensor.cpp)
 
