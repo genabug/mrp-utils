@@ -6,6 +6,8 @@ project(mrp-utils LANGUAGES CXX)
 enable_testing()
 add_definitions("-DDOCTEST_CONFIG_IMPLEMENT_WITH_MAIN=1")
 
+include_directories(BEFORE .)
+
 set(tst_factory_src
 TESTS/doctest.h
 TESTS/tst_factory.cpp
@@ -38,6 +40,3 @@ add_executable(tst_tensor ${tst_tensor_src})
 add_test(tst_state tst_state)
 add_test(tst_vector tst_vector)
 add_test(tst_tensor tst_tensor)
-
-include_directories(BEFORE .)
-
