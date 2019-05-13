@@ -4,7 +4,7 @@
 /*!
   \file Vector.h
   \author gennadiy (gennadiy3.14@gmail.com)
-  \brief Euclidian vector of arbitrary dimension definition.
+  \brief Euclidian vector of arbitrary dimension, definition and documentation.
 */
 
 #include <cctype> // isspace
@@ -39,7 +39,7 @@ public:
 
   // unary ops (NB! returns a copy!)
   constexpr Vector operator+() const noexcept { return *this; }
-  constexpr Vector operator-() const noexcept { return -1 * (*this); }
+  constexpr Vector operator-() const noexcept { return static_cast<T>(-1) * (*this); }
 
   // assign-ops
   constexpr Vector& operator=(const T &a) noexcept;
