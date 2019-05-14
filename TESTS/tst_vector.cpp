@@ -30,7 +30,8 @@ template<class T>
 namespace
 {
   // init
-  constexpr V3i v, v1(1), v2(2), v3(3), v4(4, 5, 6);
+  constexpr V2i x(4, -3), y(3, 4);
+  constexpr V3i v, v1(1), v2(2), v3(3), v4(4, 5, 6), v5(3, -6, 3);
 
   // access
   static_assert((v1[0] == 1) && (v1[1] == 1) && (v1[2] == 1), "single init failed");
@@ -44,19 +45,41 @@ namespace
   static_assert(v1*2 == v2, "v * a failed");
   static_assert(3*v1 == v3, "a * v failed");
   static_assert(v2/2 == v1, "v / a failed");
-  static_assert(v2/2 == v3/3, "v / a failed");
   static_assert(v1 + v1 == v2, "v + v failed");
   static_assert(v1 + v2 == v3, "v + v failed");
-  static_assert(v2 + v1 == v3, "v + v failed");
   static_assert(v3 - v1 == +v2, "v - v failed");
   static_assert(v1 - v3 == -v2, "v - v failed");
   static_assert(v1 * v2 == 6, "v * v failed");
-  static_assert(v2 * v1 == 6, "v * v failed");
   static_assert(v2 * v4 == 30, "v * v failed");
+  static_assert(x % y == 25, "v % v failed in 2D");
+  static_assert(v3 % v4 == v5, "v % v failed in 3D");
+  static_assert(~x == y, "~v failed in 2D");
 
-  constexpr V2i vi(-3, -4);
-  static_assert(sqs(vi) == 25, "sqs failed");
-  static_assert(fabs(vi) == 5, "abs failed");
+  // op properties
+  constexpr V3i z(0), a(1, 2, 3), b(4, 5, 6), c(7, 8, 9);
+  static_assert(a + z == a, "v + 0 failed");
+  static_assert(a + b == b + a, "v + v commutative failed");
+  static_assert((a + b) + c == a + (b + c), "v + v associative failed");
+
+  static_assert(a * b == b * a, "v * v commutative failed");
+  static_assert((2*a) * b == 2*(a * b), "v * v distributive failed");
+  static_assert((a + b) * c == a * c + b * c, "v * v associative failed");
+
+  static_assert(x % x == 0, "v % v failed");
+  static_assert(a % a == z, "v % v failed");
+  static_assert(a % b == -(b % a), "v % v anticommutative failed");
+  static_assert(x % y == -(y % x), "v % v anticommutative failed");
+  static_assert(a % (b + c) == a % b + a % c, "v % v distributive failed");
+  static_assert((2*a) % b == 2*(a % b), "v % v associative failed");
+  static_assert((a % b) * c ==  a * (b % c), "Jacobi's identity failed");
+  static_assert(a % (b % c) + b % (c % a) + c % (a % b) == z, "triple product failed");
+  static_assert(a % (b % c) == b * (a * c) - c * (a * b), "Lagrange's identity failed");
+
+  // methods
+  static_assert(sqs(-y) == 25, "sqs failed");
+  static_assert(sqs(y) == sqs(-y), "sqs failed");
+  static_assert(fabs(-y) == 5, "abs failed");
+  static_assert(fabs(x) == fabs(-x), "abs failed");
 
   constexpr V2d vd(3, 4);
   static_assert(almost_equal(sqs(vd), 25.), "sqs failed");
@@ -72,22 +95,6 @@ namespace
   static_assert(almost_equal(sin(vd, ey), .6), "sin failed");
   static_assert(almost_equal(cos(vd, ex), .6), "cos failed");
   static_assert(almost_equal(sin(vd, ex), .8), "sin failed");
-
-  constexpr V2i vi90(4, -3);
-  static_assert(~ex == ey, "~v failed in 2D");
-  static_assert(~ey == -ex, "~v failed in 2D");
-  static_assert(~vi == vi90, "~v failed in 2D");
-
-  static_assert(almost_equal(ex % ex, 0.), "v % v failed in 2D");
-
-  constexpr V3i x(1, 0, 0), y(0, 1, 0), z(0, 0, 1);
-  static_assert(x % y == z, "v % v failed in 3D");
-  static_assert(y % x == -z, "v % v failed in 3D");
-  static_assert(x % z == -y, "v % v failed in 3D");
-  static_assert(z % x == y, "v % v failed in 3D");
-  constexpr V3i v5(1, 2, 3), v6(4, 5, 6), v7(-3, 6, -3);
-  static_assert(v5 % v6 == v7, "v % v failed in 3D");
-  static_assert(v6 % v5 == -v7, "v % v failed in 3D");
 }
 
 /*----------------------------------- run-time tests ------------------------------------*/
