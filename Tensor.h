@@ -8,7 +8,6 @@
 */
 
 #include "Vector.h"
-#include <iostream>
 
 template<size_t N, class T = double> class Tensor
 {
