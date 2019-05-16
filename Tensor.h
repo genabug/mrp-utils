@@ -8,6 +8,7 @@
 */
 
 #include "Vector.h"
+#include <iostream>
 
 template<size_t N, class T = double> class Tensor
 {
@@ -80,25 +81,29 @@ private:
 
 // arithmetic ops
 template<size_t N, class T>
-  constexpr auto operator+(Tensor<N, T> A, const Tensor<N, T> &B) noexcept {return A += B;}
+  constexpr auto
+    operator+(Tensor<N, T> A, const Tensor<N, T> &B) noexcept { A += B; return A; }
 
 template<size_t N, class T>
-  constexpr auto operator-(Tensor<N, T> A, const Tensor<N, T> &B) noexcept {return A -= B;}
+  constexpr auto
+    operator-(Tensor<N, T> A, const Tensor<N, T> &B) noexcept { A -= B; return A; }
 
 template<size_t N, class T>
-  constexpr auto operator*(Tensor<N, T> A, const Tensor<N, T> &B) noexcept {return A *= B;}
+  constexpr auto
+    operator*(Tensor<N, T> A, const Tensor<N, T> &B) noexcept { A *= B; return A; }
 
 template<size_t N, class T>
-  constexpr auto operator*(Tensor<N, T> A, const T &a) noexcept { return A *= a; }
+  constexpr auto operator*(Tensor<N, T> A, const T &a) noexcept { A *= a; return A; }
 
 template<size_t N, class T>
-  constexpr auto operator*(const T &a, Tensor<N, T> A) noexcept { return A *= a; }
+  constexpr auto operator*(const T &a, Tensor<N, T> A) noexcept { A *= a; return A; }
 
 template<size_t N, class T>
-  constexpr auto operator/(Tensor<N, T> A, const T &a) noexcept { return A /= a; }
+  constexpr auto operator/(Tensor<N, T> A, const T &a) noexcept { A /= a; return A; }
 
 template<size_t N, class T>
-  constexpr auto operator/(Tensor<N, T> A, const Tensor<N, T> &B) noexcept {return A /= B;}
+  constexpr auto
+    operator/(Tensor<N, T> A, const Tensor<N, T> &B) noexcept { A /= B; return A; }
 
 // boolean ops
 template<size_t N, class T>
@@ -120,18 +125,20 @@ template<size_t N, class T>
   constexpr Vector<N, T>& operator*=(Vector<N, T> &v, const Tensor<N, T> &A) noexcept;
 
 template<size_t N, class T>
-  constexpr auto operator*(Vector<N, T> v, const Tensor<N, T> &A) noexcept {return v *= A;}
+  constexpr auto
+    operator*(Vector<N, T> v, const Tensor<N, T> &A) noexcept { v *= A; return v; }
 
 template<size_t N, class T>
   constexpr auto
-    operator*(const Tensor<N, T> &A, Vector<N, T> v) noexcept { return v *= ~A; }
+    operator*(const Tensor<N, T> &A, Vector<N, T> v) noexcept { v *= ~A; return v; }
 
 template<size_t N, class T>
   constexpr Vector<N, T>&
     operator/=(Vector<N, T> &v, const Tensor<N, T> &A) noexcept { return v *= A.invert(); }
 
 template<size_t N, class T>
-  constexpr auto operator/(Vector<N, T> v, const Tensor<N, T> &A) noexcept {return v /= A;}
+  constexpr auto
+    operator/(Vector<N, T> v, const Tensor<N, T> &A) noexcept { v /= A; return v; }
 
 template<size_t N, class T>
   constexpr auto operator^(const Vector<N, T> &v1, const Vector<N, T> &v2) noexcept;
