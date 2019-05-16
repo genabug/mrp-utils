@@ -19,15 +19,15 @@ template<size_t N, class T = double, class ST = int> class Vector
   static_assert(N != 0, "Vector of zero size is meaningless.");
 
 public:
-  constexpr Vector() noexcept : data{} {}
-  constexpr Vector(const T &a) noexcept : data{}
+  constexpr explicit Vector() noexcept : data{} {}
+  constexpr explicit Vector(const T &a) noexcept : data{}
   {
-    for (size_t i = 0; i < N; ++i)
-      data[i] = a;
+    for (auto &d : data)
+      d = a;
   }
 
   template<class... Ts, class = std::enable_if_t<sizeof...(Ts) == N>>
-    constexpr Vector(Ts... as) noexcept : data{static_cast<T>(as)...} {}
+    constexpr explicit Vector(Ts... as) noexcept : data{static_cast<T>(as)...} {}
 
   // access
   static constexpr size_t X = 0;
@@ -42,7 +42,6 @@ public:
   constexpr Vector operator-() const noexcept { return static_cast<T>(-1) * (*this); }
 
   // assign-ops
-  constexpr Vector& operator=(const T &a) noexcept;
   constexpr Vector& operator/=(const T &a) noexcept;
   constexpr Vector& operator*=(const T &a) noexcept;
   constexpr Vector& operator+=(const Vector &v) noexcept;
@@ -116,16 +115,6 @@ using Vector3D = Vector<3>;
 
 /*---------------------------------------------------------------------------------------*/
 /*------------------------------------ definition ---------------------------------------*/
-/*---------------------------------------------------------------------------------------*/
-
-template<size_t N, class T, class ST>
-  constexpr Vector<N, T, ST>& Vector<N, T, ST>::operator=(const T &a) noexcept
-{
-  for (auto &d : data)
-    d = a;
-  return *this;
-}
-
 /*---------------------------------------------------------------------------------------*/
 
 template<size_t N, class T, class ST>
