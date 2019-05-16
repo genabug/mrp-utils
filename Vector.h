@@ -53,20 +53,20 @@ public:
 // arithmetic ops
 template<size_t N, class T, class ST>
   constexpr auto operator+(
-    Vector<N, T, ST> v1, const Vector<N, T, ST> &v2) noexcept { return v1 += v2; }
+    Vector<N, T, ST> v1, const Vector<N, T, ST> &v2) noexcept { v1 += v2; return v1; }
 
 template<size_t N, class T, class ST>
   constexpr auto operator-(
-    Vector<N, T, ST> v1, const Vector<N, T, ST> &v2) noexcept { return v1 -= v2; }
+    Vector<N, T, ST> v1, const Vector<N, T, ST> &v2) noexcept { v1 -= v2; return v1; }
 
 template<size_t N, class T, class ST>
-  constexpr auto operator*(const T &a, Vector<N, T, ST> v) noexcept { return v *= a; }
+  constexpr auto operator*(const T &a, Vector<N, T, ST> v) noexcept { v *= a; return v; }
 
 template<size_t N, class T, class ST>
-  constexpr auto operator*(Vector<N, T, ST> v, const T &a) noexcept { return v *= a; }
+  constexpr auto operator*(Vector<N, T, ST> v, const T &a) noexcept { v *= a; return v; }
 
 template<size_t N, class T, class ST>
-  constexpr auto operator/(Vector<N, T, ST> v, const T &a) noexcept { return v /= a; }
+  constexpr auto operator/(Vector<N, T, ST> v, const T &a) noexcept { v /= a; return v; }
 
 template<size_t N, class T, class ST>
   constexpr auto operator*(
