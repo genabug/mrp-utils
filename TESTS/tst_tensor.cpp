@@ -59,17 +59,9 @@ namespace
   static_assert(t1 * t2 == t3, "t * t failed");
   static_assert(t2 * t1 == t4, "t * t failed");
 
-  static_assert(Z + 1 == E, "Z + 1 failed");
-  static_assert(E - 1 == Z, "E - 1 failed");
-  static_assert(1 - E == Z, "1 - E failed");
-
-  constexpr T2i t5(2), t6(1, 2, 2, 1), t7(1);
-  static_assert(t5 - 1 == t6, "t - a failed");
-  static_assert(1 - t5 == -t6, "a - t failed");
-  static_assert(t6 + 1 == t5, "t + a failed");
-  static_assert(1 + t6 == t5, "a + t failed");
-  static_assert(t7 * 2 == t5, "t * a failed");
-  static_assert(t5 / 2 == t7, "t / a failed");
+  constexpr T2i t5(2), t6(1);
+  static_assert(t6 * 2 == t5, "t * a failed");
+  static_assert(t5 / 2 == t6, "t / a failed");
 
   // vector ops
   constexpr V2i z(0), v(2, 3);
@@ -124,7 +116,7 @@ TEST_CASE("init")
   T3i td; // default init
 
   // single init -- assign all elements to 1
-  T3i t1 = 1;
+  T3i t1(1);
   CHECK((t1[0][0] == 1 && t1[0][1] == 1 && t1[0][2] == 1 &&
          t1[1][0] == 1 && t1[1][1] == 1 && t1[1][2] == 1 &&
          t1[2][0] == 1 && t1[2][1] == 1 && t1[2][2] == 1));
@@ -136,7 +128,7 @@ TEST_CASE("init")
          t2[2][0] == 0 && t2[2][1] == 0 && t2[2][2] == 3));
 
   // full init -- assign all elements to the given ones, by rows
-  T3i t3 = {1, 2, 3, 4, 5, 6, 7, 8, 9};
+  T3i t3{1, 2, 3, 4, 5, 6, 7, 8, 9};
   CHECK((t3[0][0] == 1 && t3[0][1] == 2 && t3[0][2] == 3 &&
          t3[1][0] == 4 && t3[1][1] == 5 && t3[1][2] == 6 &&
          t3[2][0] == 7 && t3[2][1] == 8 && t3[2][2] == 9));
@@ -176,7 +168,7 @@ TEST_CASE("io ops")
 
 TEST_CASE("boolean ops")
 {
-  T3i t11(1), t12 = 1, t13{1};
+  T3i t11(1), t12{1}, t13{1};
   CHECK(t11 == t12);
   CHECK(t12 == t13);
 
@@ -191,20 +183,6 @@ TEST_CASE("boolean ops")
 
 TEST_CASE("assign ops")
 {
-  T3i t(0);
-  t = 1;
-  CHECK((t[0][0] == 1 && t[0][1] == 0 && t[0][2] == 0 &&
-         t[1][0] == 0 && t[1][1] == 1 && t[1][2] == 0 &&
-         t[2][0] == 0 && t[2][1] == 0 && t[2][2] == 1));
-
-  T3i t1 = t, t11(2, 2, 2);
-  t1 += 1;
-  CHECK(t1 == t11);
-
-  T3i t2 = t1;
-  t2 -= 1;
-  CHECK(t2 == t);
-
   T3i t3(1), t4(2);
   t3 *= 2;
   CHECK(t3 == t4);
@@ -224,10 +202,7 @@ TEST_CASE("arithm ops")
   CHECK(t1 - t0 == t1);
   CHECK(t0 - t1 == -t1);
 
-  T3i t3(1, 2, 2, 2, 1, 2, 2, 2, 1);
-  CHECK(t2 - 1 == t3);
-  CHECK(t3 + 1 == t2);
-  CHECK(t1 * 2 == t2);
+  CHECK(2 * t1 == t2);
   CHECK(t2 / 2 == t1);
 }
 

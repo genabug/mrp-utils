@@ -15,7 +15,7 @@ template<size_t N, class T = double> class Tensor
   static_assert(N != 0, "Tensor of zero size is meaningless.");
 
 public:
-  template<class... Ts> constexpr Tensor(const Ts&... as) noexcept;
+  template<class... Ts> constexpr explicit Tensor(const Ts&... as) noexcept;
 
   // access
   constexpr T* operator[](size_t i) noexcept { return data[i]; }
@@ -27,9 +27,6 @@ public:
   constexpr Tensor operator~() const noexcept { return transpose(); }
 
   // assign with op
-  constexpr Tensor& operator=(const T &a) noexcept;
-  constexpr Tensor& operator+=(const T &a) noexcept;
-  constexpr Tensor& operator-=(const T &a) noexcept;
   constexpr Tensor& operator*=(const T &a) noexcept;
   constexpr Tensor& operator/=(const T &a) noexcept;
   constexpr Tensor& operator+=(const Tensor &A) noexcept;
@@ -82,27 +79,12 @@ private:
 /*---------------------------------------------------------------------------------------*/
 
 // arithmetic ops
-// addition (+)
 template<size_t N, class T>
   constexpr auto operator+(Tensor<N, T> A, const Tensor<N, T> &B) noexcept {return A += B;}
 
 template<size_t N, class T>
-  constexpr auto operator+(Tensor<N, T> A, const T &a) noexcept { return A += a; }
-
-template<size_t N, class T>
-  constexpr auto operator+(const T &a, Tensor<N, T> A) noexcept { return A += a; }
-
-// substruction (-)
-template<size_t N, class T>
   constexpr auto operator-(Tensor<N, T> A, const Tensor<N, T> &B) noexcept {return A -= B;}
 
-template<size_t N, class T>
-  constexpr auto operator-(Tensor<N, T> A, const T &a) noexcept { return A -= a; }
-
-template<size_t N, class T>
-  constexpr auto operator-(const T &a, const Tensor<N, T> &A) noexcept { return -A += a; }
-
-// multiplication (*)
 template<size_t N, class T>
   constexpr auto operator*(Tensor<N, T> A, const Tensor<N, T> &B) noexcept {return A *= B;}
 
@@ -112,7 +94,6 @@ template<size_t N, class T>
 template<size_t N, class T>
   constexpr auto operator*(const T &a, Tensor<N, T> A) noexcept { return A *= a; }
 
-// division (/)
 template<size_t N, class T>
   constexpr auto operator/(Tensor<N, T> A, const T &a) noexcept { return A /= a; }
 
@@ -202,36 +183,6 @@ template<size_t N, class T>
 /*---------------------------------------------------------------------------------------*/
 
 template<size_t N, class T>
-  constexpr Tensor<N, T>& Tensor<N, T>::operator=(const T &a) noexcept
-{
-  for (size_t i = 0; i < N; ++i)
-    data[i][i] = a;
-  return *this;
-}
-
-/*---------------------------------------------------------------------------------------*/
-
-template<size_t N, class T>
-  constexpr Tensor<N, T>& Tensor<N, T>::operator+=(const T &a) noexcept
-{
-  for (size_t i = 0; i < N; ++i)
-    data[i][i] += a;
-  return *this;
-}
-
-/*---------------------------------------------------------------------------------------*/
-
-template<size_t N, class T>
-  constexpr Tensor<N, T>& Tensor<N, T>::operator-=(const T &a) noexcept
-{
-  for (size_t i = 0; i < N; ++i)
-    data[i][i] -= a;
-  return *this;
-}
-
-/*---------------------------------------------------------------------------------------*/
-
-template<size_t N, class T>
   constexpr Tensor<N, T>& Tensor<N, T>::operator*=(const T &a) noexcept
 {
   for (size_t i = 0; i < N; ++i)
@@ -303,11 +254,11 @@ template<size_t N, class T> constexpr T Tensor<N, T>::trace() const noexcept
 
 template<size_t N, class T> constexpr Tensor<N, T> Tensor<N, T>::invert() const noexcept
 {
-  Tensor<N, T> A;
   T d = det();
   if (d == static_cast<T>(0))
-    return (A = 0); // inverse matrix doesn't exist, return 0
+    return Tensor<N, T>(0); // inverse matrix doesn't exist, return 0
 
+  Tensor<N, T> A;
   T c = static_cast<T>(1) / d;
   for (size_t i = 0; i < N; ++i)
     for (size_t j = 0; j < N; ++j)
@@ -348,10 +299,13 @@ template<size_t N, class T>
 template<size_t N, class T>
   constexpr Vector<N, T>& operator*=(Vector<N, T> &v, const Tensor<N, T> &A) noexcept
 {
-  auto y = v; v = 0;
+  auto c = v;
   for (size_t i = 0; i < N; ++i)
+  {
+    v[i] = 0;
     for (size_t j = 0; j < N; ++j)
-      v[i] += y[j] * A[j][i];
+      v[i] += c[j] * A[j][i];
+  }
   return v;
 }
 
