@@ -1,0 +1,15 @@
+function(add_marple_test tst_name)
+  cmake_parse_arguments(tst "" "" "SOURCES;DEPENDS" ${ARGN})
+
+  foreach(arg IN LISTS ${tst_UNPARSED_ARGUMENTS})
+    message(WARNING "add_marple_test had unparsed argument: '${arg}'")
+  endforeach()
+  if (${tst_UNPARSED_ARGUMENTS})
+    message(FATAL_ERROR "add_marple_test had unparsed arguments")
+  endif()
+
+  add_executable(${tst_name} ${tst_SOURCES})
+  add_dependencies(${tst_name} doctest ${tst_DEPENDS})
+  target_link_libraries(${tst_name} PRIVATE doctest ${tst_DEPENDS})
+  add_test(${tst_name} ${tst_name})
+endfunction()
