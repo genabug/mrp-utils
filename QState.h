@@ -74,7 +74,7 @@ namespace Quantities
 
     // TODO: consider less verbose access syntax, smth like s(q) or s[q]
     // is it possible at all? for example, using global constants, not types.
-    constexpr decltype(auto) operator[](const char *id) noexcept
+    constexpr decltype(auto) operator[](const char *id) const noexcept
     {
       constexpr auto idx = details::index_by_id<Qs...>(id);
       static_assert(idx < sizeof...(Qs), "quantity is not presented in the state!");
