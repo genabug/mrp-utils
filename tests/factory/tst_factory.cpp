@@ -1,7 +1,5 @@
-#pragma clang diagnostic ignored "-Woverloaded-shift-op-parentheses"
-
 #include "doctest.h"
-#include "../ObjectsFactory.h"
+#include "factory/ObjectsFactory.h"
 
 struct B { int d; B(int i) : d(i) {} };
 struct D1 : B { D1(int i) : B(i) {} };
