@@ -22,7 +22,7 @@ template<class T, class... Args> class ObjectsFactory<T(Args...)>
   std::string id;
   std::function<T(Args...)> fun;
 
-  ObjectsFactory<T(Args...)> *next;
+  ObjectsFactory<T(Args...)> *next = nullptr;
   static ObjectsFactory<T(Args...)> *begin;
 
 public:
@@ -35,9 +35,9 @@ public:
   ObjectsFactory(std::string name, std::function<T(Args...)> f)
     : id(std::move(name)), fun(std::move(f))
   {
-    if (ObjectsFactory::find(name) != nullptr)
+    if (ObjectsFactory::find(id) != nullptr)
       throw std::logic_error(
-        "ObjectFactory: id \"" + name + "\" defined more than once!");
+        "ObjectFactory: id \"" + id + "\" defined more than once!");
 
     next = begin;
     begin = this;
@@ -86,69 +86,36 @@ template<class T, class... Args>
 //template<class T, class... Args>
 //  ObjectsFactory(std::string, std::function<T(Args...)>) -> ObjectsFactory<T(Args...)>;
 
-#include "MARPLE_Log_System.h"
 #include <vector>
 #include <sstream>
 #include <iomanip>
 #include <algorithm>
 
-extern Log::Logger MARPLE_logger; // global MARPLE logger
-
 namespace IO
 {
 
   /// Default (base) logger. Do nothing because nothing to do.
-  struct FactoryLogger { virtual ~FactoryLogger() = default; };
+  struct FactoryLogger {};
 
-  using FactoryLoggerF = FactoryLogger();
+  using FactoryLoggerF = FactoryLogger(std::ostream &out);
 
-/*---------------------------------------------------------------------------------------*/
-
-  /// prints all registered factories together with their content.
-  static void print_factories()
-  {
-    std::vector<std::string> names;
-    ObjectsFactory<FactoryLoggerF>::dump_names(names);
-    std::sort(std::begin(names), std::end(names));
-
-    // 1. print available features groups
-    std::stringstream message;
-    message << "Available features groups (runtime detection):\n";
-    int counter = 0;
-    for (const auto &name : names)
-      message << std::setw(2) << (++counter) << ". " << name << '\n';
-    MARPLE_logger.notification(message.str());
-
-    // 2. print details about each feature group
-    // Details are printed in the corresponding constructors of the loggers
-    // using helper function 'print_objects' defined below.
-    for (const auto &name : names)
-      ObjectsFactory<FactoryLoggerF>::build(name);
-  }
-
-/*---------------------------------------------------------------------------------------*/
-
-  /// helper print function for the factory.
-  template<class Factory> void print_objects(
-    const std::string &factory_name,
-    const std::string &factory_fullname,
-    const std::string &factory_description)
+  /// helper function for text representation of a specific factory
+  /// should be called from the factory logger's contstructor
+  template<class Factory> void print_factory(
+    std::ostream &message, const std::string &name, const std::string &description)
   {
     std::vector<std::string> names;
     ObjectsFactory<Factory>::dump_names(names);
     std::sort(std::begin(names), std::end(names));
 
-    std::stringstream message;
     message
-      << "ObjectsFactory: \"" << factory_name << "\" (\"" << factory_fullname << "\").\n"
-      << "Features group description: \"" << factory_description << "\".\n"
-      << "Available features in the group (runtime detection):\n";
+      << "Factory: \"" << name << "\".\n"
+      << "Description: \"" << description << "\".\n"
+      << "Available object(s):\n";
 
     int counter = 0;
     for (auto &name : names)
       message << std::setw(2) << (++counter) << ". " << name << '\n';
-
-    MARPLE_logger.notification(message.str());
   }
 
 } // namespace IO
