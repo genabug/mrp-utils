@@ -7,4 +7,5 @@ project(mrp-utils LANGUAGES CXX)
 add_library(utils INTERFACE)
 target_include_directories(utils INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
 
+add_subdirectory(factory)
 add_subdirectory(tests)
