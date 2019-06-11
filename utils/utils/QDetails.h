@@ -319,7 +319,8 @@ namespace Quantities
       constexpr std::enable_if_t<I != sizeof...(Qs)>
         set_to(QState<Qs...> &s, Value value)
     {
-      s.template get<I>() = value;
+      using Q = typename type_by_index<I, Qs...>::type;
+      s.template get<I>() = static_cast<Q>(value);
       set_to<I + 1>(s, value);
     }
 
