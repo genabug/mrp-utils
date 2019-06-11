@@ -101,3 +101,23 @@ namespace
 
 // not needed, it's fully tested in compile-time 8)
 // OK, they are needed (for nice plots and stats) but later
+
+union Test
+{
+  int i; // pod type
+  V2i v; // type with non-trivial ctor
+  Test() {}
+};
+
+TEST_CASE("union")
+{
+  Test t;
+  t.v = V2i(1);
+  t.i = 2;
+  std::cerr << t.v << '\n';
+
+  V2i v{10};
+  std::cerr << v << '\n';
+
+  v = V2i(1);
+}
