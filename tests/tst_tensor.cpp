@@ -6,7 +6,7 @@
 */
 
 #include "doctest.h"
-#include "Tensor.h"
+#include "utils/Tensor.h"
 #include <sstream>
 
 using T2i = Tensor<2, int>;

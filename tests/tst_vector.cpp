@@ -6,7 +6,7 @@
 */
 
 #include "doctest.h"
-#include "Vector.h"
+#include "utils/Vector.h"
 #include <limits>
 #include <sstream>
 

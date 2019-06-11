@@ -1,7 +1,7 @@
 #include "doctest.h"
 
-#include "QState.h"
-#include "QTraits.h"
+#include "utils/QState.h"
+#include "utils/QTraits.h"
 #include "vector.h" // temporary! until Vector replaces it
 #include <string>
 
