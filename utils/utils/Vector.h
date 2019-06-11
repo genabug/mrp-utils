@@ -83,10 +83,10 @@ template<size_t N, class T, class ST>
 
 // IO ops
 template<size_t N, class T, class ST>
-  std::ostream& operator<<(std::ostream &out, const Vector<N, T, ST> &v) noexcept;
+  std::istream& operator>>(std::istream &in, Vector<N, T, ST> &v) noexcept;
 
 template<size_t N, class T, class ST>
-  std::istream& operator>>(std::istream &in, const Vector<N, T, ST> &v) noexcept;
+  std::ostream& operator<<(std::ostream &out, const Vector<N, T, ST> &v) noexcept;
 
 // useful functions
 template<size_t N, class T, class ST>
@@ -183,18 +183,7 @@ template<size_t N, class T, class ST>
 /*---------------------------------------------------------------------------------------*/
 
 template<size_t N, class T, class ST>
-  std::ostream& operator<<(std::ostream &out, const Vector<N, T, ST> &v) noexcept
-{
-  out << '(' << v[0];
-  for (size_t i = 1; i < N; ++i)
-    out << ", " << v[i];
-  return out << ')';
-}
-
-/*---------------------------------------------------------------------------------------*/
-
-template<size_t N, class T, class ST>
-  std::istream& operator>>(std::istream &in, const Vector<N, T, ST> &v) noexcept
+  std::istream& operator>>(std::istream &in, Vector<N, T, ST> &v) noexcept
 {
   char c;
   bool in_brackets = true;
@@ -226,6 +215,17 @@ template<size_t N, class T, class ST>
     }
 
   return in;
+}
+
+/*---------------------------------------------------------------------------------------*/
+
+template<size_t N, class T, class ST>
+  std::ostream& operator<<(std::ostream &out, const Vector<N, T, ST> &v) noexcept
+{
+  out << '(' << v[0];
+  for (size_t i = 1; i < N; ++i)
+    out << ", " << v[i];
+  return out << ')';
 }
 
 /*---------------------------------------------------------------------------------------*/
