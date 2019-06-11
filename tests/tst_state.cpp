@@ -2,16 +2,19 @@
 
 #include "utils/QState.h"
 #include "utils/QTraits.h"
-#include "vector.h" // temporary! until Vector replaces it
+#include "utils/Vector.h"
 #include <string>
 
 using namespace Quantities;
 using namespace std::string_literals;
+namespace qdetails = Quantities::details;
+
+using V3i = Vector<3, int>;
 
 using ti = QTraits<int, 3, 1, 't','i'>;
 using td = QTraits<double, 3, 1, 't','d'>;
 using ts = QTraits<std::string, 0, 0, 't','s'>;
-using tv = QTraits<vector<3, int>, 3, 3, 't','v'>;
+using tv = QTraits<V3i, 3, 3, 't','v'>;
 
 template<class T> void WTF(T);
 
@@ -19,22 +22,22 @@ template<class T> void WTF(T);
 
 TEST_CASE("create")
 {
-  auto s = make_state<ti, ts, tv>(1, "foo"s, vector<3, int>::comps(2, 3, 4));
+  auto s = make_state<ti, ts, tv>(1, "foo"s, V3i(2, 3, 4));
 
   CHECK(s.get<0>() == 1);
   CHECK(s.get<1>() == "foo");
-  CHECK(s.get<2>() == vector<3, int>::comps(2, 3, 4));
+  CHECK(s.get<2>() == V3i(2, 3, 4));
 
   CHECK(s.get<ti>() == 1);
   CHECK(s.get<ts>() == "foo");
-  CHECK(s.get<tv>() == vector<3, int>::comps(2, 3, 4));
+  CHECK(s.get<tv>() == V3i(2, 3, 4));
 }
 
 TEST_CASE("create_ref")
 {
   int i = 1;
   auto str = "bar"s;
-  vector<3, int> v = vector<3, int>::comps(2, 3, 4);
+  V3i v(2, 3, 4);
   auto s = make_state<ti, ts, tv>(i, str, v);
 
   CHECK(s.get<0>() == i);
@@ -47,44 +50,43 @@ TEST_CASE("create_ref")
 
   s.get<ti>() = 2;
   s.get<ts>() = "foo";
-  s.get<tv>() = 5;
+  s.get<tv>() = V3i(5);
   CHECK(i == 2);
   CHECK(str == "foo");
-  CHECK(v == vector<3, int>::comps(5));
+  CHECK(v == V3i(5));
 }
 
 TEST_CASE("create_cref")
 {
   const int i = 1;
   const auto str = "bar"s;
-  const auto v = vector<3, int>::comps(2, 3, 4);
+  const auto v = V3i(2, 3, 4);
   auto s = make_state<ti, ts, tv>(i, str, v);
 
   CHECK(s.get<0>() == 1);
   CHECK(s.get<1>() == "bar");
-  CHECK(s.get<2>() == vector<3, int>::comps(2, 3, 4));
+  CHECK(s.get<2>() == V3i(2, 3, 4));
 
   CHECK(s.get<ti>() == 1);
   CHECK(s.get<ts>() == "bar");
-  CHECK(s.get<tv>() == vector<3, int>::comps(2, 3, 4));
+  CHECK(s.get<tv>() == V3i(2, 3, 4));
 
-//  s.get<ti>() = 2;     // COMPILE ERROR: can't assign to const
-//  s.get<ts>() = "foo"; // COMPILE ERROR: can't assign to const
-//  s.get<tv>() = 3;     // COMPILE ERROR: can't assign to const
+//  s.get<ti>() = 2;      // COMPILE ERROR: can't assign to const
+//  s.get<ts>() = "foo";  // COMPILE ERROR: can't assign to const
+//  s.get<tv>() = V3i(3); // COMPILE ERROR: can't assign to const
 
   int j = s.get<ti>();
   CHECK(j == i);
 //  std::string &ss = s.get<ts>(); // COMPILE ERROR: can't bind non-const ref to a constant
 //  ss = "foo";
   auto vv = s.get<tv>();
-  vv = 0;
-  CHECK(vv == vector<3, int>::comps(0));
-  CHECK(s.get<tv>() == vector<3, int>::comps(2, 3, 4));
+  vv = V3i(0);
+  CHECK(s.get<tv>() == V3i(2, 3, 4));
 }
 
 TEST_CASE("access")
 {
-  auto s = make_state<ti, ts, tv>(1, "foo"s, vector<3, int>::comps(3));
+  auto s = make_state<ti, ts, tv>(1, "foo"s, V3i(3));
 
   SUBCASE("by value")
   {
@@ -107,34 +109,34 @@ TEST_CASE("access")
 
 TEST_CASE("assign")
 {
-  auto s = make_state<ti, ts, tv>(1, "foo"s, vector<3, int>::comps(3));
+  auto s = make_state<ti, ts, tv>(1, "foo"s, V3i(3));
   s.get<ti>() = 2;
   s.get<ts>() = "bar";
-  s.get<tv>() = vector<3, int>::comps(1, 2, 3);
+  s.get<tv>() = V3i(1, 2, 3);
 
   CHECK(s.get<ti>() == 2);
   CHECK(s.get<ts>() == "bar");
-  CHECK(s.get<tv>() == vector<3, int>::comps(1, 2, 3));
+  CHECK(s.get<tv>() == V3i(1, 2, 3));
 }
 
 TEST_CASE("assign_ref")
 {
   int i = 0;
   auto str = ""s;
-  vector<3, int> v; v = 0;
+  V3i v(0);
   auto s = make_state<ti, ts, tv>(i, str, v);
 
   s.get<ti>() = 1;
   s.get<ts>() = "foo";
-  s.get<tv>() = vector<3, int>::comps(2, 3, 4);
+  s.get<tv>() = V3i(2, 3, 4);
   CHECK(i == 1);
   CHECK(str == "foo");
-  CHECK(v == vector<3, int>::comps(2, 3, 4));
+  CHECK(v == V3i(2, 3, 4));
 }
 
 TEST_CASE("copy")
 {
-  auto s = make_state<ti, ts, tv>(1, "bar"s, vector<3, int>::comps(2, 3, 4));
+  auto s = make_state<ti, ts, tv>(1, "bar"s, V3i(2, 3, 4));
 
   int i = s.get<ti>();
   auto j = s.get<ti>();
@@ -162,17 +164,17 @@ TEST_CASE("copy")
   CHECK(s.get<ti>() == 1);
 
   // copy of a temporary object --> OK
-  auto c4 = make_state<ti, ts, tv>(1, "foo"s, vector<3, int>::comps(2, 3, 4)).copy();
+  auto c4 = make_state<ti, ts, tv>(1, "foo"s, V3i(2, 3, 4)).copy();
   CHECK(c4.get<ti>() == 1);
   CHECK(c4.get<ts>() == "foo");
-  CHECK(c4.get<tv>() == vector<3, int>::comps(2, 3, 4));
+  CHECK(c4.get<tv>() == V3i(2, 3, 4));
 }
 
 TEST_CASE("copy_ref")
 {
   int a = 1;
   auto str = "bar"s;
-  vector<3, int> v = vector<3, int>::comps(2, 3, 4);
+  V3i v = V3i(2, 3, 4);
   auto s = make_state<ti, ts, tv>(a, str, v);
 
   int i = s.get<ti>();
@@ -210,11 +212,11 @@ TEST_CASE("copy_ref")
 
 TEST_CASE("ref")
 {
-  auto s = make_state<ti, ts, tv>(1, "foo"s, vector<3, int>::comps(3));
+  auto s = make_state<ti, ts, tv>(1, "foo"s, V3i(3));
 
   auto &r1 = s;
   auto r2 = s.get();
-  auto r3 = details::get(s);
+  auto r3 = qdetails::get(s);
   CHECK(r1 == s);
   CHECK(r2 == s);
   CHECK(r3 == s);
@@ -222,16 +224,16 @@ TEST_CASE("ref")
   CHECK(s.get<ti>() == 2);
   r2.get<ts>() = "bar";
   CHECK(s.get<ts>() == "bar");
-  r3.get<tv>() = 1;
-  CHECK(s.get<tv>() == vector<3, int>::comps(1));
+  r3.get<tv>() = V3i(1);
+  CHECK(s.get<tv>() == V3i(1));
 
   // COMPILE ERROR: reference to a temporary is not a good idea!
-  //auto &r = make_state<ti, ts, tv>(1, "foo"s, vector<3, int>::comps(3));
-  //auto r = make_state<ti, ts, tv>(1, "foo"s, vector<3, int>::comps(3)).get();
-  //auto r = details::get(make_state<ti, ts, tv>(1, "foo"s, vector<3, int>::comps(3)));
+  //auto &r = make_state<ti, ts, tv>(1, "foo"s, V3i(3));
+  //auto r = make_state<ti, ts, tv>(1, "foo"s, V3i(3)).get();
+  //auto r = qdetails::get(make_state<ti, ts, tv>(1, "foo"s, V3i(3)));
 
   // it's easy for one component
-  int i = make_state<ti, ts, tv>(1, "foo"s, vector<3, int>::comps(3)).get<ti>();
+  int i = make_state<ti, ts, tv>(1, "foo"s, V3i(3)).get<ti>();
   CHECK(i == 1);
 }
 
@@ -239,12 +241,12 @@ TEST_CASE("ref_ref")
 {
   int i = 1;
   auto str = "foo"s;
-  vector<3, int> v = vector<3, int>::comps(2, 3, 4);
+  V3i v = V3i(2, 3, 4);
   auto s = make_state<ti, ts, tv>(i, str, v);
 
   auto &r1 = s;
   auto r2 = s.get();
-  auto r3 = details::get(s);
+  auto r3 = qdetails::get(s);
   CHECK(r1 == s);
   CHECK(r2 == s);
   CHECK(r3 == s);
@@ -252,15 +254,15 @@ TEST_CASE("ref_ref")
   CHECK(i == 2);
   r2.get<ts>() = "bar";
   CHECK(str == "bar");
-  r3.get<tv>() = 1;
-  CHECK(s.get<tv>() == vector<3, int>::comps(1));
+  r3.get<tv>() = V3i(1);
+  CHECK(s.get<tv>() == V3i(1));
 
   // COMPILE ERROR: for the sake of consistency!
   // In case when arguments are not temporary, it could be possible to create state
   // using get() method or function, but... Consistency, CARL! Seriously, be consistent!
   //auto &r = make_state<ti, ts, tv>(i, str, v);
   //auto r = make_state<ti, ts, tv>(i, str, v).get();
-  //auto r = details::get(make_state<ti, ts, tv>(i, str, v));
+  //auto r = qdetails::get(make_state<ti, ts, tv>(i, str, v));
 
   // it is easier for one component
   make_state<ti, ts, tv>(i, str, v).get<ti>() = 2;
@@ -271,7 +273,7 @@ TEST_CASE("ref_ref")
 
 TEST_CASE("slice_copy")
 {
-  auto s = make_state<ti, ts, tv>(1, "foo"s, vector<3, int>::comps(3));
+  auto s = make_state<ti, ts, tv>(1, "foo"s, V3i(3));
 
   auto c1 = s.copy<tv, ti>();
   QState<tv, ti> c2 = s;
@@ -282,9 +284,10 @@ TEST_CASE("slice_copy")
   CHECK(s.get<ti>() == 1);
 
   // get copies of the temporary objs --> OK!
-  auto c = make_state<ti, ts, td>(1, "bar", 2).copy<ti, td>();
-  c.get<ti>() = 3;
-  CHECK(c.get<ti>() == 3);
+  // clang doesn't like this...
+//  auto c = make_state<ti, ts, td>(1, "bar", 2).copy<ti, td>();
+//  c.get<ti>() = 3;
+//  CHECK(c.get<ti>() == 3);
 
   // get references to the temporary objs --> NOT OK!
   // COMPILE ERROR: Seriously, do not use references to the temporary objects!
@@ -295,7 +298,7 @@ TEST_CASE("slice_ref")
 {
   int i = 1;
   auto str = ""s;
-  vector<3, int> v = vector<3, int>::comps(2, 3, 4);
+  V3i v = V3i(2, 3, 4);
   auto s = make_state<ti, ts, tv>(i, str, v);
 
   auto s1 = s.get<ti, ts>();
@@ -369,7 +372,7 @@ TEST_CASE("templates")
     CHECK(s2 == 2);
 
     decltype(auto) s3 = copy_t<tv>(2, arr);
-    CHECK(s3 == vector<3, int>::comps(3));
+    CHECK(s3 == V3i(3));
   }
 
   SUBCASE("get")
@@ -380,8 +383,8 @@ TEST_CASE("templates")
     get_t<ti>(1, arr) = 4;
     CHECK(arr[1].get<ti>() == 4);
 
-    get_t<tv>(2, arr) = 5;
-    CHECK(arr[2].get<tv>() == vector<3, int>::comps(5));
+    get_t<tv>(2, arr) = V3i(5);
+    CHECK(arr[2].get<tv>() == V3i(5));
   }
 }
 
@@ -404,9 +407,9 @@ static_assert(sc3/2 == sc3_div_2, "fuck!");
 
 TEST_CASE("boolean")
 {
-  auto s1 = make_state<ti, ts, tv>(1, "foo"s, vector<3, int>::comps(3));
-  auto s2 = make_state<tv, ti, ts, td>(vector<3, int>::comps(3), 1, "foo"s, 2.);
-  auto s3 = make_state<ti, ts, tv>(2, "bar"s, vector<3, int>::comps(1));
+  auto s1 = make_state<ti, ts, tv>(1, "foo"s, V3i(3));
+  auto s2 = make_state<tv, ti, ts, td>(V3i(3), 1, "foo"s, 2.);
+  auto s3 = make_state<ti, ts, tv>(2, "bar"s, V3i(1));
 
   CHECK(s1 == s1);
   CHECK(s1 == s2);
@@ -416,26 +419,26 @@ TEST_CASE("boolean")
 
 TEST_CASE("arithmetic")
 {
-  auto s1 = make_state<ti, tv>(1, vector<3, int>::comps(3, 5, 7));
-  auto s2 = make_state<tv, ti>(vector<3, int>::comps(2, 4, 6), 4);
-  auto s3 = make_state<ti, td, tv>(1, 2., vector<3, int>::comps(3, 4, 5));
+  auto s1 = make_state<ti, tv>(1, V3i(3, 5, 7));
+  auto s2 = make_state<tv, ti>(V3i(2, 4, 6), 4);
+  auto s3 = make_state<ti, td, tv>(1, 2., V3i(3, 4, 5));
 
 //  auto s4 = s2 + s3;
 //  auto s5 = s3 + s2; //<--- COMPILE ERROR!!!
 
-  auto s1_mult_by_2 = make_state<ti, tv>(2, vector<3, int>::comps(6, 10, 14));
+  auto s1_mult_by_2 = make_state<ti, tv>(2, V3i(6, 10, 14));
   CHECK(2*s1 == s1_mult_by_2);
   CHECK(s1*2 == s1_mult_by_2);
 
-  auto s2_div_by_2 = make_state<tv, ti>(vector<3, int>::comps(1, 2, 3), 2);
+  auto s2_div_by_2 = make_state<tv, ti>(V3i(1, 2, 3), 2);
   CHECK(s2/2 == s2_div_by_2);
 
-  auto s1_plus_s2 = make_state<ti, tv>(5, vector<3, int>::comps(5, 9, 13));
-  auto s2_plus_s1 = make_state<tv, ti>(vector<3, int>::comps(5, 9, 13), 5);
+  auto s1_plus_s2 = make_state<ti, tv>(5, V3i(5, 9, 13));
+  auto s2_plus_s1 = make_state<tv, ti>(V3i(5, 9, 13), 5);
   CHECK(s1 + s2 == s1_plus_s2);
   CHECK(s2 + s1 == s2_plus_s1);
 
-  auto s1_minus_s2 = make_state<ti, tv>(-3, vector<3, int>::comps(1, 1, 1));
+  auto s1_minus_s2 = make_state<ti, tv>(-3, V3i(1, 1, 1));
   CHECK(s1 - s2 == s1_minus_s2);
 
   s1 *= 2;
@@ -444,11 +447,11 @@ TEST_CASE("arithmetic")
   s2 /= 2;
   CHECK(s2 == s2_div_by_2);
 
-  auto s2_plus_s3 = make_state<tv, ti>(vector<3, int>::comps(4, 6, 8), 3);
+  auto s2_plus_s3 = make_state<tv, ti>(V3i(4, 6, 8), 3);
   s2 += s3;
   CHECK(s2 == s2_plus_s3);
 
-  auto s1_equal_2 = make_state<tv, ti>(vector<3, int>::comps(2), 2);
+  auto s1_equal_2 = make_state<tv, ti>(V3i(2), 2);
   s1 = 2;
   CHECK(s1 == s1_equal_2);
 }
@@ -457,40 +460,40 @@ TEST_CASE("arithmetic_ref")
 {
   int i1 = 1, i2 = 2, i3 = 3;
   double d1 = 4, d2 = 5, d3 = 6;
-  vector<3, int> v1, v2, v3; v1 = 7; v2 = 8; v3 = 9;
+  V3i v1(7), v2(8), v3(9);
 
   auto s1 = make_state<ti, tv>(i1, v1);
   auto s2 = make_state<tv, ti>(v2, i2);
   auto s3 = make_state<ti, td, tv>(i3, d3, v3);
 
   auto s4 = s2 + s3;
-  CHECK(v2 == vector<3, int>::comps(8));
+  CHECK(v2 == V3i(8));
   CHECK(i2 == 2);
   CHECK(i3 == 3);
   CHECK(d3 == 6);
-  CHECK(v3 == vector<3, int>::comps(9));
+  CHECK(v3 == V3i(9));
 //  auto s5 = s3 + s2; //<--- COMPILE ERROR!!!
 
   s1 *= 2;
   CHECK(i1 == 2);
-  CHECK(v1 == vector<3, int>::comps(14));
+  CHECK(v1 == V3i(14));
 
   s2 /= 2;
-  CHECK(v2 == vector<3, int>::comps(4));
+  CHECK(v2 == V3i(4));
   CHECK(i2 == 1);
 
   s1 -= s2;
   CHECK(i1 == 1);
-  CHECK(v1 == vector<3, int>::comps(10));
+  CHECK(v1 == V3i(10));
 
   s2 += s3;
-  CHECK(v2 == vector<3, int>::comps(13));
+  CHECK(v2 == V3i(13));
   CHECK(i2 == 4);
 }
 
 TEST_CASE("io")
 {
-  auto s1 = make_state<ti, tv, ts>(1, vector<3, int>::comps(1, 2, 3), "foo"s);
+  auto s1 = make_state<ti, tv, ts>(1, V3i(1, 2, 3), "foo"s);
   std::stringstream sstr;
   sstr << s1;
   CHECK(sstr.str() == "1 (1, 2, 3) foo "); // NB! space at end
@@ -504,9 +507,9 @@ TEST_CASE("array")
 {
   using s = QState<ti, ts, tv>;
   std::array<s, 3> arr;
-  arr[0] = make_state<ti, ts, tv>(1, "2"s, vector<3, int>::comps(3));
+  arr[0] = make_state<ti, ts, tv>(1, "2"s, V3i(3));
 
-  auto s1 = make_state<ti, ts, tv>(1, "foo"s, vector<3, int>::comps(1, 2, 3));
+  auto s1 = make_state<ti, ts, tv>(1, "foo"s, V3i(1, 2, 3));
   arr[1] = s1;
   CHECK(arr[1] == s1);
 
@@ -523,47 +526,47 @@ TEST_CASE("array")
 
 template<class F, class S> static constexpr bool is_same_v = std::is_same<F, S>::value;
 
-TEST_CASE("details::get(not_a_state)")
+TEST_CASE("qdetails::get(not_a_state)")
 {
-  struct S {int i; std::string s; vector<3, int> v; };
-  S s{1, "2", vector<3, int>::comps(3)};
-  static_assert(is_same_v<std::decay_t<decltype(details::get(s))>, S>, "HECK!");
-  static_assert(is_same_v<std::decay_t<decltype(details::get<ti>(s))>, S>, "HECK!");
-  static_assert(is_same_v<std::decay_t<decltype(details::get<ti, ts>(s))>, S>, "HECK!");
+  struct S {int i; std::string s; V3i v; };
+  S s{1, "2", V3i(3)};
+  static_assert(is_same_v<std::decay_t<decltype(qdetails::get(s))>, S>, "HECK!");
+  static_assert(is_same_v<std::decay_t<decltype(qdetails::get<ti>(s))>, S>, "HECK!");
+  static_assert(is_same_v<std::decay_t<decltype(qdetails::get<ti, ts>(s))>, S>, "HECK!");
 
-  auto sc = details::get(s); // copy
-  sc.i = 4; sc.s = "5"; sc.v = 6;
+  auto sc = qdetails::get(s); // copy
+  sc.i = 4; sc.s = "5"; sc.v = V3i(6);
   CHECK(s.i == 1);
   CHECK(s.s == "2");
-  CHECK(s.v == vector<3, int>::comps(3));
+  CHECK(s.v == V3i(3));
 
-  auto &sr = details::get(s); // ref (watch for type)
-  sr.i = 4; sr.s = "5"; sr.v = 6;
+  auto &sr = qdetails::get(s); // ref (watch for type)
+  sr.i = 4; sr.s = "5"; sr.v = V3i(6);
   CHECK(s.i == 4);
   CHECK(s.s == "5");
-  CHECK(s.v == vector<3, int>::comps(6));
+  CHECK(s.v == V3i(6));
 }
 
-TEST_CASE("details::get(state)")
+TEST_CASE("qdetails::get(state)")
 {
   // strings are strange. remove s and you'll see...
-  auto a = make_state<ti, ts, tv>(1, "2"s, vector<3, int>::comps(3));
-  CHECK(details::get(a) == a);
+  auto a = make_state<ti, ts, tv>(1, "2"s, V3i(3));
+  CHECK(qdetails::get(a) == a);
 
-  CHECK(details::get<ti>(a) == 1);
-  CHECK(details::get<ts>(a) == "2");
-  CHECK(details::get<tv>(a) == vector<3, int>::comps(3));
+  CHECK(qdetails::get<ti>(a) == 1);
+  CHECK(qdetails::get<ts>(a) == "2");
+  CHECK(qdetails::get<tv>(a) == V3i(3));
 
-  auto b = details::get<ts, ti>(a);
-  CHECK(details::get<ts>(b) == details::get<ts>(a));
-  CHECK(details::get<ti>(a) == details::get<ti>(a));
+  auto b = qdetails::get<ts, ti>(a);
+  CHECK(qdetails::get<ts>(b) == qdetails::get<ts>(a));
+  CHECK(qdetails::get<ti>(a) == qdetails::get<ti>(a));
   b.get<ts>() = "4";
   b.get<ti>() = 5;
-  CHECK(details::get<ti>(a) == 5);
-  CHECK(details::get<ts>(a) == "4");
+  CHECK(qdetails::get<ti>(a) == 5);
+  CHECK(qdetails::get<ts>(a) == "4");
 
-//  auto c = details::get<ti, td>(make_state<td, ti, tv>(1, 2, vector<3, int>::comps(3)));
-  auto c1 = details::get<ti, ts>(a);
+//  auto c = qdetails::get<ti, td>(make_state<td, ti, tv>(1, 2, V3i(3)));
+  auto c1 = qdetails::get<ti, ts>(a);
 }
 
 //TEST_SUITE_END();
