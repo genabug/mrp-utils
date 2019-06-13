@@ -42,12 +42,10 @@ namespace
 
   // conversion
   constexpr V2d xd = V2d(x);
-  static_assert(almost_equal(xd[0], 4.), "vd = vi failed");
-  static_assert(almost_equal(xd[1], -3.), "vd = vi failed");
+  static_assert(almost_equal(xd[0], 4.) && almost_equal(xd[1], -3.),"convert i->d failed");
 
   constexpr V2i xi = V2i(xd);
-  static_assert(xi[0] == 4, "vi = vd failed");
-  static_assert(xi[1] == -3, "vi = vd failed");
+  static_assert((xi[0] == 4) && (xi[1] == -3), "convert d->i failed");
 
   // ops
   static_assert(v == v, "v == v failed");
