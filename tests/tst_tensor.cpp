@@ -9,6 +9,7 @@
 #include "utils/Tensor.h"
 #include <sstream>
 
+using T2d = Tensor<2>;
 using T2i = Tensor<2, int>;
 using T3i = Tensor<3, int>;
 
@@ -31,6 +32,12 @@ namespace
 
   static_assert((t2[0][0] == 3) && (t2[0][1] == 4) &&
                 (t2[1][0] == 5) && (t2[1][1] == 6), "full init failed");
+
+  // conversion
+  constexpr T2d d(1., 2., 3., 4.);
+  constexpr T2i m = T2i(d);
+  static_assert((m[0][0] == 1) && (m[0][1] == 2) &&
+                (m[1][0] == 3) && (m[1][1] == 4), "conversion d -> i failed");
 
   // ops
   static_assert(td == td, "t == t failed");

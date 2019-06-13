@@ -19,6 +19,16 @@ public:
 
   template<class... Ts> constexpr explicit Tensor(const Ts&... as) noexcept;
 
+  // specials
+  constexpr Tensor(Tensor &&) noexcept = default;
+  constexpr Tensor(const Tensor &) noexcept = default;
+  constexpr Tensor& operator=(Tensor &&) noexcept = default;
+  constexpr Tensor& operator=(const Tensor &) noexcept = default;
+
+  // converters
+  template<class U> constexpr explicit Tensor(const Tensor<N, U> &t) noexcept;
+  template<class U> constexpr Tensor& operator=(const Tensor<N, U> &t) noexcept;
+
   // access
   constexpr T* operator[](size_t i) noexcept { return data[i]; }
   constexpr const T* operator[](size_t i) const noexcept { return data[i]; }
@@ -174,6 +184,28 @@ template<size_t N, class T> template<class... Ts>
   static_assert(
     n == 0 || n == 1 || n == N || n == N*N, "unsupported number of arguments.");
   init<n>({as...});
+}
+
+/*---------------------------------------------------------------------------------------*/
+
+template<size_t N, class T>
+  template<class U>
+    constexpr Tensor<N, T>::Tensor(const Tensor<N, U> &t) noexcept : data{}
+{
+  for (size_t i = 0; i < N; ++i)
+    for (size_t j = 0; j < N; ++j)
+      data[i][j] = t[i][j];
+}
+
+/*---------------------------------------------------------------------------------------*/
+
+template<size_t N, class T>
+  template<class U>
+    constexpr Tensor<N, T>& Tensor<N, T>::operator=(const Tensor<N, U> &t) noexcept
+{
+  for (size_t i = 0; i < N; ++i)
+    for (size_t j = 0; j < N; ++j)
+      data[i][j] = t[i][j];
 }
 
 /*---------------------------------------------------------------------------------------*/
