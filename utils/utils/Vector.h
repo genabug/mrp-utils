@@ -112,9 +112,10 @@ template<class T, class ST>
     const Vector<2, T, ST> &v1, const Vector<2, T, ST> &v2) noexcept;
 
 template<class T, class ST>
-  constexpr auto operator%(Vector<3, T, ST> v1, const Vector<3, T, ST> &v2) noexcept;
+  constexpr auto operator%(
+    const Vector<3, T, ST> &v1, const Vector<3, T, ST> &v2) noexcept;
 
-template<class T, class ST> constexpr auto operator~(Vector<2, T, ST> v) noexcept;
+template<class T, class ST> constexpr auto operator~(const Vector<2, T, ST> &v) noexcept;
 
 using Vector2D = Vector<2>;
 using Vector3D = Vector<3>;
@@ -327,23 +328,19 @@ template<class T, class ST>
 /*---------------------------------------------------------------------------------------*/
 
 template<class T, class ST>
-  constexpr auto operator%(Vector<3, T, ST> v1, const Vector<3, T, ST> &v2) noexcept
+  constexpr auto operator%(const Vector<3, T, ST> &v1, const Vector<3, T, ST> &v2) noexcept
 {
-  auto v1_0_ = v1[0], v1_1_ = v1[1];
-  v1[0] = v1[1]*v2[2] - v2[1]*v1[2];
-  v1[1] = v1[2]*v2[0] - v2[2]*v1_0_;
-  v1[2] = v1_0_*v2[1] - v2[0]*v1_1_;
-  return v1;
+  return Vector<3, T, ST>(
+    v1[1]*v2[2] - v2[1]*v1[2],
+    v1[2]*v2[0] - v2[2]*v1[0],
+    v1[0]*v2[1] - v2[0]*v1[1]);
 }
 
 /*---------------------------------------------------------------------------------------*/
 
-template<class T, class ST> constexpr auto operator~(Vector<2, T, ST> v) noexcept
+template<class T, class ST> constexpr auto operator~(const Vector<2, T, ST> &v) noexcept
 {
-  auto a_0_ = v[0];
-  v[0] = -v[1];
-  v[1] = +a_0_;
-  return v;
+  return Vector<2, T, ST>(-v[1], v[0]);
 }
 
 /*---------------------------------------------------------------------------------------*/
