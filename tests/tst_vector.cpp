@@ -105,6 +105,14 @@ namespace
   static_assert(almost_equal(sin(vd, ey), .6), "sin failed");
   static_assert(almost_equal(cos(vd, ex), .6), "cos failed");
   static_assert(almost_equal(sin(vd, ex), .8), "sin failed");
+
+  constexpr Vector<2, float> vf(3, 4);
+  static_assert(almost_equal(sqs(vf), 25.f), "sqs failed");
+  static_assert(almost_equal(fabs(vf), 5.f), "abs failed");
+
+  constexpr Vector<2, long> vl(3, 4);
+  static_assert(sqs(vl) == 25, "sqs failed");
+  static_assert(fabs(vl) == 5, "abs failed");
 }
 
 /*----------------------------------- run-time tests ------------------------------------*/
