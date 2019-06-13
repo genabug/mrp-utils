@@ -19,15 +19,21 @@ template<size_t N, class T = double, class ST = int> class Vector
   static_assert(N != 0, "Vector of zero size is meaningless.");
 
 public:
+  // ctors
   constexpr explicit Vector() noexcept : data{} {}
-  constexpr explicit Vector(const T &a) noexcept : data{}
-  {
-    for (auto &d : data)
-      d = a;
-  }
-
+  constexpr explicit Vector(const T &a) noexcept;
   template<class... Ts, class = std::enable_if_t<sizeof...(Ts) == N>>
     constexpr explicit Vector(Ts... as) noexcept : data{static_cast<T>(as)...} {}
+
+  // specials
+  constexpr Vector(Vector &&) noexcept = default;
+  constexpr Vector(const Vector &) noexcept = default;
+  constexpr Vector& operator=(Vector &&) noexcept = default;
+  constexpr Vector& operator=(const Vector &) noexcept = default;
+
+  // converters
+  template<class U> constexpr explicit Vector(const Vector<N, U, ST> &v) noexcept;
+  template<class U> constexpr Vector& operator=(const Vector<N, U, ST> &v) noexcept;
 
   // access
   static constexpr size_t X = 0;
@@ -115,6 +121,35 @@ using Vector3D = Vector<3>;
 
 /*---------------------------------------------------------------------------------------*/
 /*------------------------------------ definition ---------------------------------------*/
+/*---------------------------------------------------------------------------------------*/
+
+template<size_t N, class T, class ST>
+  constexpr Vector<N, T, ST>::Vector(const T &a) noexcept : data{}
+{
+  for (auto &d : data)
+    d = a;
+}
+
+/*---------------------------------------------------------------------------------------*/
+
+template<size_t N, class T, class ST>
+  template<class U>
+    constexpr Vector<N, T, ST>::Vector(const Vector<N, U, ST> &v) noexcept : data{}
+{
+  for (size_t i = 0; i < N; ++i)
+    data[i] = v[i];
+}
+
+/*---------------------------------------------------------------------------------------*/
+
+template<size_t N, class T, class ST>
+  template<class U>
+    constexpr Vector<N, T, ST>& Vector<N, T, ST>::operator=(const Vector<N, U, ST> &v) noexcept
+{
+  for (size_t i = 0; i < N; ++i)
+    data[i] = v[i];
+}
+
 /*---------------------------------------------------------------------------------------*/
 
 template<size_t N, class T, class ST>

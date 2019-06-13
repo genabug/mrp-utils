@@ -11,6 +11,7 @@
 #include <sstream>
 
 using V2d = Vector<2>;
+using V3d = Vector<3>;
 using V2i = Vector<2, int>;
 using V3i = Vector<3, int>;
 
@@ -31,13 +32,22 @@ namespace
 {
   // init
   constexpr V2i x(4, -3), y(3, 4);
-  constexpr V3i v, v1(1), v2(2), v3(3), v4(4, 5, 6), v5(3, -6, 3);
+  constexpr V3i v, v1(1), v2(2), v3(v1 + v2), v4(4, 5, 6), v5(3, -6, 3);
 
   // access
   static_assert((v1[0] == 1) && (v1[1] == 1) && (v1[2] == 1), "single init failed");
   static_assert((v2[0] == 2) && (v2[1] == 2) && (v2[2] == 2), "single init failed");
   static_assert((v3[0] == 3) && (v3[1] == 3) && (v3[2] == 3), "single init failed");
   static_assert((v4[0] == 4) && (v4[1] == 5) && (v4[2] == 6), "full init failed");
+
+  // conversion
+  constexpr V2d xd = V2d(x);
+  static_assert(almost_equal(xd[0], 4.), "vd = vi failed");
+  static_assert(almost_equal(xd[1], -3.), "vd = vi failed");
+
+  constexpr V2i xi = V2i(xd);
+  static_assert(xi[0] == 4, "vi = vd failed");
+  static_assert(xi[1] == -3, "vi = vd failed");
 
   // ops
   static_assert(v == v, "v == v failed");
