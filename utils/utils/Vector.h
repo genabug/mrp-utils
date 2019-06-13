@@ -19,6 +19,8 @@ template<size_t N, class T = double, class ST = int> class Vector
   static_assert(N != 0, "Vector of zero size is meaningless.");
 
 public:
+  static constexpr size_t size = N;
+
   // ctors
   constexpr explicit Vector() noexcept : data{} {}
   constexpr explicit Vector(const T &a) noexcept;

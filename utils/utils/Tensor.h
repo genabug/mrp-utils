@@ -15,6 +15,8 @@ template<size_t N, class T = double> class Tensor
   static_assert(N != 0, "Tensor of zero size is meaningless.");
 
 public:
+  static constexpr size_t size = N;
+
   template<class... Ts> constexpr explicit Tensor(const Ts&... as) noexcept;
 
   // access
