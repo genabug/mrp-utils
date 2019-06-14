@@ -130,10 +130,42 @@ TEST_CASE("union")
   Test t;
   t.v = V2i(1);
   t.i = 2;
-  std::cerr << t.v << '\n';
+//  std::cerr << t.v << '\n';
 
   V2i v{10};
-  std::cerr << v << '\n';
+//  std::cerr << v << '\n';
 
   v = V2i(1);
 }
+
+TEST_CASE("io ops")
+{
+  std::stringstream ss;
+
+  ss.str("");
+  V3i v3(1, 2, 3), v4;
+  ss << V3i::bareComponents << v3;
+  CHECK(ss.str() == "1 2 3");
+  ss >> v4;
+  CHECK(v3 == v4);
+
+  ss.str("");
+  ss << V3i::inBrackets << v4;
+  CHECK(ss.str() == "(1, 2, 3)");
+  ss >> v3;
+  CHECK(v3 == v4);
+
+  ss.str("");
+  V2i v1(1, 2), v2;
+  ss << v1;
+  CHECK(ss.str() == "(1, 2)");
+  ss >> v2;
+  CHECK(v2 == v1);
+
+  ss.str("");
+  ss << V3i::bareComponents << v2;
+  CHECK(ss.str() == "1 2");
+  ss >> v1;
+  CHECK(v2 == v1);
+}
+
