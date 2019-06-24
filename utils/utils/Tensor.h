@@ -62,8 +62,11 @@ private:
   template<size_t I = N> // direct calculation for N = 2
     constexpr std::enable_if_t<I == 2, T> det_impl() const noexcept;
 
-  template<size_t I = N> // common case for N > 2
-    constexpr std::enable_if_t<(I > 2), T> det_impl() const noexcept;
+  template<size_t I = N> // direct calculation for N = 3
+    constexpr std::enable_if_t<I == 3, T> det_impl() const noexcept;
+
+  template<size_t I = N> // common case for N > 3
+    constexpr std::enable_if_t<(I > 3), T> det_impl() const noexcept;
 
   // init helper struct
   // had to use it instead of std::array
@@ -367,12 +370,10 @@ template<size_t N, class T>
   std::istream& operator>>(std::istream &in, Tensor<N, T> &A) noexcept
 {
   char c;
-  bool in_brackets = true;
   while (in.get(c) && c != '[')
     if (!std::isspace(c))
     {
       in.putback(c);
-      in_brackets = false;
       break;
     }
 
@@ -385,11 +386,10 @@ template<size_t N, class T>
           in.putback(c);
           break;
         }
-
       in >> A[i][j];
     }
 
-  while (in_brackets && in.get(c) && c != ']')
+  while (in.get(c) && c != ']')
     if (!std::isspace(c))
     {
       in.putback(c);
@@ -506,7 +506,15 @@ template<size_t N, class T> template<size_t I>
 }
 
 template<size_t N, class T> template<size_t I>
-  constexpr std::enable_if_t<(I > 2), T> Tensor<N, T>::det_impl() const noexcept
+  constexpr std::enable_if_t<I == 3, T> Tensor<N, T>::det_impl() const noexcept
+{
+  return data[0][0] * (data[1][1]*data[2][2] - data[1][2]*data[2][1]) +
+         data[0][1] * (data[1][2]*data[2][0] - data[1][0]*data[2][2]) +
+         data[0][2] * (data[1][0]*data[2][1] - data[1][1]*data[2][0]);
+}
+
+template<size_t N, class T> template<size_t I>
+  constexpr std::enable_if_t<(I > 3), T> Tensor<N, T>::det_impl() const noexcept
 {
   T d = 0;
   for (size_t j = 0; j < N; ++j)
