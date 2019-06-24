@@ -320,7 +320,7 @@ namespace Quantities
         set_to(QState<Qs...> &s, Value value)
     {
       using Q = typename type_by_index<I, Qs...>::type;
-      s.template get<I>() = static_cast<Q>(value);
+      s.template get<I>() = Q{value};
       set_to<I + 1>(s, value);
     }
 
