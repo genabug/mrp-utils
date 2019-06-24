@@ -144,15 +144,11 @@ TEST_CASE("io ops")
 
   ss.str("");
   V3i v3(1, 2, 3), v4;
-  ss << V3i::bareComponents << v3;
-  CHECK(ss.str() == "1 2 3");
-  ss >> v4;
-  CHECK(v3 == v4);
 
   ss.str("");
-  ss << V3i::inBrackets << v4;
+  ss << v3;
   CHECK(ss.str() == "(1, 2, 3)");
-  ss >> v3;
+  ss >> v4;
   CHECK(v3 == v4);
 
   ss.str("");
@@ -161,11 +157,4 @@ TEST_CASE("io ops")
   CHECK(ss.str() == "(1, 2)");
   ss >> v2;
   CHECK(v2 == v1);
-
-  ss.str("");
-  ss << V3i::bareComponents << v2;
-  CHECK(ss.str() == "1 2");
-  ss >> v1;
-  CHECK(v2 == v1);
 }
-

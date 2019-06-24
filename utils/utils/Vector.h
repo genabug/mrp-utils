@@ -19,8 +19,6 @@ template<size_t N, class T = double, class ST = int> class Vector
   static_assert(N != 0, "Vector of zero size is meaningless.");
 
 public:
-  static constexpr size_t size = N;
-
   // ctors
   constexpr explicit Vector() noexcept : data{} {}
   constexpr explicit Vector(const T &a) noexcept;
@@ -41,6 +39,7 @@ public:
   static constexpr size_t X = 0;
   static constexpr size_t Y = 1;
   static constexpr size_t Z = 2;
+  static constexpr size_t size = N;
 
   constexpr T& operator[](size_t i) noexcept { return data[i]; }
   constexpr const T& operator[](size_t i) const noexcept { return data[i]; }
@@ -128,41 +127,6 @@ using Vector3D = Vector<3>;
 
 /*---------------------------------------------------------------------------------------*/
 /*------------------------------------ definition ---------------------------------------*/
-/*---------------------------------------------------------------------------------------*/
-
-// Facet for localization which defines the output mode (in brackets or only components).
-class IO_mode final : public std::locale::facet
-{
-  mutable bool bracketsFormFlag;
-
-public:
-  static std::locale::id id;
-  ~IO_mode() final = default;
-
-  // Create new IO_mode if necessary and it in the current
-  // locale of the stream "stream", and return the pointer to
-  // IO_mode stored in the current locale.
-  static const IO_mode& getIO_mode(std::ios_base &stream)
-  {
-    const std::locale::id *dummy = &id;
-    /* This is necessary only because compilers are not obligated to instantiate
-       the members of class templates which are not used explicitly, and often they dont.
-       As a result, we must explicitly reference the static member "id", although
-       we dont need it, because otherwise, may be, it will not be instantiated,
-       and the linker will tell us that IO_mode::id is unresolved external.
-       This problem was detected with Microsoft Visual C++ 2005 compiler. */
-    std::locale loc = stream.getloc();
-    if (!std::has_facet<IO_mode>(loc))
-      stream.imbue(std::locale(loc, new IO_mode));
-    return std::use_facet<IO_mode>(stream.getloc());
-  }
-
-  bool isBracketsForm() const { return bracketsFormFlag; }
-  void setBracketsFormFlag(bool theFlag) const { bracketsFormFlag = theFlag; }
-};
-
-std::locale::id IO_mode::id;
-
 /*---------------------------------------------------------------------------------------*/
 
 template<size_t N, class T, class ST>
@@ -263,12 +227,10 @@ template<size_t N, class T, class ST>
   std::istream& operator>>(std::istream &in, Vector<N, T, ST> &v) noexcept
 {
   char c;
-  bool in_brackets = true;
   while (in.get(c) && c != '(')
     if (!std::isspace(c))
     {
       in.putback(c);
-      in_brackets = false;
       break;
     }
 
@@ -280,11 +242,10 @@ template<size_t N, class T, class ST>
         in.putback(c);
         break;
       }
-
     in >> v[i];
   }
 
-  while (in_brackets && in.get(c) && c != ')')
+  while (in.get(c) && c != ')')
     if (!std::isspace(c))
     {
       in.putback(c);
@@ -296,48 +257,13 @@ template<size_t N, class T, class ST>
 
 /*---------------------------------------------------------------------------------------*/
 
-/// Manipulator for the output stream - bare components.
-/** out << vector<N>::bareComponents results in that all output of the vectors
-    in that stream will be performed in the form of N numbers separated by spaces.
-*/
-template<size_t N, class T, class ST>
-  std::ios_base& Vector<N, T, ST>::bareComponents(std::ios_base &stream)
-{
-  IO_mode::getIO_mode(stream).setBracketsFormFlag(false);
-  return stream;
-}
-
-/// Manipulator for the output stream - brackets form.
-/** out << vector<N>::inBrackets results in that all output of the vectors
-    in that stream will be performed in the form of N numbers separated by commas
-    and enclosed into the round brackets, (x, y, z, ...). This regime is default.
-*/
-template<size_t N, class T, class ST>
-  std::ios_base& Vector<N, T, ST>::inBrackets(std::ios_base &stream)
-{
-  IO_mode::getIO_mode(stream).setBracketsFormFlag(true);
-  return stream;
-}
-
 template<size_t N, class T, class ST>
   std::ostream& operator<<(std::ostream &out, const Vector<N, T, ST> &v) noexcept
 {
-  const auto &loc = out.getloc();
-  const bool bracketsRegime =
-    std::has_facet<IO_mode>(loc)?
-      std::use_facet<IO_mode>(loc).isBracketsForm() : true;
-
-  if (bracketsRegime)
-    out << '(';
-
-  out << v[0];
+  out << '('<< v[0];
   for (size_t i = 1; i < N; ++i)
-    out << (bracketsRegime? ", " : " ") << v[i];
-
-  if (bracketsRegime)
-    out << ')';
-
-  return out;
+    out << ", " << v[i];
+  return out << ')';
 }
 
 /*---------------------------------------------------------------------------------------*/
