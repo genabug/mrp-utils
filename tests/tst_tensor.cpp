@@ -10,6 +10,7 @@
 #include <sstream>
 
 using T2d = Tensor<2>;
+using T3d = Tensor<3>;
 using T2i = Tensor<2, int>;
 using T3i = Tensor<3, int>;
 
@@ -120,7 +121,7 @@ namespace
 
 TEST_CASE("init")
 {
-  T3i td; // default init
+  T3i td; // default zero init
 
   // single init -- assign all elements to 1
   T3i t1(1);
@@ -140,6 +141,7 @@ TEST_CASE("init")
          t3[1][0] == 4 && t3[1][1] == 5 && t3[1][2] == 6 &&
          t3[2][0] == 7 && t3[2][1] == 8 && t3[2][2] == 9));
 
+  // copying
   T3i t1c(t1);
   CHECK((t1c[0][0] == 1 && t1c[0][1] == 1 && t1c[0][2] == 1 &&
          t1c[1][0] == 1 && t1c[1][1] == 1 && t1c[1][2] == 1 &&
@@ -154,6 +156,13 @@ TEST_CASE("init")
   CHECK((t3c[0][0] == 1 && t3c[0][1] == 2 && t3c[0][2] == 3 &&
          t3c[1][0] == 4 && t3c[1][1] == 5 && t3c[1][2] == 6 &&
          t3c[2][0] == 7 && t3c[2][1] == 8 && t3c[2][2] == 9));
+
+  // conversion
+  T3d tdd = T3d(t3);
+  T3i ti = T3i(tdd);
+  CHECK((ti[0][0] == 1 && ti[0][1] == 2 && ti[0][2] == 3 &&
+         ti[1][0] == 4 && ti[1][1] == 5 && ti[1][2] == 6 &&
+         ti[2][0] == 7 && ti[2][1] == 8 && ti[2][2] == 9));
 }
 
 TEST_CASE("io ops")
@@ -204,17 +213,6 @@ TEST_CASE("boolean ops")
   CHECK(t31 != t22);
 }
 
-TEST_CASE("assign ops")
-{
-  T3i t3(1), t4(2);
-  t3 *= 2;
-  CHECK(t3 == t4);
-
-  T3i t5(1);
-  t4 /= 2;
-  CHECK(t4 == t5);
-}
-
 TEST_CASE("arithm ops")
 {
   T3i t0(0), t1(1), t2(2);
@@ -242,6 +240,19 @@ TEST_CASE("vector ops")
   CHECK(t * v2 == V2i(18, 28));
 }
 
+TEST_CASE("assign ops")
+{
+  T3i t3(1), t4(2);
+  t3 += t3;
+  CHECK(t3 == t4);
+  t3 /= 2;
+  CHECK(t3 == T3i(1));
+  t3 *= 2;
+  CHECK(t3 == t4);
+  t3 -= t4;
+  CHECK(t3 == T3i(0));
+}
+
 TEST_CASE("methods")
 {
   T3i E(1, 1, 1),
@@ -258,6 +269,7 @@ TEST_CASE("methods")
   CHECK(t * t.invert() == E);
   CHECK(t.invert() == R);
 
+  Tensor<4, int> E4(1, 1, 1, 1);
   Tensor<4, int> t4(2, 3, 5, 2,
                     6, 1, 8, 3,
                     5, 4, 9, 2,
@@ -266,7 +278,6 @@ TEST_CASE("methods")
                       88,  20, -55, -21,
                     -113, -26,  71,  27,
                       30,   7, -19,  -7);
-  Tensor<4, int> E4(1, 1, 1, 1);
   CHECK(t4.det() == -1);
   CHECK(t4.invert() == t5);
   CHECK(t4*t4.invert() == E4);
