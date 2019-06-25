@@ -15,8 +15,6 @@ template<size_t N, class T = double> class Tensor
   static_assert(N != 0, "Tensor of zero size is meaningless.");
 
 public:
-  static constexpr size_t size = N;
-
   template<class... Ts> constexpr explicit Tensor(const Ts&... as) noexcept;
 
   // specials
@@ -30,6 +28,7 @@ public:
   template<class U> constexpr Tensor& operator=(const Tensor<N, U> &t) noexcept;
 
   // access
+  static constexpr size_t size = N;
   constexpr T* operator[](size_t i) noexcept { return data[i]; }
   constexpr const T* operator[](size_t i) const noexcept { return data[i]; }
 
@@ -370,10 +369,12 @@ template<size_t N, class T>
   std::istream& operator>>(std::istream &in, Tensor<N, T> &A) noexcept
 {
   char c;
+  bool in_brackets = true;
   while (in.get(c) && c != '[')
     if (!std::isspace(c))
     {
       in.putback(c);
+      in_brackets = false;
       break;
     }
 
@@ -389,7 +390,7 @@ template<size_t N, class T>
       in >> A[i][j];
     }
 
-  while (in.get(c) && c != ']')
+  while (in_brackets && in.get(c) && c != ']')
     if (!std::isspace(c))
     {
       in.putback(c);
@@ -404,15 +405,20 @@ template<size_t N, class T>
 template<size_t N, class T>
   std::ostream& operator<<(std::ostream &out, const Tensor<N, T> &A) noexcept
 {
-  out << '[' << A[0][0];
+  const std::locale &loc = out.getloc();
+  bool use_brackets =
+    std::has_facet<IO_mode>(loc)?
+      std::use_facet<IO_mode>(loc).use_brackets() : true;
+
+  out << (use_brackets? "[" : "") << A[0][0];
   for (size_t j = 1; j < N; ++j)
-    out << ", " << A[0][j];
+    out << (use_brackets? ", " : " ") << A[0][j];
 
   for (size_t i = 1; i < N; ++i)
     for (size_t j = 0; j < N; ++j)
-      out << ", " << A[i][j];
+      out << (use_brackets? ", " : " ") << A[i][j];
 
-  return out << ']';
+  return out << (use_brackets? "]" : "");
 }
 
 /*---------------------------------------------------------------------------------------*/

@@ -152,9 +152,26 @@ TEST_CASE("io ops")
   CHECK(v3 == v4);
 
   ss.str("");
+  //ss.clear(); // doesn't needed because ss is not in eof state and contains ')'
+  ss << bareComponents << v3;
+  CHECK(ss.str() == "1 2 3");
+  v4 = V3i(0);
+  ss >> v4;
+  CHECK(v3 == v4);
+
+  ss.str("");
+  ss.clear(); // clear eof bit
   V2i v1(1, 2), v2;
   ss << v1;
+  CHECK(ss.str() == "1 2");
+  ss >> v2;
+  CHECK(v2 == v1);
+
+  ss.str("");
+  ss.clear(); // clear eof bit
+  ss << inBrackets << v1;
   CHECK(ss.str() == "(1, 2)");
+  v2 = V2i(0);
   ss >> v2;
   CHECK(v2 == v1);
 }

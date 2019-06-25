@@ -159,16 +159,32 @@ TEST_CASE("init")
 TEST_CASE("io ops")
 {
   std::stringstream ss;
-  T2i t2(1, 2, 3, 4), t2_;
+  T2i t2(1, 2, 3, 4), t2r;
   ss << t2;
   CHECK(ss.str() == "[1, 2, 3, 4]");
-  ss >> t2_;
-  CHECK(t2 == t2_);
+  ss >> t2r;
+  CHECK(t2 == t2r);
 
   ss.str("");
+  ss << bareComponents << t2;
+  CHECK(ss.str() == "1 2 3 4");
+  t2r = T2i(0);
+  ss >> t2r;
+  CHECK(t2r == t2);
+
+  ss.str("");
+  ss.clear(); // clear eof bit
   T3i t3(1, 2, 3, 4, 5, 6, 7, 8, 9), t3r;
   ss << t3;
+  CHECK(ss.str() == "1 2 3 4 5 6 7 8 9");
+  ss >> t3r;
+  CHECK(t3 == t3r);
+
+  ss.str("");
+  ss.clear(); // clear eof bit
+  ss << inBrackets << t3;
   CHECK(ss.str() == "[1, 2, 3, 4, 5, 6, 7, 8, 9]");
+  t3r = T3i(0);
   ss >> t3r;
   CHECK(t3 == t3r);
 }

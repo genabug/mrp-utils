@@ -7,6 +7,8 @@
   \brief Euclidian vector of arbitrary dimension, definition and documentation.
 */
 
+#include "IOMode.h"
+
 #include <cctype> // isspace
 #include <cstddef> // size_t
 #include <ostream>
@@ -53,10 +55,6 @@ public:
   constexpr Vector& operator*=(const T &a) noexcept;
   constexpr Vector& operator+=(const Vector &v) noexcept;
   constexpr Vector& operator-=(const Vector &v) noexcept;
-
-  // io
-  static std::ios_base& bareComponents(std::ios_base &stream);
-  static std::ios_base& inBrackets(std::ios_base &stream);
 }; // Vector<N, T, ST>
 
 /*---------------------------------------------------------------------------------------*/
@@ -227,10 +225,12 @@ template<size_t N, class T, class ST>
   std::istream& operator>>(std::istream &in, Vector<N, T, ST> &v) noexcept
 {
   char c;
+  bool in_brackets = true;
   while (in.get(c) && c != '(')
     if (!std::isspace(c))
     {
       in.putback(c);
+      in_brackets = false;
       break;
     }
 
@@ -245,7 +245,7 @@ template<size_t N, class T, class ST>
     in >> v[i];
   }
 
-  while (in.get(c) && c != ')')
+  while (in_brackets && in.get(c) && c != ')')
     if (!std::isspace(c))
     {
       in.putback(c);
@@ -260,10 +260,17 @@ template<size_t N, class T, class ST>
 template<size_t N, class T, class ST>
   std::ostream& operator<<(std::ostream &out, const Vector<N, T, ST> &v) noexcept
 {
-  out << '('<< v[0];
+  const std::locale &loc = out.getloc();
+  bool use_brackets =
+    std::has_facet<IO_mode>(loc)?
+      std::use_facet<IO_mode>(loc).use_brackets() : true;
+
+  out << (use_brackets? "(" : "") << v[0];
+
   for (size_t i = 1; i < N; ++i)
-    out << ", " << v[i];
-  return out << ')';
+    out << (use_brackets? ", " : " ") << v[i];
+
+  return out << (use_brackets? ")" : "");
 }
 
 /*---------------------------------------------------------------------------------------*/
