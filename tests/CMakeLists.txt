@@ -1,4 +1,3 @@
-enable_testing()
 add_definitions("-DDOCTEST_CONFIG_IMPLEMENT_WITH_MAIN=1")
 
 add_library(doctest INTERFACE)
@@ -17,7 +16,6 @@ function(add_marple_test tst_name)
   add_executable(${tst_name} ${tst_SOURCES})
   add_dependencies(${tst_name} doctest ${tst_DEPENDS})
   target_link_libraries(${tst_name} PRIVATE doctest ${tst_DEPENDS})
-  add_test(${tst_name} ${tst_name})
 endfunction()
 
 add_marple_test(tst_state SOURCES tst_state.cpp DEPENDS utils)
