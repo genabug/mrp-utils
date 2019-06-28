@@ -170,8 +170,8 @@ namespace Quantities
     template<class... Ts> constexpr QState<Qs...>& operator+=(const QState<Ts...> &);
     template<class... Ts> constexpr QState<Qs...>& operator-=(const QState<Ts...> &);
 
-    constexpr QState<Qs...>& operator*=(double);
-    constexpr QState<Qs...>& operator/=(double);
+    template<class T> constexpr QState<Qs...>& operator*=(T);
+    template<class T> constexpr QState<Qs...>& operator/=(T);
 
     constexpr QState<std::decay_t<Qs>...> operator-() const; // NB! returns a copy!
     constexpr QState<Qs...>& operator+() { return *this; }
@@ -226,14 +226,14 @@ template<class... Ls, class... Rs>
   constexpr auto operator-(
     const Quantities::QState<Ls...> &, const Quantities::QState<Rs...> &);
 
-template<class... Qs>
-  constexpr auto operator*(const Quantities::QState<Qs...> &, double);
+template<class T, class... Qs>
+  constexpr auto operator*(const Quantities::QState<Qs...> &, T);
 
-template<class... Qs>
-  constexpr auto operator*(double v, const Quantities::QState<Qs...> &s) { return s * v; }
+template<class T, class... Qs>
+  constexpr auto operator*(T v, const Quantities::QState<Qs...> &s) { return s * v; }
 
-template<class... Qs>
-  constexpr auto operator/(const Quantities::QState<Qs...> &, double);
+template<class T, class... Qs>
+  constexpr auto operator/(const Quantities::QState<Qs...> &, T);
 
 // boolean operations
 // WARNING: operations are not symmetric, i.e. l == r does not mean that r == l
@@ -401,8 +401,8 @@ namespace Quantities
 
 /*---------------------------------------------------------------------------------------*/
 
-  template<class... Qs>
-    constexpr QState<Qs...>& QState<Qs...>::operator*=(double value)
+  template<class... Qs> template<class T>
+    constexpr QState<Qs...>& QState<Qs...>::operator*=(T value)
   {
     details::mult_by(*this, value);
     return *this;
@@ -410,8 +410,8 @@ namespace Quantities
 
 /*---------------------------------------------------------------------------------------*/
 
-  template<class... Qs>
-    constexpr QState<Qs...>& QState<Qs...>::operator/=(double value)
+  template<class... Qs> template<class T>
+    constexpr QState<Qs...>& QState<Qs...>::operator/=(T value)
   {
     details::div_by(*this, value);
     return *this;
@@ -473,8 +473,8 @@ template<class... Ls, class... Rs>
 
 /*---------------------------------------------------------------------------------------*/
 
-template<class... Qs>
-  constexpr auto operator*(const Quantities::QState<Qs...> &s, double v)
+template<class T, class... Qs>
+  constexpr auto operator*(const Quantities::QState<Qs...> &s, T v)
 {
   auto r = s.copy();
   Quantities::details::mult_by(r, v);
@@ -483,8 +483,8 @@ template<class... Qs>
 
 /*---------------------------------------------------------------------------------------*/
 
-template<class... Qs>
-  constexpr auto operator/(const Quantities::QState<Qs...> &s, double v)
+template<class T, class... Qs>
+  constexpr auto operator/(const Quantities::QState<Qs...> &s, T v)
 {
   auto r = s.copy();
   Quantities::details::div_by(r, v);
