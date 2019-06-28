@@ -173,9 +173,9 @@ namespace Quantities
     template<class T> constexpr QState<Qs...>& operator*=(T);
     template<class T> constexpr QState<Qs...>& operator/=(T);
 
-    constexpr QState<std::decay_t<Qs>...> operator-() const; // NB! returns a copy!
-    constexpr QState<Qs...>& operator+() { return *this; }
-    constexpr const QState<Qs...>& operator+() const { return *this; }
+    // unary ops return a copy!
+    constexpr QState<std::decay_t<Qs>...> operator-() const;
+    constexpr QState<std::decay_t<Qs>...> operator+() const { return *this; }
 
     // some traits
     template<class Q>
