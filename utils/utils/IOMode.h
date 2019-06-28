@@ -9,10 +9,13 @@
 
 #include <locale>
 
-template<class Dummy = void> struct id_init_helper { static std::locale::id id; };
-template<class Dummy> std::locale::id id_init_helper<Dummy>::id;
+namespace details
+{
+  template<class Dummy = void> struct id_init_helper { static std::locale::id id; };
+  template<class Dummy> std::locale::id id_init_helper<Dummy>::id;
+}
 
-class IO_mode final : public id_init_helper<>, public std::locale::facet
+class IO_mode final : public details::id_init_helper<>, public std::locale::facet
 {
   mutable bool use;
 
