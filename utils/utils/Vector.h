@@ -27,12 +27,6 @@ public:
   template<class... Ts, class = std::enable_if_t<sizeof...(Ts) == N>>
     constexpr explicit Vector(Ts... as) noexcept : data{static_cast<T>(as)...} {}
 
-  // specials
-  constexpr Vector(Vector &&) noexcept = default;
-  constexpr Vector(const Vector &) noexcept = default;
-  constexpr Vector& operator=(Vector &&) noexcept = default;
-  constexpr Vector& operator=(const Vector &) noexcept = default;
-
   // converters
   template<class U> constexpr explicit Vector(const Vector<N, U, ST> &v) noexcept;
   template<class U> constexpr Vector& operator=(const Vector<N, U, ST> &v) noexcept;

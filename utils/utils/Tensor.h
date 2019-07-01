@@ -17,12 +17,6 @@ template<size_t N, class T = double> class Tensor
 public:
   template<class... Ts> constexpr explicit Tensor(const Ts&... as) noexcept;
 
-  // specials
-  constexpr Tensor(Tensor &&) noexcept = default;
-  constexpr Tensor(const Tensor &) noexcept = default;
-  constexpr Tensor& operator=(Tensor &&) noexcept = default;
-  constexpr Tensor& operator=(const Tensor &) noexcept = default;
-
   // converters
   template<class U> constexpr explicit Tensor(const Tensor<N, U> &t) noexcept;
   template<class U> constexpr Tensor& operator=(const Tensor<N, U> &t) noexcept;
