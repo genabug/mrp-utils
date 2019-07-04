@@ -555,43 +555,49 @@ template<size_t N, class T> template<size_t I, class, class> // full init
 
 /*!
   \class Tensor.
+  \brief Tensor of rank 2.
   \tparam N Number of components.
   \tparam T Type of the components.
-  \brief Tensor of rank 2.
 
   ...
 */
 
 /*!
   \fn constexpr explicit Tensor::Tensor(const Ts&... as) noexcept
-  \tparam as Pack of the initial values
   \brief Tensor initialization.
+  \tparam as Pack of the initial values
 
   Four variants of initialization are possible depends on the number of parameters:
-  * no parameters (default): all components are set to zero;
-  * one parameter (single): all components are set to the given value;
-  * N parameters (diagonal): diagonal components are set to the given values,
+  - no parameters (default): all components are set to zero;
+  - one parameter (single): all components are set to the given value;
+  - N parameters (diagonal): diagonal components are set to the given values,
     the rest are set to zero;
-  * N*N parameters (full): all components are set to the given values, row by row.
+  - N*N parameters (full): all components are set to the given values, row by row.
 
   Only these combinations are possible, any other leads to a compilation error
-  about ambiguous number of the constructor arguments.
+  message about ambiguous number of the constructor arguments.
 
   \code
   using T2i = Tensor<2, int>;
-  T2i td;             // [0, 0, 0, 0]
-  T2i t1(1);          // [1, 1, 1, 1]
-  T2i t2(1, 2);       // [1, 0, 0, 2]
-  T2i t3(1, 2, 3, 4); // [1, 2, 3, 4] ~ [1 2]
-                                        [3 4]
+  T2i td;             // [0, 0]
+                      // [0, 0]
+
+  T2i t1(1);          // [1, 1]
+                      // [1, 1]
+
+  T2i t2(1, 2);       // [1, 0]
+                      // [0, 2]
+
+  T2i t3(1, 2, 3, 4); // [1 2]
+                      // [3 4]
   \endcode
 */
 
 /*!
   \fn constexpr explicit Tensor::Tensor(const Tensor<N, U> &t) noexcept
-  \tparam U Type of the given tensor' conmponents.
-  \param t Tensor to be converted.
   \brief Conversion constructor from a tensor with arbitrary type of the components.
+  \tparam U Type of the given tensor' components.
+  \param t Tensor to be converted.
 
   If the specified type U leads to a narrowing conversion then there won't be any warnings.
   In other words, I suppose you know what you're going to do.
@@ -599,9 +605,9 @@ template<size_t N, class T> template<size_t I, class, class> // full init
 
 /*!
   \fn constexpr Tensor& Tensor::operator=(const Tensor<N, U> &t) noexcept
-  \tparam U Type of the given tensor' conmponents.
-  \param t Tensor to be converted.
   \brief Conversion assignment from a tensor with arbitrary type of the components.
+  \tparam U Type of the given tensor' components.
+  \param t Tensor to be converted.
 */
 
 /*!
@@ -611,100 +617,100 @@ template<size_t N, class T> template<size_t I, class, class> // full init
 
 /*!
   \fn constexpr T* Tensor::operator[](size_t i) noexcept
-  \param i Row number to be returned.
-  \return Specified row of a tensor.
   \brief Returns the specified row of a tensor.
+  \param i Row number.
+  \return Specified row of a tensor.
 */
 
 /*!
   \fn constexpr const T* Tensor::operator[](size_t i) const noexcept
-  \param i Row number to be returned.
+  \param i Row number.
   \return Specified row of a tensor.
   \brief Returns the specified row of a tensor. Constant version.
 */
 
 /*!
   \fn constexpr Tensor Tensor::operator-() const noexcept
-  \return A copy of the given tensor with all its components multiplied by -1.
   \brief Unary minus.
+  \return A copy of the given tensor with all its components multiplied by -1.
 */
 
 /*!
   \fn constexpr Tensor Tensor::operator+() const noexcept
-  \return A copy of the given tensor.
   \brief Unary plus.
+  \return A copy of the given tensor.
 */
 
 /*!
   \fn constexpr Tensor operator~() const noexcept
-  \return Copy of the given tensor with flipped components values (aT[i][j] == a[j][i])
   \brief Transposition.
+  \return Copy of the given tensor with flipped components values (aT[i][j] == a[j][i])
 */
 
 /*!
   \fn constexpr Tensor& Tensor::operator*=(const T &a) noexcept
-  \param a Factor, a value with the same type as tensor components (T).
-  \return The tensor with all its components multiplied by "a" value.
   \brief Mutliplication by scalar.
+  \param a Factor, a value of the same type as tensor components (T).
+  \return The tensor with all its components multiplied by "a" value.
 */
 
 /*!
   \fn constexpr Tensor& Tensor::operator/=(const T &a) noexcept
-  \param a Divider, a value with the same type as tensor components (T).
-  \return The tensor with all its components divided by "a" value.
   \brief Division by scalar.
+  \param a Divider, a value of the same type as tensor components (T).
+  \return The tensor with all its components divided by "a" value.
 */
 
 /*!
   \fn constexpr Tensor& Tensor::operator+=(const Tensor &A) noexcept
-  \param A Summand, a tensor with the same type (T) and size (N) of the components.
-  \return The sum of the given tensor with the summand A.
   \brief Addition with tensor.
+  \param A Summand, a tensor of the same size (N) and type (T) of the components.
+  \return The sum of the given tensor with the summand A.
 */
 
 /*!
   \fn constexpr Tensor& Tensor::operator-=(const Tensor &A) noexcept
-  \param A Substrahend, a tensor with the same type (T) and size (N) of the components.
-  \return The difference of the given tensor and the substrahend A.
   \brief Substruction with tensor.
+  \param A Substrahend, a tensor of the same size (N) and type (T) of the components.
+  \return The difference of the given tensor and the substrahend A.
 */
 
 /*!
   \fn constexpr Tensor& Tensor::operator*=(const Tensor &A) noexcept
-  \param A Factor, a tensor with the same type (T) and size (N) of the components.
-  \return The multiplication of the given tensor and the factor A.
   \brief Multiplication by tensor.
+  \param A Factor, a tensor of the same size (N) and type (T) of the components.
+  \return The multiplication of the given tensor and the factor A.
 */
 
 /*!
   \fn constexpr Tensor& Tensor::operator/=(const Tensor &A) noexcept
-  \param A Factor, a tensor with the same type (T) and size (N) of the components.
-  \return The multiplication of the given tensor and the inverse factor A.
   \brief A shortcut for multiplication by inverse tensor, A /= B ~ A *= B^{-1}.
+  \param A Factor, a tensor of the same size (N) and type (T) of the components.
+  \return The multiplication of the given tensor and the inverse factor A.
 */
 
 /*!
   \fn constexpr T Tensor::det() const noexcept
-  \return Determinant of the given tensor.
   \brief Compute the tensor' determinant.
+  \return Determinant of the given tensor.
 */
 
 /*!
   \fn constexpr T Tensor::trace() const noexcept
-  \return Trace of the given tensor.
   \brief Compute the tensor' trace.
+  \return Trace of the given tensor.
 */
 
 /*!
   \fn constexpr Tensor Tensor::invert() const noexcept
-  \return The inverse tensor to the given one.
   \brief Get the inverse tensor.
+  \return The inverse tensor to the given one.
 */
 
 /*!
   \fn constexpr Tensor Tensor::transpose() const noexcept
-  \return Tensor with flipped components, i.e. aT[i][j] == a[j][i]
   \brief Get the transposed tensor.
+  \return Tensor with flipped components, i.e. aT[i][j] == a[j][i]
   \see Tensor::operator~()
 */
 
