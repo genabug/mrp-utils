@@ -23,7 +23,7 @@ public:
   template<class U> constexpr Tensor& operator=(const Tensor<N, U> &t) noexcept;
 
   // access
-  static constexpr size_t size = N;
+  static constexpr size_t dim = N;
   constexpr T* operator[](size_t i) noexcept { assert(i < N); return data[i]; }
   constexpr const T* operator[](size_t i) const noexcept { assert(i < N); return data[i]; }
 
@@ -556,7 +556,7 @@ template<size_t N, class T> template<size_t I, class, class> // full init
 /*!
   \class Tensor.
   \brief Tensor of rank 2.
-  \tparam N Number of components.
+  \tparam N Spatial dimension (total number of its components is N*N).
   \tparam T Type of the components.
 
   ...
@@ -568,29 +568,35 @@ template<size_t N, class T> template<size_t I, class, class> // full init
   \tparam as Pack of the initial values
 
   Four variants of initialization are possible depends on the number of parameters:
-  - no parameters (default): all components are set to zero;
-  - one parameter (single): all components are set to the given value;
-  - N parameters (diagonal): diagonal components are set to the given values,
+  - no parameters: all components are set to zero;
+  - one parameter: all components are set to the given value;
+  - N parameters: diagonal components are set to the given values,
     the rest are set to zero;
-  - N*N parameters (full): all components are set to the given values, row by row.
+  - N*N parameters: all components are set to the given values, row by row.
 
   Only these combinations are possible, any other leads to a compilation error
   message about ambiguous number of the constructor arguments.
 
   \code
   using T2i = Tensor<2, int>;
-  T2i td;             // [0, 0]
-                      // [0, 0]
+  T2i td;             // [0 0]
+                      // [0 0]
 
-  T2i t1(1);          // [1, 1]
-                      // [1, 1]
+  T2i t1(1);          // [1 1]
+                      // [1 1]
 
-  T2i t2(1, 2);       // [1, 0]
-                      // [0, 2]
+  T2i t2(1, 2);       // [1 0]
+                      // [0 2]
 
   T2i t3(1, 2, 3, 4); // [1 2]
                       // [3 4]
   \endcode
+
+  Note that all constructors are explicit thus you should be specific in any operation
+  with tensors. For example, if
+
+  If deduced types/size of the terms aren't match than compile error occur. Be explicit.
+
 */
 
 /*!
@@ -611,8 +617,8 @@ template<size_t N, class T> template<size_t I, class, class> // full init
 */
 
 /*!
-  \property Tensor::size
-  \brief Size of a tensor, equals to N.
+  \property static constexpr size_t Tensor::dim
+  \brief Spatial dimension (size of vector field).
 */
 
 /*!
@@ -644,7 +650,7 @@ template<size_t N, class T> template<size_t I, class, class> // full init
 /*!
   \fn constexpr Tensor operator~() const noexcept
   \brief Transposition.
-  \return Copy of the given tensor with flipped components values (aT[i][j] == a[j][i])
+  \return Copy of the given tensor with flipped components values,\f$a_{i,j} = a_{j,i}\f$
 */
 
 /*!
@@ -664,8 +670,8 @@ template<size_t N, class T> template<size_t I, class, class> // full init
 /*!
   \fn constexpr Tensor& Tensor::operator+=(const Tensor &A) noexcept
   \brief Addition with tensor.
-  \param A Summand, a tensor of the same size (N) and type (T) of the components.
-  \return The sum of the given tensor with the summand A.
+  \param A Addhend, a tensor of the same size (N) and type (T) of the components.
+  \return The sum of the given tensor with the addhend A.
 */
 
 /*!
@@ -684,7 +690,7 @@ template<size_t N, class T> template<size_t I, class, class> // full init
 
 /*!
   \fn constexpr Tensor& Tensor::operator/=(const Tensor &A) noexcept
-  \brief A shortcut for multiplication by inverse tensor, A /= B ~ A *= B^{-1}.
+  \brief A shortcut for multiplication by inverse tensor, \f$A /= B \equiv A *= B^{-1}\f$.
   \param A Factor, a tensor of the same size (N) and type (T) of the components.
   \return The multiplication of the given tensor and the inverse factor A.
 */
@@ -710,8 +716,139 @@ template<size_t N, class T> template<size_t I, class, class> // full init
 /*!
   \fn constexpr Tensor Tensor::transpose() const noexcept
   \brief Get the transposed tensor.
-  \return Tensor with flipped components, i.e. aT[i][j] == a[j][i]
+  \return Tensor with flipped components, i.e. \f$a_{i,j} = a_{j,i}\f$.
   \see Tensor::operator~()
+*/
+
+/*!
+  \fn constexpr auto operator+(Tensor A, const Tensor &B) noexcept
+  \brief Component-wise addition of two tensors with the same dimension and type.
+  \param A Left term, augend.
+  \param B Right term, addhend.
+  \return Tensor with components \f$C_{i,j} = A_{i,j} + B_{i,j}\f$.
+*/
+
+/*!
+  \fn constexpr auto operator-(Tensor A, const Tensor &B) noexcept
+  \brief Component-wise substruction of two tensors with the same dimension and type.
+  \param A Left term, minuend.
+  \param B Right term, substrahend.
+  \return Tensor with components \f$C_{i,j} = A_{i,j} - B_{i,j}\f$.
+*/
+
+/*!
+  \fn constexpr auto operator*(Tensor A, const Tensor &B) noexcept
+  \brief Matrix multiplication of two tensors with the same dimension and type.
+  \param A Left term, multiplicand.
+  \param B Right term, multiplier.
+  \return Tensor with components \f$C_{i,j} = \Sigma_{k=1}^N A_{i,k} \cdot B_{k,j}\f$.
+*/
+
+/*!
+  \fn constexpr auto operator*(Tensor A, const T &a) noexcept
+  \brief Component-wise tensor multiplication by scalar on the right.
+  \param A Left term, tensor multiplicand.
+  \param a Right term, scalar multiplier.
+  \return Tensor with components \f$C_{i,j} = A_{i,j} \cdot a\f$.
+*/
+
+/*!
+  \fn constexpr auto operator*(const T &a, Tensor A) noexcept
+  \brief Component-wise tensor multiplication by scalar on the left.
+  \param a Left term, scalar multiplier.
+  \param A Right term, tensor multiplicand.
+  \return Tensor with components \f$C_{i,j} = a \cdot A_{i,j}\f$.
+*/
+
+/*!
+  \fn constexpr auto operator/(Tensor A, const T &a) noexcept
+  \brief Component-wise tensor division by scalar.
+  \param A Left term, tensor divident.
+  \param a Right term, scalar divider.
+  \return Tensor with components \f$C_{i,j} = A_{i,j} / a\f$.
+*/
+
+/*!
+  \fn constexpr auto operator/(Tensor A, const Tensor &B) noexcept
+  \brief A shortcut for tensor multiplication by inverse one,
+    \f$A/B \equiv A\cdot B^{-1}\f$.
+  \param A Left term, divident.
+  \param B Right term, divider.
+  \return The multiplication of the left term by the inverse right term.
+*/
+
+/*!
+  \fn constexpr bool operator==(const Tensor &A, const Tensor &B) noexcept
+  \brief Component-wise equality comparison of two tensors.
+  \param A Left term.
+  \param B Right term.
+  \return true if all components of the left term equals to the corresponding components
+    of the right term, i.e. \f$A_{i,j} = B_{i,j}\f$.
+*/
+
+/*!
+  \fn constexpr bool operator!=(const Tensor &A, const Tensor &B) noexcept
+  \brief Component-wise inequality comparison of two tensors.
+  \param A Left term.
+  \param B Right term.
+  \return true if any component of the left term not equal to the corresponding component
+    of the right term, i.e. \f$\exists i, j: A_{i,j} \neq B_{i,j}\f$.
+*/
+
+/*!
+  \fn std::istream& operator>>(std::istream &in, Tensor &A) noexcept
+  \brief
+  \param in
+  \param A
+  \return
+  \see IO_Mode
+*/
+
+/*
+template<size_t N, class T>
+std::ostream& operator<<(std::ostream &out, const Tensor<N, T> &A) noexcept;
+
+// ops with vectors
+template<size_t N, class T>
+constexpr Vector<N, T>& operator*=(Vector<N, T> &v, const Tensor<N, T> &A) noexcept;
+
+template<size_t N, class T>
+constexpr auto
+  operator*(Vector<N, T> v, const Tensor<N, T> &A) noexcept { v *= A; return v; }
+
+template<size_t N, class T>
+constexpr auto
+  operator*(const Tensor<N, T> &A, Vector<N, T> v) noexcept { v *= ~A; return v; }
+
+template<size_t N, class T>
+constexpr Vector<N, T>&
+  operator/=(Vector<N, T> &v, const Tensor<N, T> &A) noexcept { return v *= A.invert(); }
+
+template<size_t N, class T>
+constexpr auto
+  operator/(Vector<N, T> v, const Tensor<N, T> &A) noexcept { v /= A; return v; }
+
+template<size_t N, class T>
+constexpr auto operator^(const Vector<N, T> &v1, const Vector<N, T> &v2) noexcept;
+
+// ops with 2D vectors
+template<class T>
+constexpr auto operator%(const Tensor<2, T> &A, const Vector<2, T> &v) noexcept;
+
+template<class T>
+constexpr auto operator%(const Vector<2, T> &v, const Tensor<2, T> &A) noexcept;
+
+template<class T>
+constexpr auto operator%(const Tensor<2, T> &A, const Tensor<2, T> &B) noexcept;
+
+// ops with 3D vectors
+template<class T> constexpr Tensor<3, T> operator~(const Vector<3, T> &v) noexcept;
+
+template<class T>
+constexpr auto operator%(const Tensor<3, T> &A, const Vector<3, T> &v) noexcept;
+
+template<class T>
+constexpr auto operator%(const Vector<3, T> &v, const Tensor<3, T> &A) noexcept;
 */
 
 #endif // TENSOR_H_INCLUDED
