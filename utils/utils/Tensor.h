@@ -130,7 +130,7 @@ template<size_t N, class T>
 
 // ops with vectors
 template<size_t N, class T>
-  constexpr Vector<N, T>& operator*=(Vector<N, T> &v, const Tensor<N, T> &A) noexcept;
+  constexpr auto& operator*=(Vector<N, T> &v, const Tensor<N, T> &A) noexcept;
 
 template<size_t N, class T>
   constexpr auto
@@ -334,7 +334,7 @@ template<size_t N, class T>
 /*---------------------------------------------------------------------------------------*/
 
 template<size_t N, class T>
-  constexpr Vector<N, T>& operator*=(Vector<N, T> &v, const Tensor<N, T> &A) noexcept
+  constexpr auto& operator*=(Vector<N, T> &v, const Tensor<N, T> &A) noexcept
 {
   auto c = v;
   for (size_t i = 0; i < N; ++i)
@@ -593,10 +593,9 @@ template<size_t N, class T> template<size_t I, class, class> // full init
   \endcode
 
   Note that all constructors are explicit thus you should be specific in any operation
-  with tensors. For example, if
+  with tensors. For example, if...
 
   If deduced types/size of the terms aren't match than compile error occur. Be explicit.
-
 */
 
 /*!
@@ -797,58 +796,125 @@ template<size_t N, class T> template<size_t I, class, class> // full init
 
 /*!
   \fn std::istream& operator>>(std::istream &in, Tensor &A) noexcept
-  \brief
-  \param in
-  \param A
-  \return
+  \brief Read a tensor from input stream.
+  \param in Input stream from which tensor is read.
+  \param A Tensor where read object will be stored.
+  \return Input stream after reading the tensor from it.
   \see IO_Mode
+
+    Tensor may be represented in two formats w/ brackets, e.g.
+    "[1, 2, 3, 4]" and "1 2 3 4" both represent the same tensor.
+    This function is able to read in both formats, none additional actions needed
+    in order to successfully read a tensor.
 */
 
-/*
-template<size_t N, class T>
-std::ostream& operator<<(std::ostream &out, const Tensor<N, T> &A) noexcept;
+/*!
+  \fn std::ostream& operator<<(std::ostream &out, const Tensor &A) noexcept
+  \brief Write a tensor to output stream.
+  \param out Output stream where tensor is written.
+  \param A Tensor which will be written to the output stream.
+  \return Output stream after writing the tensor to it.
+  \see IO_Mode
 
-// ops with vectors
-template<size_t N, class T>
-constexpr Vector<N, T>& operator*=(Vector<N, T> &v, const Tensor<N, T> &A) noexcept;
+    Tensor may be represented in two formats -- w/ brackets, e.g.
+    "[1, 2, 3, 4]" and "1 2 3 4" both represent the same tensor.
+    You can choose the format using special manipulators inBrackets() and bareComponents(),
+    the default is inBrackets. The second one may be useful for e.g. backup purposes.
+*/
 
-template<size_t N, class T>
-constexpr auto
-  operator*(Vector<N, T> v, const Tensor<N, T> &A) noexcept { v *= A; return v; }
+/*!
+  \fn constexpr Vector<N, T>& operator*=(Vector<N, T> &v, const Tensor<N, T> &A) noexcept
+  \brief
+  \param v
+  \param A
+  \return
+*/
 
-template<size_t N, class T>
-constexpr auto
-  operator*(const Tensor<N, T> &A, Vector<N, T> v) noexcept { v *= ~A; return v; }
+/*!
+  \fn constexpr auto operator*(Vector<N, T> v, const Tensor<N, T> &A) noexcept
+  \brief
+  \param v
+  \param A
+  \return
+*/
 
-template<size_t N, class T>
-constexpr Vector<N, T>&
-  operator/=(Vector<N, T> &v, const Tensor<N, T> &A) noexcept { return v *= A.invert(); }
+/*!
+  \fn constexpr auto operator*(const Tensor<N, T> &A, Vector<N, T> v) noexcept
+  \brief
+  \param A
+  \param v
+  \return
+*/
 
-template<size_t N, class T>
-constexpr auto
-  operator/(Vector<N, T> v, const Tensor<N, T> &A) noexcept { v /= A; return v; }
+/*!
+  \fn constexpr auto& operator/=(Vector<N, T> &v, const Tensor<N, T> &A) noexcept
+  \brief
+  \param v
+  \param A
+  \return
+*/
 
-template<size_t N, class T>
-constexpr auto operator^(const Vector<N, T> &v1, const Vector<N, T> &v2) noexcept;
+/*!
+  \fn constexpr auto operator/(Vector<N, T> v, const Tensor<N, T> &A) noexcept
+  \brief
+  \param v
+  \param A
+  \return
+*/
 
-// ops with 2D vectors
-template<class T>
-constexpr auto operator%(const Tensor<2, T> &A, const Vector<2, T> &v) noexcept;
+/*!
+  \fn constexpr auto operator^(const Vector<N, T> &v1, const Vector<N, T> &v2) noexcept
+  \brief ...
+  \param v1 First
+  \param v2 Second
+  \return ...
+*/
 
-template<class T>
-constexpr auto operator%(const Vector<2, T> &v, const Tensor<2, T> &A) noexcept;
+/*!
+  \fn constexpr auto operator%(const Tensor<2, T> &A, const Vector<2, T> &v) noexcept
+  \brief Vector product of...
+  \param A 2D tensor
+  \param v 2D vector
+  \return Vector product of...
+*/
 
-template<class T>
-constexpr auto operator%(const Tensor<2, T> &A, const Tensor<2, T> &B) noexcept;
+/*!
+  \fn constexpr auto operator%(const Vector<2, T> &v, const Tensor<2, T> &A) noexcept
+  \brief
+  \param v
+  \param A
+  \return
+*/
 
-// ops with 3D vectors
-template<class T> constexpr Tensor<3, T> operator~(const Vector<3, T> &v) noexcept;
+/*!
+  \fn constexpr auto operator%(const Tensor<2, T> &A, const Tensor<2, T> &B) noexcept
+  \brief
+  \param A
+  \param B
+  \return
+*/
 
-template<class T>
-constexpr auto operator%(const Tensor<3, T> &A, const Vector<3, T> &v) noexcept;
+/*!
+  \fn constexpr Tensor<3, T> operator~(const Vector<3, T> &v) noexcept
+  \brief
+  \param v
+  \return
+*/
 
-template<class T>
-constexpr auto operator%(const Vector<3, T> &v, const Tensor<3, T> &A) noexcept;
+/*!
+  \fn constexpr auto operator%(const Tensor<3, T> &A, const Vector<3, T> &v) noexcept
+  \brief
+  \param A
+  \param v
+  \return
+*/
+
+/*!
+  \fn constexpr auto operator%(const Vector<3, T> &v, const Tensor<3, T> &A) noexcept
+  \brief
+  \param v
+  \param A
+  \return
 */
 
 #endif // TENSOR_H_INCLUDED
