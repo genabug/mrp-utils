@@ -33,9 +33,9 @@ public:
 
   // access
   static constexpr size_t X = 0;
-  static constexpr size_t Y = 1;
-  static constexpr size_t Z = 2;
-  static constexpr size_t size = N;
+  static constexpr size_t Y = (N > 0)? 1 : X;
+  static constexpr size_t Z = (N > 1)? 2 : Y;
+  static constexpr size_t dim = N;
 
   constexpr T& operator[](size_t i) noexcept { return data[i]; }
   constexpr const T& operator[](size_t i) const noexcept { return data[i]; }
@@ -49,7 +49,7 @@ public:
   constexpr Vector& operator*=(const T &a) noexcept;
   constexpr Vector& operator+=(const Vector &v) noexcept;
   constexpr Vector& operator-=(const Vector &v) noexcept;
-}; // Vector<N, T, ST>
+}; // class Vector<N, T, ST>
 
 /*---------------------------------------------------------------------------------------*/
 
@@ -362,10 +362,11 @@ template<class T, class ST> constexpr auto operator~(const Vector<2, T, ST> &v) 
 
 /*!
   \class Vector
+  \brief Euclidian vector of arbitrary dimension and type.
   \tparam N Number of components.
   \tparam T Type of the components.
   \tparam ST Subtype, used to distinguish vector value of various nature on the type-level.
-  \brief Euclidian vector of arbitrary dimension and type.
+    [[deprecated]]
 
   The vector values may have various physical nature and various behavior,
   such as sliding vectors, localized vectors etc. Moreover, the class can be also used
@@ -379,20 +380,83 @@ template<class T, class ST> constexpr auto operator~(const Vector<2, T, ST> &v) 
   Since this parameter is a type, not a value, it's possible to group different subtypes
   of vectors by introducing the template specializations:
   \code
-  template<class T1>
-    void f(Vector<2, double, T1>);
+  template<class T1> void f(Vector<2, double, T1>);
   \endcode
   handles the vector of any subtype, while
   \code
   template<class T2> class subtype;
-  template<class T2>
-    void f(Vector<2, double, subtype<T2>>)
+  template<class T2> void f(Vector<2, double, subtype<T2>>)
   \endcode
   defines the alternative behavior for some subtypes of vector.
 
   NB! All operations are noexcept because I don't care about overflows! Just kidding!
   It's because there is no standard and cross-platform way to catch them in C++
   for types like int or double (which are the main type of the components IMO).
+*/
+
+/*!
+  \fn constexpr explicit Vector::Vector(Ts... as) noexcept
+  \brief Vector initialization.
+  \tparam as Pack of the initial values
+
+  Three variants of initialization are possible depends on the number of parameters:
+  - 0 parameters: all components are set to zero;
+  - 1 parameter: all components are set to the given value;
+  - N parameters: all components are set to the given values.
+
+  Only these combinations are possible, any other leads to a compilation error
+  message about ambiguous number of the constructor arguments.
+  \code
+  using V2i = Vector<2, int>;
+  V2i vd;       // (0, 0)
+  V2i v1(1);    // (1, 1)
+  V2i v2(1, 2); // (1, 2)
+  \endcode
+
+  Note that all constructors are explicit thus you should be specific in any operation
+  with vectors!
+*/
+
+/*!
+  \fn constexpr explicit Vector::Vector(const Vector<N, U, ST> &v) noexcept
+  \brief Conversion constructor from a vector with arbitrary type of the components.
+  \tparam U Type of the given vector' components.
+  \param v Vector to be converted.
+
+  If the specified type U leads to a narrowing conversion then there won't be any warnings.
+  In other words, I suppose you know what you do.
+*/
+
+/*!
+  \fn constexpr Vector& Vector::operator=(const Vector<N, U, ST> &v) noexcept
+  \brief Conversion assignment from a vector with arbitrary type of the components.
+  \tparam U Type of the given vector' components.
+  \param t Vector to be converted.
+*/
+
+/*!
+  \property static constexpr size_t Vector::X
+  \brief Access shortcut to the first component of the vector
+    in order to make expression look more mathematically.
+*/
+
+/*!
+  \property static constexpr size_t Vector::Y
+  \brief Access shortcut to the second (if presented) component of the vector
+    in order to make expression look more mathematically. In case of 1D vectors
+    it value coincides with Vector::X.
+*/
+
+/*!
+  \property static constexpr size_t Vector::Z
+  \brief Access shortcut to the third (if presented) component of the vector
+    in order to make expression look more mathematically. In case of 2D vectors
+    it value coincides with Vector::Y.
+*/
+
+/*!
+  \property static constexpr size_t Vector::dim
+  \brief Spatial dimension, number of vector components.
 */
 
 #endif // VECTOR_H_INCLUDED
