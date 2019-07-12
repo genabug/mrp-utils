@@ -599,9 +599,7 @@ template<size_t N, class T> template<size_t I, class, class> // full init
   \endcode
 
   Note that all constructors are explicit thus you should be specific in any operation
-  with tensors. For example, if...
-
-  If deduced types/size of the terms aren't match than compile error occur. Be explicit.
+  with tensors!
 */
 
 /*!
@@ -611,7 +609,7 @@ template<size_t N, class T> template<size_t I, class, class> // full init
   \param t Tensor to be converted.
 
   If the specified type U leads to a narrowing conversion then there won't be any warnings.
-  In other words, I suppose you know what you're going to do.
+  In other words, I suppose you know what you do.
 */
 
 /*!
