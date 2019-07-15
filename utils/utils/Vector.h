@@ -392,6 +392,8 @@ template<class T, class ST> constexpr auto operator~(const Vector<2, T, ST> &v) 
   NB! All operations are noexcept because I don't care about overflows! Just kidding!
   It's because there is no standard and cross-platform way to catch them in C++
   for types like int or double (which are the main type of the components IMO).
+
+  Several additional operations with tensors/matricies are also defined, \see Tensor.
 */
 
 /*!
@@ -457,6 +459,212 @@ template<class T, class ST> constexpr auto operator~(const Vector<2, T, ST> &v) 
 /*!
   \property static constexpr size_t Vector::dim
   \brief Spatial dimension, number of vector components.
+*/
+
+/*!
+  \fn constexpr T& Vector::operator[](size_t i) noexcept
+  \brief Get the i-th component of a vector.
+  \param i Number of component.
+  \return Reference to the i-th component of a vector.
+*/
+
+/*!
+  \fn constexpr const T& Vector::operator[](size_t i) const noexcept
+  \brief Get the i-th component of a vector (constant version).
+  \param i Number of component.
+  \return Constant reference to the i-th component of a vector.
+*/
+
+/*!
+  \fn constexpr Vector Vector::operator+() const noexcept
+  \brief Unary plus.
+  \return Copy of the given vector.
+*/
+
+/*!
+  \fn constexpr Vector Vector::operator-() const noexcept
+  \brief Unary minus.
+  \return Copy of the given vector with negated components.
+*/
+
+/*!
+  \fn constexpr Vector& Vector::operator/=(const T &a) noexcept
+  \brief Division assignment by scalar
+  \param a Divider, a value of the same type as vector components (T).
+  \return The vector with all its components divided by "a" value.
+*/
+
+/*!
+  \fn constexpr Vector& Vector::operator*=(const T &a) noexcept
+  \brief Mutliplication assignment by scalar.
+  \param a Factor, a value of the same type as vector components (T).
+  \return The vector with all its components multiplied by "a" value.
+*/
+
+/*!
+  \fn constexpr Vector& Vector::operator+=(const Vector &v) noexcept
+  \brief Addition assignment with vector.
+  \param v Addhend, a vector of the same size (N) and type (T) of the components.
+  \return The sum of the given vector with the addhend "v".
+*/
+
+/*!
+  \fn constexpr Vector& Vector::operator-=(const Vector &v) noexcept
+  \brief Substruction assignment with vector.
+  \param v Substrahend, a vector of the same size (N) and type (T) of the components.
+  \return The difference of the given vector and the substrahend "v".
+*/
+
+/*!
+  \fn constexpr auto operator+(Vector v1, const Vector &v2) noexcept
+  \brief Component-wise addition of two vectors with the same dimension and type.
+  \param v1 Left term, augend.
+  \param v2 Right term, addhend.
+  \return Vector "r" with components r[i] == v1[i] + v2[i]
+*/
+
+/*!
+  \fn constexpr auto operator-(Vector v1, const Vector &v2) noexcept
+  \brief Component-wise substruction of two vectors with the same dimension and type.
+  \param v1 Left term, minuend.
+  \param v2 Right term, substrahend.
+  \return Vector "r" with components r[i] == v1[i] - v2[i]
+*/
+
+/*!
+  \fn constexpr auto operator*(const T &a, Vector v) noexcept
+  \brief Component-wise vector multiplication by scalar on the left.
+  \param a Left term, scalar multiplier.
+  \param v Right term, vector multiplicand.
+  \return Vector "r" with components r[i] == a * r[i]
+*/
+
+/*!
+  \fn constexpr auto operator*(Vector v, const T &a) noexcept
+  \brief Component-wise vector multiplication by scalar on the right.
+  \param v Left term, vector multiplicand.
+  \param a Right term, scalar multiplier.
+  \return Vector "r" with components r[i] == v[i] * a
+*/
+
+/*!
+  \fn constexpr auto operator/(Vector v, const T &a) noexcept
+  \brief Component-wise vector division by scalar.
+  \param v Left term, vector divident.
+  \param a Right term, scalar divider.
+  \return Vector "r" with components r[i] == v[i] / a
+*/
+
+/*!
+  \fn constexpr auto operator*(const Vector &v1, const Vector &v2) noexcept
+  \brief Dot product of two vectors of the same size and type.
+  \param v1 Left term, multiplier.
+  \param v2 Right term, multiplicand.
+  \return Dot product of the two given vectors.
+*/
+
+/*!
+  \fn constexpr bool operator==(const Vector &v1, const Vector &v2) noexcept
+  \brief Component-wise equality comparison of two vectors.
+  \param v1 Left term.
+  \param v2 Right term.
+  \return true if all components of the left term equals to the corresponding components
+    of the right term, i.e. v1[i] == v2[i] for i = 0..(N-1)
+*/
+
+/*!
+  \fn constexpr bool operator!=(const Vector &v1, const Vector &v2) noexcept
+  \brief Component-wise inequality comparison of two vectors.
+  \param v1 Left term.
+  \param v2 Right term.
+  \return true if at least one component of the left term is not equal
+    to the corresponding component of the right term, i.e. exists i: v1[i] != v2[i]
+*/
+
+/*!
+  \fn std::istream& operator>>(std::istream &in, Vector &v) noexcept
+  \brief Read a vector from input stream.
+  \param in Input stream from which tensor is read.
+  \param v Vector where read object will be stored.
+  \return Input stream after reading the tensor from it.
+  \see IO_Mode
+
+  Vector may be represented in two formats -- w/ brackets, e.g.
+  "(1, 2, 3)" and "1 2 3" both represent the same vector.
+  This function is able to read in both formats, none additional actions needed
+  in order to successfully read a vector.
+*/
+
+/*!
+  \fn std::ostream& operator<<(std::ostream &out, const Vector &v) noexcept
+  \brief Write a vector to output stream.
+  \param out Output stream where tensor is written.
+  \param v Vector which will be written to the output stream.
+  \return Output stream after writing the tensor to it.
+  \see IO_Mode
+
+  Vector may be represented in two formats -- w/ brackets, e.g.
+  "(1, 2, 3)" and "1 2 3" both represent the same vector.
+  You can choose the format using special manipulators inBrackets() and bareComponents(),
+  the default is inBrackets. The second one may be useful for e.g. backup purposes.
+*/
+
+/*!
+  \fn constexpr auto sqs(const Vector &v) noexcept
+  \brief Alias for dot product of a vector by itself, i.e. sqs(v) == v*v
+  \param v Vector
+  \return Dot product of the given vector by itself.
+*/
+
+/*!
+  \fn constexpr auto fabs(const Vector &v) noexcept
+  \brief Get vector's magnitude.
+  \param v Vector
+  \return Magnitude of the given vector.
+*/
+
+/*!
+  \fn constexpr auto cos(const Vector &v1, const Vector &v2) noexcept
+  \brief Get cosine of the angle between two vectors.
+  \param v1 Left term.
+  \param v2 Right term.
+  \return Cosine of the angle between two given vectors.
+*/
+
+/*!
+  \fn constexpr auto sin(const Vector &v1, const Vector &v2) noexcept
+  \brief Get sine of the angle between two vectors.
+  \param v1 Left term.
+  \param v2 Right term.
+  \return Sine of the angle between two given vectors.
+*/
+
+/*!
+  \fn constexpr auto operator%(
+    const Vector<2, T, ST> &v1, const Vector<2, T, ST> &v2) noexcept
+  \brief Cross product in 2D i.e. signed(!) area of a parallelogram formed by two vectors.
+  \param v1 Left term.
+  \param v2 Right term.
+  \return Signed(!) area of a parallelogram formed by the two given vectors.
+*/
+
+/*!
+  \fn constexpr auto operator%(
+    const Vector<3, T, ST> &v1, const Vector<3, T, ST> &v2) noexcept
+  \brief Cross product in 3D.
+  \param v1 Left term.
+  \param v2 Right term.
+  \return A vector that is orthogonal to both given vectors, with a direction
+    given by the right-hand rule and a magnitude equal to the area of the parallelogram
+    that the vectors span.
+*/
+
+/*!
+  \fn constexpr auto operator~(const Vector<2, T, ST> &v) noexcept
+  \brief Counterclockwise rotation of a 2D vector.
+  \param v Vector
+  \return A vector rotated by 90 degrees in the positive direction (counterclockwise)
+    relative to the given one.
 */
 
 #endif // VECTOR_H_INCLUDED
