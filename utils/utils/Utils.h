@@ -24,6 +24,9 @@ namespace Utils
     constexpr std::enable_if_t<!std::is_integral<T>::value, bool>
       almost_equal(T x, T y, int ulp = 1);
 
+  // equality for c-strings
+  constexpr bool cstr_equal(const char *a, const char *b);
+
 } // namespace Utils
 
 /*---------------------------------------------------------------------------------------*/
@@ -74,5 +77,15 @@ template<class T>
          // unless the result is subnormal
          || std::abs(x - y) < std::numeric_limits<T>::min();
 }
+
+/*---------------------------------------------------------------------------------------*/
+
+constexpr bool Utils::cstr_equal(const char *a, const char *b)
+{
+  return (*a && *b)? (*a == *b && Utils::cstr_equal(a + 1, b + 1)) : (!*a && !*b);
+}
+
+static_assert(Utils::cstr_equal("one", "one"), "HECK!");
+static_assert(!Utils::cstr_equal("one", "two"), "FECK!");
 
 #endif // UTILS_H_INCLUDED

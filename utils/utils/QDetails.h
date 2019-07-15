@@ -7,6 +7,7 @@
   \brief A bunch of helpers to implement quantities (well, mostly Quantities::QState).
 */
 
+#include "Utils.h"
 #include <tuple>
 #include <utility>
 #include <ostream>
@@ -44,20 +45,12 @@ namespace Quantities
 
 /*---------------------------------------------------------------------------------------*/
 
-    constexpr bool cstr_eq(const char *a, const char *b)
-    {
-      return (*a && *b)? (*a == *b && cstr_eq(a + 1, b + 1)) : (!*a && !*b);
-    }
-
-    static_assert(cstr_eq("one", "one"), "HECK!");
-    static_assert(!cstr_eq("one", "two"), "FECK!");
-
     template<size_t N> constexpr size_t index_by_id_impl(const char *) { return N; }
 
     template<size_t I, class Q, class... Qs>
       constexpr size_t index_by_id_impl(const char *s)
     {
-      return cstr_eq(s, Q::id)? I : index_by_id_impl<I+1, Qs...>(s);
+      return Utils::cstr_equal(s, Q::id)? I : index_by_id_impl<I+1, Qs...>(s);
     }
 
     // This function may be used to implement access by name (not type-name)
