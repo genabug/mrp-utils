@@ -136,7 +136,7 @@ template<size_t N, class T, class ST>
     constexpr Vector<N, T, ST>::Vector(const Vector<N, U, ST> &v) noexcept : data{}
 {
   for (size_t i = 0; i < N; ++i)
-    data[i] = v[i];
+    data[i] = static_cast<T>(v[i]);
 }
 
 /*---------------------------------------------------------------------------------------*/
