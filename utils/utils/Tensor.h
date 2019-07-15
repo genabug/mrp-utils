@@ -658,42 +658,43 @@ template<size_t N, class T> template<size_t I, class, class> // full init
 
 /*!
   \fn constexpr Tensor& Tensor::operator*=(const T &a) noexcept
-  \brief Mutliplication by scalar.
+  \brief Mutliplication assignment by scalar.
   \param a Factor, a value of the same type as tensor components (T).
   \return The tensor with all its components multiplied by "a" value.
 */
 
 /*!
   \fn constexpr Tensor& Tensor::operator/=(const T &a) noexcept
-  \brief Division by scalar.
+  \brief Division assignment by scalar.
   \param a Divider, a value of the same type as tensor components (T).
   \return The tensor with all its components divided by "a" value.
 */
 
 /*!
   \fn constexpr Tensor& Tensor::operator+=(const Tensor &A) noexcept
-  \brief Addition with tensor.
+  \brief Addition assignment with tensor.
   \param A Addhend, a tensor of the same size (N) and type (T) of the components.
   \return The sum of the given tensor with the addhend A.
 */
 
 /*!
   \fn constexpr Tensor& Tensor::operator-=(const Tensor &A) noexcept
-  \brief Substruction with tensor.
+  \brief Substruction assignment with tensor.
   \param A Substrahend, a tensor of the same size (N) and type (T) of the components.
   \return The difference of the given tensor and the substrahend A.
 */
 
 /*!
   \fn constexpr Tensor& Tensor::operator*=(const Tensor &A) noexcept
-  \brief Multiplication by tensor.
+  \brief Multiplication assignment by tensor.
   \param A Factor, a tensor of the same size (N) and type (T) of the components.
   \return The multiplication of the given tensor and the factor A.
 */
 
 /*!
   \fn constexpr Tensor& Tensor::operator/=(const Tensor &A) noexcept
-  \brief A shortcut for multiplication by inverse tensor, A /= B == A *= B.inverse()
+  \brief A shortcut for multiplication assignment by inverse tensor,
+    A /= B == A *= B.inverse()
   \param A Factor, a tensor of the same size (N) and type (T) of the components.
   \return The multiplication of the given tensor and the inverse factor A.
 */
@@ -744,7 +745,7 @@ template<size_t N, class T> template<size_t I, class, class> // full init
   \brief Matrix multiplication of two tensors with the same dimension and type.
   \param A Left term, multiplicand.
   \param B Right term, multiplier.
-  \return Tensor "C" with components C[i][j] == A[i][k] + B[k][j] for k = 1..N
+  \return Tensor "C" with components C[i][j] == A[i][k] + B[k][j] for k = 0..(N-1)
 */
 
 /*!
@@ -760,7 +761,7 @@ template<size_t N, class T> template<size_t I, class, class> // full init
   \brief Component-wise tensor multiplication by scalar on the left.
   \param a Left term, scalar multiplier.
   \param A Right term, tensor multiplicand.
-  \return Tensor "C" with components C[i][j] = a * A[i][j]
+  \return Tensor "C" with components C[i][j] == a * A[i][j]
 */
 
 /*!
@@ -768,7 +769,7 @@ template<size_t N, class T> template<size_t I, class, class> // full init
   \brief Component-wise tensor division by scalar.
   \param A Left term, tensor divident.
   \param a Right term, scalar divider.
-  \return Tensor "C" with components C[i][j] = A[i][j] / a
+  \return Tensor "C" with components C[i][j] == A[i][j] / a
 */
 
 /*!
