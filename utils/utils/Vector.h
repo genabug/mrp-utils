@@ -8,6 +8,7 @@
 */
 
 #include "IOMode.h"
+#include "Utils.h"
 
 #include <cctype> // isspace
 #include <cstddef> // size_t
@@ -269,46 +270,11 @@ template<size_t N, class T, class ST>
 
 /*---------------------------------------------------------------------------------------*/
 
-namespace details
-{
-  // constexpr version of std::sqrt for both integral and floating point types
-
-  template<class T> static constexpr bool is_real_v = std::is_floating_point<T>::value;
-  template<class T> static constexpr bool is_integer_v = std::is_integral<T>::value;
-
-  template<class T> constexpr T sqrt_int(T x, T lo, T hi)
-  {
-    auto mid = (lo + hi + 1) / 2;
-    if (lo == hi)
-      return lo;
-    else
-      return (x/mid < mid)? sqrt_int(x, lo, mid - 1) : sqrt_int(x, mid, hi);
-  }
-
-  template<class T> constexpr T sqrt_real(T x, T lo, T hi)
-  {
-    return (lo == hi)? lo : sqrt_real(x, static_cast<T>(0.5) * (lo + x/lo), lo);
-  }
-
-  template<class T>
-    constexpr std::enable_if_t<is_integer_v<T>, T> sqrt(T x)
-  {
-    return sqrt_int(x, static_cast<T>(0), x/2 + static_cast<T>(1));
-  }
-
-  template<class T>
-    constexpr std::enable_if_t<is_real_v<T>, T> sqrt(T x)
-  {
-    return sqrt_real(x, x, static_cast<T>(0));
-  }
-
-} // namespace details
-
 template<size_t N, class T, class ST>
   constexpr auto fabs(const Vector<N, T, ST> &v) noexcept
 {
   static_assert(std::is_arithmetic<T>::value, "Component must has arithmetic type!");
-  return details::sqrt(v*v);
+  return Utils::sqrt(v*v);
 }
 
 /*---------------------------------------------------------------------------------------*/
@@ -327,7 +293,7 @@ template<size_t N, class T, class ST>
 {
   static_assert(std::is_arithmetic<T>::value, "Component must has arithmetic type!");
   auto x = cos(v1, v2);
-  return details::sqrt(static_cast<T>(1) - x*x);
+  return Utils::sqrt(static_cast<T>(1) - x*x);
 }
 
 /*---------------------------------------------------------------------------------------*/
