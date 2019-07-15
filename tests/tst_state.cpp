@@ -47,13 +47,6 @@ TEST_CASE("create_ref")
   CHECK(s.get<ti>() == i);
   CHECK(s.get<ts>() == str);
   CHECK(s.get<tv>() == v);
-
-  s.get<ti>() = 2;
-  s.get<ts>() = "foo";
-  s.get<tv>() = V3i(5);
-  CHECK(i == 2);
-  CHECK(str == "foo");
-  CHECK(v == V3i(5));
 }
 
 TEST_CASE("create_cref")
