@@ -67,7 +67,7 @@ private:
   // because the last one doesn't have constexpr operator[] until c++17
   template<size_t I = N, class U = T> struct array
   {
-    U data[I];
+    U data[I? I : 1];
     constexpr const T& operator[](size_t i) const noexcept { return data[i]; }
   };
 
@@ -537,8 +537,7 @@ template<size_t N, class T> template<size_t I, class> // diagonal init
   constexpr void Tensor<N, T>::init(const Tensor<N, T>::array<I> &arr) noexcept
 {
   for (size_t i = 0; i < N; ++i)
-    for (size_t j = 0; j < N; ++j)
-      data[i][j] = (i == j)? arr[i] : 0;
+    data[i][i] = arr[i];
 }
 
 template<size_t N, class T> template<size_t I, class, class> // full init
