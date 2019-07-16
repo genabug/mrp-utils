@@ -97,7 +97,7 @@ template<size_t N, class T, class ST>
   constexpr auto sqs(const Vector<N, T, ST> &v) noexcept { return v*v; }
 
 template<size_t N, class T, class ST>
-  constexpr auto fabs(const Vector<N, T, ST> &v) noexcept;
+  constexpr auto fabs(const Vector<N, T, ST> &v) noexcept { return Utils::sqrt(v*v); }
 
 template<size_t N, class T, class ST>
   constexpr auto cos(const Vector<N, T, ST> &v1, const Vector<N, T, ST> &v2) noexcept;
@@ -266,15 +266,6 @@ template<size_t N, class T, class ST>
     out << (use_brackets? ", " : " ") << v[i];
 
   return out << (use_brackets? ")" : "");
-}
-
-/*---------------------------------------------------------------------------------------*/
-
-template<size_t N, class T, class ST>
-  constexpr auto fabs(const Vector<N, T, ST> &v) noexcept
-{
-  static_assert(std::is_arithmetic<T>::value, "Component must has arithmetic type!");
-  return Utils::sqrt(v*v);
 }
 
 /*---------------------------------------------------------------------------------------*/
