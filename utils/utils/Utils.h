@@ -24,8 +24,8 @@ namespace Utils
 
   // floating-point comparison with specific epsilon
   template<class T>
-    constexpr std::enable_if_t<!std::is_integral<T>::value, bool>
-      almost_equal(T x, T y, int ulp = 1) noexcept;
+    constexpr std::enable_if_t<std::is_floating_point<T>::value, bool>
+      fp_equal(T x, T y, int ulp = 1) noexcept;
 
   // equality for c-strings
   constexpr bool cstr_equal(const char *a, const char *b) noexcept;
@@ -71,8 +71,8 @@ template<class T>
 /*---------------------------------------------------------------------------------------*/
 
 template<class T>
-  constexpr std::enable_if_t<!std::is_integral<T>::value, bool>
-    Utils::almost_equal(T x, T y, int ulp) noexcept
+  constexpr std::enable_if_t<std::is_floating_point<T>::value, bool>
+    Utils::fp_equal(T x, T y, int ulp) noexcept
 {
   // the machine epsilon has to be scaled to the magnitude of the values used
   // and multiplied by the desired precision in ULPs (units of least precision)

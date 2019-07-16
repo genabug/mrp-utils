@@ -335,7 +335,7 @@ namespace vector_tests
 
   // conversion
   constexpr V2d xd = V2d(x);
-  static_assert(Utils::almost_equal(xd[0], 4.) && Utils::almost_equal(xd[1], -3.),
+  static_assert(Utils::fp_equal(xd[0], 4.) && Utils::fp_equal(xd[1], -3.),
                 "explicit conversion i->d failed");
 
   constexpr V2i xi = V2i(xd);
@@ -384,23 +384,23 @@ namespace vector_tests
   static_assert(fabs(x) == fabs(-x), "abs failed");
 
   constexpr V2d vd(3, 4);
-  static_assert(Utils::almost_equal(sqs(vd), 25.), "sqs failed");
-  static_assert(Utils::almost_equal(fabs(vd), 5.), "abs failed");
+  static_assert(Utils::fp_equal(sqs(vd), 25.), "sqs failed");
+  static_assert(Utils::fp_equal(fabs(vd), 5.), "abs failed");
 
   constexpr V2d ex(1, 0), ey(0, 1);
-  static_assert(Utils::almost_equal(cos(ex, ex), 1.), "cos failed");
-  static_assert(Utils::almost_equal(cos(ex, ey), 0.), "cos failed");
-  static_assert(Utils::almost_equal(sin(ey, ey), 0.), "sin failed");
-  static_assert(Utils::almost_equal(sin(ey, ex), 1.), "sin failed");
+  static_assert(Utils::fp_equal(cos(ex, ex), 1.), "cos failed");
+  static_assert(Utils::fp_equal(cos(ex, ey), 0.), "cos failed");
+  static_assert(Utils::fp_equal(sin(ey, ey), 0.), "sin failed");
+  static_assert(Utils::fp_equal(sin(ey, ex), 1.), "sin failed");
 
-  static_assert(Utils::almost_equal(cos(vd, ey), .8), "cos failed");
-  static_assert(Utils::almost_equal(sin(vd, ey), .6), "sin failed");
-  static_assert(Utils::almost_equal(cos(vd, ex), .6), "cos failed");
-  static_assert(Utils::almost_equal(sin(vd, ex), .8), "sin failed");
+  static_assert(Utils::fp_equal(cos(vd, ey), .8), "cos failed");
+  static_assert(Utils::fp_equal(sin(vd, ey), .6), "sin failed");
+  static_assert(Utils::fp_equal(cos(vd, ex), .6), "cos failed");
+  static_assert(Utils::fp_equal(sin(vd, ex), .8), "sin failed");
 
   constexpr Vector<2, float> vf(3, 4);
-  static_assert(Utils::almost_equal(sqs(vf), 25.f), "sqs failed");
-  static_assert(Utils::almost_equal(fabs(vf), 5.f), "abs failed");
+  static_assert(Utils::fp_equal(sqs(vf), 25.f), "sqs failed");
+  static_assert(Utils::fp_equal(fabs(vf), 5.f), "abs failed");
 
   constexpr Vector<2, long> vl(3, 4);
   static_assert(sqs(vl) == 25, "sqs failed");
