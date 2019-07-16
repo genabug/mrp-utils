@@ -16,6 +16,8 @@ template<size_t N, class T = double> class Tensor
   static_assert(N != 0, "Tensor of zero size is meaningless.");
 
 public:
+  constexpr explicit Tensor() noexcept : data{} {}
+  template<class U> constexpr explicit Tensor(const U &a) noexcept;
   template<class... Ts> constexpr explicit Tensor(const Ts&... as) noexcept;
 
   // converters
@@ -72,12 +74,6 @@ private:
   };
 
   // init helpers
-  template<size_t I, class = std::enable_if_t<I == 0>> // default init
-    constexpr void init(const array<0> &) noexcept {}
-
-  template<size_t I, class = std::enable_if_t<I == 1>> // single init
-    constexpr void init(const array<1> &arr) noexcept;
-
   template<size_t I, class = std::enable_if_t<I == N>> // diagonal init
     constexpr void init(const array<I> &arr) noexcept;
 
@@ -174,12 +170,19 @@ template<class T>
 /*------------------------------------ definition ---------------------------------------*/
 /*---------------------------------------------------------------------------------------*/
 
+template<size_t N, class T> template<class U>
+  constexpr Tensor<N, T>::Tensor(const U &a) noexcept : data{}
+{
+  for (size_t i = 0; i < N; ++i)
+    for (size_t j = 0; j < N; ++j)
+      data[i][j] = static_cast<T>(a);
+}
+
 template<size_t N, class T> template<class... Ts>
   constexpr Tensor<N, T>::Tensor(const Ts&... as) noexcept : data{}
 {
   constexpr auto n = sizeof...(Ts);
-  static_assert(
-    n == 0 || n == 1 || n == N || n == N*N, "Ambiguous number of arguments.");
+  static_assert(n == N || n == N*N, "Ambiguous number of arguments.");
   init<n>({as...});
 }
 
@@ -524,14 +527,6 @@ template<size_t N, class T> template<size_t I>
 }
 
 /*---------------------------------------------------------------------------------------*/
-
-template<size_t N, class T> template<size_t, class> // single init
-  constexpr void Tensor<N, T>::init(const Tensor<N, T>::array<1> &arr) noexcept
-{
-  for (size_t i = 0; i < N; ++i)
-    for (size_t j = 0; j < N; ++j)
-      data[i][j] = arr[0];
-}
 
 template<size_t N, class T> template<size_t I, class> // diagonal init
   constexpr void Tensor<N, T>::init(const Tensor<N, T>::array<I> &arr) noexcept
