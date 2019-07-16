@@ -4,6 +4,7 @@
 #include "utils/QTraits.h"
 #include "utils/Vector.h"
 #include <string>
+#include <array>
 
 using namespace Quantities;
 using namespace std::string_literals;
