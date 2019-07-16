@@ -198,7 +198,7 @@ namespace Quantities
   template<class... Qs>
     constexpr std::initializer_list<const char *> QState<Qs...>::names;
 
-} //namespace Solvers
+} // namespace Quantities
 
 // IO operations
 
@@ -266,7 +266,7 @@ namespace Quantities
   // (see data definition in the class State<Qs...>)
   // Thus we get state with values tagges by the quantity types!
   // NB! It's a user responsibility to correctly match list of tags with list values!!!
-  template<class... Qs, class... Args> constexpr auto make_state(Args&&... args)
+  template<class... Qs, class... Args> constexpr auto make_state(Args&&... args) noexcept
   {
     static_assert(sizeof...(Qs) == sizeof...(Args), "incomplete state initialization!");
     return QState<
