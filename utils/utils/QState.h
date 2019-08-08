@@ -4,7 +4,7 @@
 /*!
   \file QState.h
   \author gennadiy (gennadiy3.14@gmail.com)
-  \brief Definition of class to represent vector of quantities (state).
+  \brief Vector (state) of quantities with arbitrary types, definition and documentation.
 */
 
 #include "QDetails.h"
@@ -14,12 +14,14 @@ namespace Quantities
 
   template<class... Qs> class QState
   {
+    static_assert(sizeof...(Qs) != 0, "empty state is useless");
+
     std::tuple<
       std::conditional_t<
         std::is_reference<Qs>::value,
         std::conditional_t<
           std::is_const<std::remove_reference_t<Qs>>::value,
-          const typename std::decay_t<Qs>::type&,
+          typename std::decay_t<Qs>::type,
           typename std::decay_t<Qs>::type&
         >,
         typename std::decay_t<Qs>::type
@@ -28,143 +30,62 @@ namespace Quantities
 
   public:
     template<class... Args>
-      constexpr QState(Args&&... args)
+      constexpr explicit QState(Args &&... args) noexcept
         : data(std::forward<Args>(args)...) {}
 
+    // copy ctor
+    // WARNING: be careful when use it with auto due to the fact that exact types of data
+    // (reference or not) are encoded in the QState type itself! Thus it's duplicate ctor
+    // not copy! When data are themselfs copies then duplicate and copy are both the same
+    // but when data are references they are not the same! For example:
+    //   auto sc = make_state<rho, w>(1, 2); // r and v are rvalues => s : QState<rho, w>
+    //   auto sr = make_state<rho, w>(r, v); // r and v are lvalues => s : QState<rho&, w&>
+    //   auto c2 = sc; // c2 : QState<rho, w> => it is a copy!
+    //   auto c1 = sr; // c1 : QState<rho&, w&> => it is NOT a copy!
     template<class... Ts>
-      constexpr QState(QState<Ts...> &&s)
-        : data(std::move(s).template get<std::decay_t<Qs>>()...) {}
+      constexpr QState(const QState<Ts...> &s) noexcept : data(s.template get<Qs>()...) {}
 
-    template<class Arg>
-      constexpr QState(Arg &&arg) { details::set_to(*this, std::forward<Arg>(arg)); }
+    // access by index (mainly to implement basic ops, see details)
+    template<size_t I> constexpr auto& get() & noexcept { return std::get<I>(data); }
+    template<size_t I> constexpr auto& get() const & noexcept { return std::get<I>(data); }
 
-    // copy ctors
-    // WARNING: be careful when use them with auto due to specifics of implementation
-    // (see make_state for details). For example:
-    //   auto s = make_state<rho, w>(r, v); // r and v are lvalues => s : QState<rho&, w&>
-    //   auto sc = s; // sc : QState<rho&, w&> => it is NOT a copy!
-    //
-    // It can be really confusing especially when compare with this code:
-    //   auto s = make_state<rho, w>(1, 2); // arguments are rvalues => s : QState<rho, w>
-    //   auto sc = s; // sc : QState<rho, w> => it is a copy!
-    // So use 'auto' with care! Be verbose and specify the exact type:
-    //   QState<rho, w> sc = s; // always copy!
-    // or use the corresponding copy methods
-    //   auto sc = s.copy();
-    // in order to get a real copy.
-    template<class... Ts>
-      constexpr QState(QState<Ts...> &s)
-        : data(s.template get<std::decay_t<Qs>>()...) {}
-
-    template<class... Ts>
-      constexpr QState(const QState<Ts...> &s)
-        : data(s.template copy<std::decay_t<Qs>>()...) {}
-
-    // access by reference using index (mainly to implement basic ops, see below)
-    template<size_t I>
-      constexpr decltype(auto) get() & noexcept { return std::get<I>(data); }
-    template<size_t I>
-      constexpr decltype(auto) get() const & noexcept { return std::get<I>(data); }
-
-    template<size_t I>
-      constexpr decltype(auto) get() && noexcept { return std::get<I>(std::move(data)); }
-    template<size_t I>
-      constexpr decltype(auto) get() const && noexcept { return std::get<I>(std::move(data)); }
-
-
-    // TODO: consider less verbose access syntax, smth like s(q) or s[q]
-    // is it possible at all? for example, using global constants, not types.
-    constexpr decltype(auto) operator[](const char *id) const noexcept
-    {
-      constexpr auto idx = details::index_by_id<Qs...>(id);
-      static_assert(idx < sizeof...(Qs), "quantity is not presented in the state!");
-      return std::get<idx>(data);
-    }
-    // DOES NOT WORK! Why? Because id is not a constant expression, thats why!
-    // auto s = make_state<Q, ...>(q, ...);
-    // s[Q::id] = 1; // COMPILE ERROR!
-    // s["rho"] = 2; // same shit!
-    // Why it's not a constant expression? Because id has external lifetime
-    // __inside__ operator[] thus you can't prove it is a constant expression.
-    //
-    // Let me quote the standard:
-    // 5.19 Constant expressions [expr.const]
-    //
-    // 2 A conditional-expression e is a core constant expression
-    // unless the evaluation of e, following the rules of the abstract machine (1.9),
-    // would evaluate one of the following expressions:
-    // - an id-expression that refers to a variable or data member of reference type
-    //   unless the reference has a preceding initialization and either
-    // - it is initialized with a constant expression or
-    // - it is a non-static data member of an object
-    //   whose lifetime began within the evaluation of e; (sic!)
-    //
-    // This section has the following code example:
-    //
-    // constexpr int f1(int k)
-    // {
-    //   constexpr int x = k; // error: x is not initialized by a constant expression
-    //                        // because lifetime of k began outside the initializer of x
-    //   return x;
-    // }
-    //
-    // Because x is not a constant expression,
-    // you can't e.g. instantiate templates with either x or k inside f1.
-    //
-    // Back to the operator[], idx is not a constant expression because id is not!
-
-
-    // access by reference using type-name
-    // have to use common template pack with specialization for three cases
-    // in order to simplify generic code
+    // access and slices by type-name (for generic code)
     template<class Q> constexpr auto& get() & noexcept;
-    template<class Q> constexpr const auto& get() const & noexcept;
-    template<class Q> constexpr auto&& get() && noexcept;
-    // const && overload. yep, strange! see https://cplusplus.github.io/LWG/issue2485
-    template<class Q> constexpr const auto&& get() const && noexcept;
+    template<class Q> constexpr auto& get() const & noexcept;
 
-    // refs to all elements
+    // slice/refs
     template<class... Ts>
-      constexpr std::enable_if_t<sizeof...(Ts) == 0,
-        QState<std::decay_t<Qs>&...>> get() &;
-    template<class... Ts>
-      constexpr std::enable_if_t<sizeof...(Ts) == 0,
-        QState<const std::decay_t<Qs>&...>> get() const &;
-    template<class... Ts>
-      constexpr std::enable_if_t<sizeof...(Ts) == 0,
-        QState<std::decay_t<Qs>&...>&&> get() && = delete; // no refs to temporary objs!
-    template<class... Ts>
-      constexpr std::enable_if_t<sizeof...(Ts) == 0,
-        QState<const std::decay_t<Qs>&...>&&> get() const && = delete; // --//--
+      constexpr std::enable_if_t<sizeof...(Ts) == 0, QState<std::decay_t<Qs>&...>>
+        get() & noexcept { return QState<std::decay_t<Qs>&...>(get<Qs>()...); }
 
-    // refs to a slice
     template<class... Ts>
-      constexpr std::enable_if_t<sizeof...(Ts) >= 2,
-        QState<Ts&...>> get() &;
+      constexpr std::enable_if_t<sizeof...(Ts) >= 2, QState<std::decay_t<Ts>&...>>
+        get() & noexcept { return QState<std::decay_t<Ts>&...>(get<Ts>()...); }
+
+    // slice/copies
+    template<class Q> constexpr auto copy() const noexcept { return get<Q>(); }
+
     template<class... Ts>
-      constexpr std::enable_if_t<sizeof...(Ts) >= 2,
-        QState<const Ts&...>> get() const &;
+      constexpr std::enable_if_t<sizeof...(Ts) == 0, QState<std::decay_t<Qs>...>>
+        copy() const noexcept { return *this; }
+
     template<class... Ts>
-      constexpr std::enable_if_t<sizeof...(Ts) >= 2,
-        QState<Ts&...>&&> get() && = delete; // --//--
-    template<class... Ts>
-      constexpr std::enable_if_t<sizeof...(Ts) >= 2,
-        QState<const Ts&...>&&> get() const && = delete;
+      constexpr std::enable_if_t<sizeof...(Ts) >= 2, QState<std::decay_t<Ts>...>>
+        copy() const noexcept { return *this; }
 
-    // access by value using type-name
-    // same shit about generic code here...
-    template<class Q>
-      constexpr auto copy() const { return get<Q>(); }
+    // access and slices by variable (for end-user code)
+    template<class Q> constexpr auto& operator[](Q) & noexcept { return get<Q>(); }
+    template<class Q> constexpr auto& operator[](Q) const & noexcept { return get<Q>(); }
 
-    template<class... Ts> // full copy
-      constexpr std::enable_if_t<sizeof...(Ts) == 0,
-        QState<std::decay_t<Qs>...>> copy() const;
+    // slice/refs
+    template<class... Ts, class = std::enable_if_t<sizeof...(Ts) != 0>>
+      constexpr decltype(auto) get(Ts...) & noexcept { return get<Ts...>(); }
 
-    template<class... Ts> // partial copy (slice)
-      constexpr std::enable_if_t<sizeof...(Ts) >= 2,
-        QState<Ts...>> copy() const;
+    // slice/copies
+    template<class... Ts, class = std::enable_if_t<sizeof...(Ts) != 0>>
+      constexpr decltype(auto) copy(Ts...) const noexcept { return copy<Ts...>(); }
 
-    // some ops
+    // some arithmetics
     template<class T> constexpr QState<Qs...>& operator=(T);
     template<class... Ts> constexpr QState<Qs...>& operator=(const QState<Ts...> &);
     template<class... Ts> constexpr QState<Qs...>& operator+=(const QState<Ts...> &);
@@ -173,7 +94,7 @@ namespace Quantities
     template<class T> constexpr QState<Qs...>& operator*=(T);
     template<class T> constexpr QState<Qs...>& operator/=(T);
 
-    // unary ops return a copy!
+    // unary ops return the copy!
     constexpr QState<std::decay_t<Qs>...> operator-() const;
     constexpr QState<std::decay_t<Qs>...> operator+() const { return *this; }
 
@@ -181,32 +102,63 @@ namespace Quantities
     template<class Q>
       constexpr size_t index() const { return details::index_by_type_v<Q, Qs...>; }
 
-    constexpr size_t index(const char *name) const
-    {
-      return details::index_by_id<Qs...>(name);
-    }
+    static constexpr auto names = details::quantity_names<std::decay_t<Qs>...>;
 
-    static constexpr std::initializer_list<const char *> names =
-      details::quantity_names<std::decay_t<Qs>...>;
-
-    // use helper variables to guarantee correctness in case of nested states
+    // helper variables to guarantee correctness in case of nested states
     static constexpr int size = details::size_of_v<std::decay_t<Qs>...>;
     static constexpr int ncomps = details::ncomps_of_v<std::decay_t<Qs>...>;
   }; // class QState<Qs...>
 
-  // a static member must be defined outside of the struct
-  template<class... Qs>
-    constexpr std::initializer_list<const char *> QState<Qs...>::names;
+/*---------------------------------------------------------------------------------------*/
+
+  // Helpers to get value(s) from a state using type-name(s).
+  // In generic code when dealing with compound state and would like to work
+  // only with specific component(s), e.g.:
+  //   QState<A,B,C,D> c;
+  //   auto a = get(c);       // a : QState<A,B,C,D>
+  //   auto a = get<A>(c);    // a : A::type
+  //   auto a = get<A,B>(c);  // a : QState<A,B>
+  // Generic is generic thus 'c' may be not a state at all! In that case:
+  //   C c;
+  //   auto a = get(c);       // a : C
+  //   auto a = get<A>(c);    // a : C
+  //   auto a = get<A,B>(c);  // a : C
+  // If in all these cases we want the type of 'a' be the same as mentioned
+  // in the corresponding comment then the function below is what you need!
+
+  // Just like the corresponding methods of QState class:
+  // get-function returns reference(s) to the component(s)
+  // while copy-function returns value(s) i.e. copies.
+
+  // slice/copies
+  template<class..., class T>
+    constexpr std::enable_if_t<!is_state_v<T>, T> copy(T &&s) noexcept { return s; }
+
+  template<class... Qs, class... Ts>
+    constexpr decltype(auto) copy(const QState<Ts...> &s) noexcept
+  {
+    return s.template copy<Qs...>();
+  }
+
+  // slice/refs
+  template<class..., class T>
+    constexpr std::enable_if_t<!is_state_v<T>, T&> get(T &s) noexcept { return s; }
+
+  template<class... Qs, class... Ts>
+    constexpr decltype(auto) get(QState<Ts...> &s) noexcept
+  {
+    return s.template get<Qs...>();
+  }
 
 } // namespace Quantities
 
 // IO operations
 
 template<class... Qs>
-  std::ostream& operator<<(std::ostream &, const Quantities::QState<Qs...> &);
+  std::istream& operator>>(std::istream &, Quantities::QState<Qs...> &);
 
 template<class... Qs>
-  std::istream& operator>>(std::istream &, Quantities::QState<Qs...> &);
+  std::ostream& operator<<(std::ostream &, const Quantities::QState<Qs...> &);
 
 // binary arithmetic operations
 // WARNING: operations are not symmetric, i.e. in general case l + r != r + l
@@ -259,13 +211,13 @@ template<class... Ls, class... Rs>
 
 namespace Quantities
 {
-  // helper function to create a state using given arguments.
-  // in order to preserve the exact types of arguments (ref, const ref or simple one)
+  // Helper function to create a state using given arguments.
+  // In order to preserve the exact types of arguments (ref or copy)
   // we transfer this information to the template arguments of the state
   // and then, inside the state, restore them to the final types
-  // (see data definition in the class State<Qs...>)
-  // Thus we get state with values tagges by the quantity types!
-  // NB! It's a user responsibility to correctly match list of tags with list values!!!
+  // (see data definition in the class QState<Qs...>).
+  // Thus we get state with values tagged by the quantity types.
+  // NB! It's a user responsibility to correctly match list of tags with list values!
   template<class... Qs, class... Args> constexpr auto make_state(Args&&... args) noexcept
   {
     static_assert(sizeof...(Qs) == sizeof...(Args), "incomplete state initialization!");
@@ -274,7 +226,7 @@ namespace Quantities
         std::is_reference<Args>::value,
         std::conditional_t<
           std::is_const<std::remove_reference_t<Args>>::value,
-          const Qs&, Qs&
+          Qs, Qs&
         >,
         Qs
       >...
@@ -292,75 +244,13 @@ namespace Quantities
   }
 
   template<class... Qs>
-    template<class Q> constexpr const auto& QState<Qs...>::get() const & noexcept
+    template<class Q> constexpr auto& QState<Qs...>::get() const & noexcept
   {
     constexpr auto idx = details::index_by_type_v<std::decay_t<Q>, std::decay_t<Qs>...>;
     static_assert(idx < sizeof...(Qs), "quantity is not presented in the state!");
     // it'll be good if name of non-presented quantity will be in the error message...
     // UPD: impossible due to second argument must be a string literal (standard requires)
     return std::get<idx>(data);
-  }
-
-  template<class... Qs>
-    template<class Q> constexpr auto&& QState<Qs...>::get() && noexcept
-  {
-    constexpr auto idx = details::index_by_type_v<std::decay_t<Q>, std::decay_t<Qs>...>;
-    static_assert(idx < sizeof...(Qs), "quantity is not presented in the state!");
-    return std::get<idx>(std::move(data));
-  }
-
-  template<class... Qs>
-    template<class Q> constexpr const auto&& QState<Qs...>::get() const && noexcept
-  {
-    constexpr auto idx = details::index_by_type_v<std::decay_t<Q>, std::decay_t<Qs>...>;
-    static_assert(idx < sizeof...(Qs), "quantity is not presented in the state!");
-    return std::get<idx>(std::move(data));
-  }
-
-/*---------------------------------------------------------------------------------------*/
-
-  template<class... Qs> template<class... Ts>
-    constexpr std::enable_if_t<sizeof...(Ts) >= 2,
-      QState<Ts&...>> QState<Qs...>::get() &
-  {
-    return QState<Ts&...>(get<Ts>()...);
-  }
-
-  template<class... Qs> template<class... Ts>
-    constexpr std::enable_if_t<sizeof...(Ts) >= 2,
-      QState<const Ts&...>> QState<Qs...>::get() const &
-  {
-    return QState<const Ts&...>(get<Ts>()...);
-  }
-
-  template<class... Qs> template<class... Ts>
-    constexpr std::enable_if_t<sizeof...(Ts) == 0,
-      QState<std::decay_t<Qs>&...>> QState<Qs...>::get() &
-  {
-    return QState<std::decay_t<Qs>&...>(get<Qs>()...);
-  }
-
-  template<class... Qs> template<class... Ts>
-    constexpr std::enable_if_t<sizeof...(Ts) == 0,
-      QState<const std::decay_t<Qs>&...>> QState<Qs...>::get() const &
-  {
-    return QState<const std::decay_t<Qs>&...>(get<Qs>()...);
-  }
-
-/*---------------------------------------------------------------------------------------*/
-
-  template<class... Qs> template<class... Ts>
-    constexpr std::enable_if_t<sizeof...(Ts) == 0,
-      QState<std::decay_t<Qs>...>> QState<Qs...>::copy() const
-  {
-    return QState<std::decay_t<Qs>...>(copy<std::decay_t<Qs>>()...);
-  }
-
-  template<class... Qs> template<class... Ts>
-    constexpr std::enable_if_t<sizeof...(Ts) >= 2,
-      QState<Ts...>> QState<Qs...>::copy() const
-  {
-    return QState<Ts...>(copy<Ts>()...);
   }
 
 /*---------------------------------------------------------------------------------------*/
@@ -499,5 +389,25 @@ template<class... Ls, class... Rs>
 {
   return Quantities::details::equal(l, r);
 }
+
+/*---------------------------------------------------------------------------------------*/
+/*--------------------------------------- tests -----------------------------------------*/
+/*---------------------------------------------------------------------------------------*/
+
+namespace qstate_tests
+{
+  // someday...
+}
+
+/*---------------------------------------------------------------------------------------*/
+/*----------------------------------- documentation -------------------------------------*/
+/*---------------------------------------------------------------------------------------*/
+
+/*!
+  \class Quantities::QState
+  \tparam Qs Type-names (tags) of the data.
+  \author gennadiy (gennadiy3.14@gmail.com)
+  \brief
+*/
 
 #endif // QSTATE_H_INCLUDED
