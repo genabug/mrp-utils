@@ -25,6 +25,21 @@ static constexpr tv_t tv;
 template<class T> void WTF(T);
 
 
+constexpr auto sc1 = make_state<ti_t, td_t>(1, 2.);
+constexpr auto sc2 = make_state<td_t, ti_t>(2., 1);
+static_assert(sc1 == sc2, "oops"); // fuck yeah!!!!
+
+constexpr auto sc1_plus_sc2 = make_state<ti_t, td_t>(2, 4.);
+static_assert(sc1 + sc2 == sc1_plus_sc2, "heck!");
+
+constexpr auto sc1_mult_2 = make_state<ti_t, td_t>(2, 4.);
+static_assert(sc1*2 == sc1_mult_2, "feck!");
+
+constexpr auto sc3 = make_state<ti_t, td_t>(2, 4.);
+constexpr auto sc3_div_2 = make_state<ti_t, td_t>(1, 2.);
+static_assert(sc3/2 == sc3_div_2, "fuck!");
+
+
 TEST_CASE("init")
 {
   // assume that access by index works
@@ -196,16 +211,35 @@ TEST_CASE("assign")
 }
 
 
-TEST_CASE("boolean")
+TEST_CASE("compare")
 {
-  auto s1 = make_state<ti_t, ts_t, tv_t>(1, "foo"s, V3i(3));
-  auto s2 = make_state<tv_t, ti_t, ts_t, td_t>(V3i(3), 1, "foo"s, 2.);
-  auto s3 = make_state<ti_t, ts_t, tv_t>(2, "bar"s, V3i(1));
+  SUBCASE("rvalues")
+  {
+    auto s1 = make_state<ti_t, ts_t, tv_t>(1, "foo"s, V3i(3));
+    auto s2 = make_state<tv_t, ti_t, ts_t, td_t>(V3i(3), 1, "foo"s, 2.);
+    auto s3 = make_state<ti_t, ts_t, tv_t>(2, "bar"s, V3i(1));
 
-  CHECK(s1 == s1);
-  CHECK(s1 == s2);
-//  CHECK(s2 == s1); //<--- COMPILE ERROR!!!
-  CHECK(s1 != s3);
+    CHECK(s1 == s1);
+    CHECK(s1 == s2);
+//    CHECK(s2 == s1); //<--- COMPILE ERROR!!!
+    CHECK(s1 != s3);
+  }
+
+  SUBCASE("lvalues")
+  {
+    double d = 1;
+    int i = 1, i3 = 2;
+    auto str = "foo"s;
+    V3i v(3, 4, 5);
+    auto s1 = make_state<ti_t, ts_t, tv_t>(i, str, v);
+    auto s2 = make_state<tv_t, ti_t, ts_t, td_t>(v, i, str, d);
+    auto s3 = make_state<ti_t, ts_t, tv_t>(i3, str, v);
+
+    CHECK(s1 == s1);
+    CHECK(s1 == s2);
+//    CHECK(s2 == s1); //<--- COMPILE ERROR!!!
+    CHECK(s1 != s3);
+  }
 }
 
 
@@ -483,120 +517,78 @@ TEST_CASE("func")
   st s3 = func_cref(s2);
   CHECK((s3 == s2));
 }
-/*
-template<class... Ts, class A> decltype(auto) get_t(size_t i, A &a)
-{
-  return a[i].template get<Ts...>();
-}
-
-TEST_CASE("templates")
-{
-  std::array<st, 3> arr;
-  arr[0] = 1;
-  arr[1] = 2;
-  arr[2] = 3;
-
-  SUBCASE("get")
-  {
-    decltype(auto) s1 = get_t(0, arr);
-    CHECK(s1 == arr[0]);
-
-    get_t<ti_t>(1, arr) = 4;
-    CHECK(arr[1].get<ti_t>() == 4);
-
-    get_t<tv_t>(2, arr) = V3i(5);
-    CHECK(arr[2].get<tv_t>() == V3i(5));
-  }
-}
-*/
-
-constexpr auto sc1 = make_state<ti_t, td_t>(1, 2.);
-constexpr auto sc2 = make_state<td_t, ti_t>(2., 1);
-static_assert(sc1 == sc2, "oops"); // fuck yeah!!!!
-
-constexpr auto sc1_plus_sc2 = make_state<ti_t, td_t>(2, 4.);
-static_assert(sc1 + sc2 == sc1_plus_sc2, "heck!");
-
-constexpr auto sc1_mult_2 = make_state<ti_t, td_t>(2, 4.);
-static_assert(sc1*2 == sc1_mult_2, "feck!");
-
-constexpr auto sc3 = make_state<ti_t, td_t>(2, 4.);
-constexpr auto sc3_div_2 = make_state<ti_t, td_t>(1, 2.);
-static_assert(sc3/2 == sc3_div_2, "fuck!");
 
 
 TEST_CASE("arithmetic")
 {
-  auto s1 = make_state<ti_t, tv_t>(1, V3i(3, 5, 7));
-  auto s2 = make_state<tv_t, ti_t>(V3i(2, 4, 6), 4);
-  auto s3 = make_state<ti_t, td_t, tv_t>(1, 2., V3i(3, 4, 5));
+  SUBCASE("rvalues")
+  {
+    auto s1 = make_state<ti_t, tv_t>(1, V3i(3, 5, 7));
+    auto s2 = make_state<tv_t, ti_t>(V3i(2, 4, 6), 4);
+    auto s3 = make_state<ti_t, td_t, tv_t>(1, 2., V3i(3, 4, 5));
 
-//  auto s4 = s2 + s3;
-//  auto s5 = s3 + s2; //<--- COMPILE ERROR!!!
+//    auto s4 = s2 + s3; // OK
+//    auto s5 = s3 + s2; // COMPILE ERROR!
 
-  auto s1_mult_by_2 = make_state<ti_t, tv_t>(2, V3i(6, 10, 14));
-  CHECK(2*s1 == s1_mult_by_2);
-  CHECK(s1*2 == s1_mult_by_2);
+    auto s1_mult_by_2 = make_state<ti_t, tv_t>(2, V3i(6, 10, 14));
+    CHECK(2*s1 == s1_mult_by_2);
+    CHECK(s1*2 == s1_mult_by_2);
 
-  auto s2_div_by_2 = make_state<tv_t, ti_t>(V3i(1, 2, 3), 2);
-  CHECK(s2/2 == s2_div_by_2);
+    auto s2_div_by_2 = make_state<tv_t, ti_t>(V3i(1, 2, 3), 2);
+    CHECK(s2/2 == s2_div_by_2);
 
-  auto s1_plus_s2 = make_state<ti_t, tv_t>(5, V3i(5, 9, 13));
-  auto s2_plus_s1 = make_state<tv_t, ti_t>(V3i(5, 9, 13), 5);
-  CHECK(s1 + s2 == s1_plus_s2);
-  CHECK(s2 + s1 == s2_plus_s1);
+    auto s1_plus_s2 = make_state<ti_t, tv_t>(5, V3i(5, 9, 13));
+    auto s2_plus_s1 = make_state<tv_t, ti_t>(V3i(5, 9, 13), 5);
+    CHECK(s1 + s2 == s1_plus_s2);
+    CHECK(s2 + s1 == s2_plus_s1);
 
-  auto s1_minus_s2 = make_state<ti_t, tv_t>(-3, V3i(1, 1, 1));
-  CHECK(s1 - s2 == s1_minus_s2);
+    auto s1_minus_s2 = make_state<ti_t, tv_t>(-3, V3i(1, 1, 1));
+    CHECK(s1 - s2 == s1_minus_s2);
 
-  s1 *= 2;
-  CHECK(s1 == s1_mult_by_2);
+    s1 *= 2;
+    CHECK(s1 == s1_mult_by_2);
 
-  s2 /= 2;
-  CHECK(s2 == s2_div_by_2);
+    s2 /= 2;
+    CHECK(s2 == s2_div_by_2);
 
-  auto s2_plus_s3 = make_state<tv_t, ti_t>(V3i(4, 6, 8), 3);
-  s2 += s3;
-  CHECK(s2 == s2_plus_s3);
+    auto s2_plus_s3 = make_state<tv_t, ti_t>(V3i(4, 6, 8), 3);
+    s2 += s3;
+    CHECK(s2 == s2_plus_s3);
 
-  auto s1_equal_2 = make_state<tv_t, ti_t>(V3i(2), 2);
-  s1 = 2;
-  CHECK(s1 == s1_equal_2);
-}
+    auto s1_equal_2 = make_state<tv_t, ti_t>(V3i(2), 2);
+    s1 = 2;
+    CHECK(s1 == s1_equal_2);
+  }
 
-TEST_CASE("arithmetic_ref")
-{
-  int i1 = 1, i2 = 2, i3 = 3;
-  double d1 = 4, d2 = 5, d3 = 6;
-  V3i v1(7), v2(8), v3(9);
+  SUBCASE("lvalues")
+  {
+    double d3 = 1;
+    int i1 = 2, i2 = 4, i3 = 3;
+    V3i v1(5), v2(6), v3(7);
 
-  auto s1 = make_state<ti_t, tv_t>(i1, v1);
-  auto s2 = make_state<tv_t, ti_t>(v2, i2);
-  auto s3 = make_state<ti_t, td_t, tv_t>(i3, d3, v3);
+    auto s1 = make_state<ti_t, tv_t>(i1, v1);
+    auto s2 = make_state<tv_t, ti_t>(v2, i2);
+    auto s3 = make_state<ti_t, td_t, tv_t>(i3, d3, v3);
 
-  auto s4 = s2 + s3;
-  CHECK(v2 == V3i(8));
-  CHECK(i2 == 2);
-  CHECK(i3 == 3);
-  CHECK(d3 == 6);
-  CHECK(v3 == V3i(9));
-//  auto s5 = s3 + s2; //<--- COMPILE ERROR!!!
+//    auto s4 = s2 + s3; // OK
+//    auto s5 = s3 + s2; // COMPILE ERROR!
 
-  s1 *= 2;
-  CHECK(i1 == 2);
-  CHECK(v1 == V3i(14));
+    s1 *= 2;
+    CHECK(i1 == 4);
+    CHECK(v1 == V3i(10));
 
-  s2 /= 2;
-  CHECK(v2 == V3i(4));
-  CHECK(i2 == 1);
+    s2 /= 2;
+    CHECK(v2 == V3i(3));
+    CHECK(i2 == 2);
 
-  s1 -= s2;
-  CHECK(i1 == 1);
-  CHECK(v1 == V3i(10));
+    s1 -= s2;
+    CHECK(i1 == 2);
+    CHECK(v1 == V3i(7));
 
-  s2 += s3;
-  CHECK(v2 == V3i(13));
-  CHECK(i2 == 4);
+    s2 += s3;
+    CHECK(v2 == V3i(10));
+    CHECK(i2 == 5);
+  }
 }
 
 TEST_CASE("io")
@@ -609,25 +601,4 @@ TEST_CASE("io")
   QState<ti_t, tv_t, ts_t> s2;
   sstr >> s2;
   CHECK(s1 == s2);
-}
-
-TEST_CASE("array")
-{
-  using s = QState<ti_t, ts_t, tv_t>;
-  std::array<s, 3> arr;
-  arr[0] = make_state<ti_t, ts_t, tv_t>(1, "2"s, V3i(3));
-
-  auto s1 = make_state<ti_t, ts_t, tv_t>(1, "foo"s, V3i(1, 2, 3));
-  arr[1] = s1;
-  CHECK(arr[1] == s1);
-
-  s1.get<ti_t>() = 4;
-  CHECK(arr[1].get<ti_t>() == 1);
-
-  std::vector<s> vs;
-  vs.push_back(s1);
-  CHECK(vs[0] == s1);
-
-  s1.get<ti_t>() = 5;
-  CHECK(vs[0].get<ti_t>() == 4);
 }
