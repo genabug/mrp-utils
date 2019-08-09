@@ -99,8 +99,10 @@ namespace Quantities
     constexpr QState<std::decay_t<Qs>...> operator+() const { return *this; }
 
     // some traits
+    template<size_t I> using type_of = details::type_by_index<I, Qs...>;
+
     template<class Q>
-      constexpr size_t index() const { return details::index_by_type_v<Q, Qs...>; }
+      static constexpr size_t index_of = details::index_by_type_v<Q, Qs...>;
 
     static constexpr auto names = details::quantity_names<std::decay_t<Qs>...>;
 
