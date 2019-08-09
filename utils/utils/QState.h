@@ -104,9 +104,9 @@ namespace Quantities
 
     static constexpr auto names = details::quantity_names<std::decay_t<Qs>...>;
 
-    // helper variables to guarantee correctness in case of nested states
+    // helper variables for traits (see QTraits)
     static constexpr int size = details::size_of_v<std::decay_t<Qs>...>;
-    static constexpr int ncomps = details::ncomps_of_v<std::decay_t<Qs>...>;
+    static constexpr int ncomps = sizeof...(Qs);
   }; // class QState<Qs...>
 
 /*---------------------------------------------------------------------------------------*/
