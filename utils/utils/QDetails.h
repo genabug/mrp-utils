@@ -24,7 +24,7 @@ namespace Quantities
 
   namespace details
   {
-    // implementation of a helper indexers
+    // implementation of helper indexers
     template<size_t N, class T, class... Ts>
       struct index_by_type_impl {
         static constexpr size_t value = N; }; // stop
@@ -73,20 +73,13 @@ namespace Quantities
 
 /*---------------------------------------------------------------------------------------*/
 
-    // compute total number of components of the given quantities
+    // total number of components of the given quantities
     template<class... Qs> struct ncomps_of { static constexpr size_t value = 0; };
 
     template<class Q, class... Qs> struct ncomps_of<Q, Qs...> {
       static constexpr size_t value = Q::ncomps + ncomps_of<Qs...>::value; };
 
     template<class... Qs> static constexpr size_t ncomps_of_v = ncomps_of<Qs...>::value;
-
-
-    // get number of components: if Q is a state then get its ncomps else return 1
-    template<class Q>
-      constexpr std::enable_if_t<!is_state_v<Q>, size_t> ncomps() { return 1; }
-    template<class Q>
-      constexpr std::enable_if_t<is_state_v<Q>, size_t> ncomps() { return Q::ncomps; }
 
 
     // total size of the given quantities
