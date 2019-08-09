@@ -164,7 +164,7 @@ template<class... Qs>
   std::ostream& operator<<(std::ostream &, const Quantities::QState<Qs...> &);
 
 // binary arithmetic operations
-// WARNING: operations are not symmetric, i.e. in general case l + r != r + l
+// WARNING: operations are not symmetric, i.e. in general case l + r != r + l.
 // This is done in order to do arithmetic with states with different set of elements,
 // when one of a set is subset of the other, or when the order of elements is differ.
 // For example:
@@ -191,11 +191,7 @@ template<class T, class... Qs>
   constexpr auto operator/(const Quantities::QState<Qs...> &, T);
 
 // boolean operations
-// WARNING: operations are not symmetric, i.e. l == r does not mean that r == l
-// This is done in order to compare states with different set of elements,
-// when one of a set is subset of the other or when order of elements is differ.
-// For example, state<rho, Te, w> may be equal to the state<rho, Te, w, Pe, B>
-// but not vise versa (COMPILE ERROR!!!)
+// WARNING: operations are not symmetric too, i.e. l == r does not mean that r == l.
 
 template<class... Ls, class... Rs>
   constexpr bool operator==(
@@ -238,16 +234,16 @@ namespace Quantities
 
 /*---------------------------------------------------------------------------------------*/
 
-  template<class... Qs>
-    template<class Q> constexpr auto& QState<Qs...>::get() & noexcept
+  template<class... Qs> template<class Q>
+    constexpr auto& QState<Qs...>::get() & noexcept
   {
     constexpr auto idx = index_of<Q>;
     static_assert(idx < ncomps, "quantity is not presented in the state!");
     return std::get<idx>(data);
   }
 
-  template<class... Qs>
-    template<class Q> constexpr auto& QState<Qs...>::get() const & noexcept
+  template<class... Qs> template<class Q>
+    constexpr auto& QState<Qs...>::get() const & noexcept
   {
     constexpr auto idx = index_of<Q>;
     static_assert(idx < ncomps, "quantity is not presented in the state!");
