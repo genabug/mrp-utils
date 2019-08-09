@@ -116,7 +116,7 @@ namespace Quantities
       std::enable_if_t<I != sizeof...(Qs)>
         write_state(std::ostream &ostr, const QState<Qs...> &s)
     {
-      ostr << s.template get<I>() << ' ';
+      ostr << (I? " " : "") << s.template get<I>();
       write_state<I + 1>(ostr, s);
     }
 

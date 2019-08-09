@@ -385,17 +385,16 @@ TEST_CASE("get method")
     CHECK(sc[ts] == "baz");
     CHECK(sr[tv] == v);
   }
-
+/*
   SUBCASE("slice/state")
   {
     using iv_s = QState<ti_t, tv_t>;
-//    auto rc = sc.get<iv_s>();
-//    auto rr = sr.get<iv_s>();
-//    rc[ti] = 3;
-//    rr[tv] = V3i(2);
-//    CHECK(sc[ti] == 3);
-//    CHECK(sr[tv] == v);
+    sc.get<iv_s>()[ti] = 3;
+    sr.get<iv_s>()[tv] = V3i(2);
+    CHECK(sc[ti] == 3);
+    CHECK(sr[tv] == v);
   }
+*/
 }
 
 
@@ -605,7 +604,7 @@ TEST_CASE("io")
   auto s1 = make_state<ti_t, tv_t, ts_t>(1, V3i(1, 2, 3), "foo"s);
   std::stringstream sstr;
   sstr << s1;
-  CHECK(sstr.str() == "1 (1, 2, 3) foo "); // NB! space at end
+  CHECK(sstr.str() == "1 (1, 2, 3) foo");
 
   QState<ti_t, tv_t, ts_t> s2;
   sstr >> s2;
