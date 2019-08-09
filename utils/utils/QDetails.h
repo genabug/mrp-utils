@@ -145,6 +145,7 @@ namespace Quantities
         constexpr add_to(QState<Ls...> &self, const QState<Rs...> &other)
     {
       using L = type_by_index<I, Ls...>;
+      static_assert(other.template has<L>(), "other state doesn't have enough quantities");
       self.template get<L>() += other.template get<L>();
       add_to<I + 1>(self, other);
     }
@@ -160,6 +161,7 @@ namespace Quantities
         sub_from(QState<Ls...> &self, const QState<Rs...> &other)
     {
       using L = type_by_index<I, Ls...>;
+      static_assert(other.template has<L>(), "other state doesn't have enough quantities");
       self.template get<L>() -= other.template get<L>();
       sub_from<I + 1>(self, other);
     }
@@ -175,6 +177,7 @@ namespace Quantities
         copy_to(QState<Ls...> &self, const QState<Rs...> &other)
     {
       using L = type_by_index<I, Ls...>;
+      static_assert(other.template has<L>(), "other state doesn't have emough quantities");
       self.template get<L>() = other.template get<L>();
       copy_to<I + 1>(self, other);
     }
@@ -233,6 +236,7 @@ namespace Quantities
         equal(const QState<Ls...> &l, const QState<Rs...> &r)
     {
       using L = type_by_index<I, Ls...>;
+      static_assert(r.template has<L>(), "right state doesn't have enough quantities");
       return (l.template get<L>() == r.template get<L>()) && equal<I + 1>(l, r);
     }
 

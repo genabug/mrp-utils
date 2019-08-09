@@ -101,9 +101,10 @@ namespace Quantities
     // some traits
     template<size_t I> using type_of = details::type_by_index<I, std::decay_t<Qs>...>;
 
-    template<class Q>
-      static constexpr size_t index_of =
-        details::index_by_type_v<std::decay_t<Q>, std::decay_t<Qs>...>;
+    template<class Q> static constexpr size_t index_of()
+    { return details::index_by_type_v<std::decay_t<Q>, std::decay_t<Qs>...>; }
+
+    template<class Q> static constexpr bool has() { return index_of<Q>() < ncomps; }
 
     static constexpr auto names = details::quantity_names<std::decay_t<Qs>...>;
 
@@ -237,7 +238,7 @@ namespace Quantities
   template<class... Qs> template<class Q>
     constexpr auto& QState<Qs...>::get() & noexcept
   {
-    constexpr auto idx = index_of<Q>;
+    constexpr auto idx = index_of<Q>();
     static_assert(idx < ncomps, "quantity is not presented in the state!");
     return std::get<idx>(data);
   }
@@ -245,7 +246,7 @@ namespace Quantities
   template<class... Qs> template<class Q>
     constexpr auto& QState<Qs...>::get() const & noexcept
   {
-    constexpr auto idx = index_of<Q>;
+    constexpr auto idx = index_of<Q>();
     static_assert(idx < ncomps, "quantity is not presented in the state!");
     // it'll be good if name of non-presented quantity will be in the error message...
     // UPD: impossible due to second argument must be a string literal (standard requires)
