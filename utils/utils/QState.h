@@ -99,14 +99,15 @@ namespace Quantities
     constexpr QState<std::decay_t<Qs>...> operator+() const { return *this; }
 
     // some traits
-    template<size_t I> using type_of = details::type_by_index<I, Qs...>;
+    template<size_t I> using type_of = details::type_by_index<I, std::decay_t<Qs>...>;
 
     template<class Q>
-      static constexpr size_t index_of = details::index_by_type_v<Q, Qs...>;
+      static constexpr size_t index_of =
+        details::index_by_type_v<std::decay_t<Q>, std::decay_t<Qs>...>;
 
     static constexpr auto names = details::quantity_names<std::decay_t<Qs>...>;
 
-    // helper variables for traits (see QTraits)
+    // helpers for QTraits
     static constexpr int size = details::size_of_v<std::decay_t<Qs>...>;
     static constexpr int ncomps = sizeof...(Qs);
   }; // class QState<Qs...>
@@ -240,16 +241,16 @@ namespace Quantities
   template<class... Qs>
     template<class Q> constexpr auto& QState<Qs...>::get() & noexcept
   {
-    constexpr auto idx = details::index_by_type_v<std::decay_t<Q>, std::decay_t<Qs>...>;
-    static_assert(idx < sizeof...(Qs), "quantity is not presented in the state!");
+    constexpr auto idx = index_of<Q>;
+    static_assert(idx < ncomps, "quantity is not presented in the state!");
     return std::get<idx>(data);
   }
 
   template<class... Qs>
     template<class Q> constexpr auto& QState<Qs...>::get() const & noexcept
   {
-    constexpr auto idx = details::index_by_type_v<std::decay_t<Q>, std::decay_t<Qs>...>;
-    static_assert(idx < sizeof...(Qs), "quantity is not presented in the state!");
+    constexpr auto idx = index_of<Q>;
+    static_assert(idx < ncomps, "quantity is not presented in the state!");
     // it'll be good if name of non-presented quantity will be in the error message...
     // UPD: impossible due to second argument must be a string literal (standard requires)
     return std::get<idx>(data);

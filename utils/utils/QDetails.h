@@ -46,7 +46,7 @@ namespace Quantities
 
     // just a useful shortcut -- get i-th type in a pack
     template<size_t I, class... Ts>
-      using type_by_index = std::decay_t<std::tuple_element_t<I, std::tuple<Ts...>>>;
+      using type_by_index = std::tuple_element_t<I, std::tuple<Ts...>>;
 
 /*---------------------------------------------------------------------------------------*/
 
