@@ -4,7 +4,7 @@
 /*!
   \file QState.h
   \author gennadiy (gennadiy3.14@gmail.com)
-  \brief Vector (state) of quantities with arbitrary types, definition and documentation.
+  \brief Vector/state of quantities with arbitrary types, definition and documentation.
 */
 
 #include "QDetails.h"
@@ -38,10 +38,10 @@ namespace Quantities
     // (reference or not) are encoded in the QState type itself! Thus it's duplicate ctor
     // not copy! When data are themselfs copies then duplicate and copy are both the same
     // but when data are references they are not the same! For example:
-    //   auto sc = make_state<rho, w>(1, 2); // r and v are rvalues => s : QState<rho, w>
-    //   auto sr = make_state<rho, w>(r, v); // r and v are lvalues => s : QState<rho&, w&>
-    //   auto c2 = sc; // c2 : QState<rho, w> => it is a copy!
-    //   auto c1 = sr; // c1 : QState<rho&, w&> => it is NOT a copy!
+    //  auto sc = make_state<rho, w>(1, 2); // r and v are rvalues => s : QState<rho, w>
+    //  auto sr = make_state<rho, w>(r, v); // r and v are lvalues => s : QState<rho&, w&>
+    //  auto c1 = sc; // c1 : QState<rho, w> => it is a copy!
+    //  auto c2 = sr; // c2 : QState<rho&, w&> => it is NOT a copy!
     template<class... Ts>
       constexpr QState(const QState<Ts...> &s) noexcept : data(s.template get<Qs>()...) {}
 
@@ -53,7 +53,7 @@ namespace Quantities
     template<class Q> constexpr auto& get() & noexcept;
     template<class Q> constexpr auto& get() const & noexcept;
 
-    // slice/refs
+    // slice/refs by type-name
     template<class... Ts>
       constexpr std::enable_if_t<sizeof...(Ts) == 0, QState<std::decay_t<Qs>&...>>
         get() & noexcept { return QState<std::decay_t<Qs>&...>(get<Qs>()...); }
@@ -62,7 +62,7 @@ namespace Quantities
       constexpr std::enable_if_t<sizeof...(Ts) >= 2, QState<std::decay_t<Ts>&...>>
         get() & noexcept { return QState<std::decay_t<Ts>&...>(get<Ts>()...); }
 
-    // slice/copies
+    // slice/copies by type-name
     template<class Q> constexpr auto copy() const noexcept { return get<Q>(); }
 
     template<class... Ts>
@@ -77,11 +77,11 @@ namespace Quantities
     template<class Q> constexpr auto& operator[](Q) & noexcept { return get<Q>(); }
     template<class Q> constexpr auto& operator[](Q) const & noexcept { return get<Q>(); }
 
-    // slice/refs
+    // slice/refs by variable
     template<class... Ts, class = std::enable_if_t<sizeof...(Ts) != 0>>
       constexpr decltype(auto) get(Ts...) & noexcept { return get<Ts...>(); }
 
-    // slice/copies
+    // slice/copies by variable
     template<class... Ts, class = std::enable_if_t<sizeof...(Ts) != 0>>
       constexpr decltype(auto) copy(Ts...) const noexcept { return copy<Ts...>(); }
 
@@ -116,8 +116,8 @@ namespace Quantities
 /*---------------------------------------------------------------------------------------*/
 
   // Helpers to get value(s) from a state using type-name(s).
-  // In generic code when dealing with compound state and would like to work
-  // only with specific component(s), e.g.:
+  // Use in generic code when dealing with a state and would like to work
+  // only with specific subset of its component(s), e.g.:
   //   QState<A,B,C,D> c;
   //   auto a = get(c);       // a : QState<A,B,C,D>
   //   auto a = get<A>(c);    // a : A::type
@@ -128,11 +128,10 @@ namespace Quantities
   //   auto a = get<A>(c);    // a : C
   //   auto a = get<A,B>(c);  // a : C
   // If in all these cases we want the type of 'a' be the same as mentioned
-  // in the corresponding comment then the function below is what you need!
-
-  // Just like the corresponding methods of QState class:
-  // get-function returns reference(s) to the component(s)
-  // while copy-function returns value(s) i.e. copies.
+  // then the function below is what you need!
+  // Just like the corresponding methods of QState class
+  // get-function returns reference to a component or state of references
+  // while copy-function returns copies (value or state of values).
 
   // slice/copies
   template<class..., class T>
@@ -153,7 +152,6 @@ namespace Quantities
   {
     return s.template get<Qs...>();
   }
-
 } // namespace Quantities
 
 // IO operations
@@ -166,8 +164,8 @@ template<class... Qs>
 
 // binary arithmetic operations
 // WARNING: operations are not symmetric, i.e. in general case l + r != r + l.
-// This is done in order to do arithmetic with states with different set of elements,
-// when one of a set is subset of the other, or when the order of elements is differ.
+// This is done in order to do arithmetic with states of different sets of elements,
+// when one of a set is a subset of the other, or when the order of elements is differ.
 // For example:
 // auto s1 = make_state<rho, Te, w>(...);
 // auto s2 = make_state<rho, Te, w, Pi, B>(...);
@@ -202,7 +200,7 @@ template<class... Ls, class... Rs>
   constexpr bool operator!=(
     const Quantities::QState<Ls...> &l, const Quantities::QState<Rs...> &r)
 {
-    return !(l == r);
+  return !(l == r);
 }
 
 /*---------------------------------------------------------------------------------------*/
@@ -391,23 +389,105 @@ template<class... Ls, class... Rs>
 }
 
 /*---------------------------------------------------------------------------------------*/
-/*--------------------------------------- tests -----------------------------------------*/
-/*---------------------------------------------------------------------------------------*/
-
-namespace qstate_tests
-{
-  // someday...
-}
-
-/*---------------------------------------------------------------------------------------*/
 /*----------------------------------- documentation -------------------------------------*/
 /*---------------------------------------------------------------------------------------*/
 
 /*!
   \class Quantities::QState
   \tparam Qs Type-names (tags) of the data.
-  \author gennadiy (gennadiy3.14@gmail.com)
-  \brief
+  \brief Vector/state of quantities with arbitrary types.
+
+  Class is aimed for aggregation and processing an arbitrary set of heterogeneous
+  values as a single structure with a set of basic operations (arithmetic, logical, IO)
+  on objects of such classes. Set of values of physical nature can be considered
+  as a state of matter at some spatial point thus the class is called QState.
+  Basic arithmetic operations on such states allows us to consider them as vectors,
+  for example, for flux computations. However the class doesn't limited to work only
+  with physical/arithmetic values and may be considered as heterogeneous collection
+  of data with name access to the elements (named tuple).
+  \code
+  using HD2T_s = QState<rho_t, Te_t, Ti_t, w_t>;
+  HD2T_s hd1(1e-6, 1e-3, 1e-3, V3d(0));
+  auto hd2 = 2*hd1;
+  hd1[rho] = 2e-6;
+  auto hd3 = (hd1 + hd2) / 2;
+  std::cerr << hd3 << '\n';
+  \endcode
+  The only requirement to a type-name (tag) is public field 'type' with value type.
+
+  Class allows you to aggregate both copies and references to specified set of variables.
+  State of copies is very similar to simple structure with a little bit more complex access
+  (I'm working on that) but also with auto-generated set of basic operations.
+  State of references is useful for vectorization of the computations (in a logical way),
+  i.e. applying the same operation to a set of variables at once.
+  \code
+  double r = 1, t = 2;
+  auto s1 = make_state<rho_t, T_t>(1, 2); // s1 : QState<rho_t, T_t>
+  auto s2 = make_state<rho_t, T_t>(r, t); // s2 : QState<rho_t&, T_t&>
+  s1[rho] = 2; // r == 1
+  s2[rho] = 2; // r == 2
+  \endcode
+
+  The way the class aggregates values is effected on its type which leads to some specifics
+  of copy constructor semantics. Namely the aggregated copies will be copied but references
+  will remain the references to the original objects. Thus the resultant object of the copy
+  constructor it's not a copy of the original object in general case but its duplicate.
+  It may be really confusing especially in combination with auto keyword. To be assure
+  that you get the copy of a state use special method/function 'copy' or specify exact type
+  explicitely.
+  \code
+  // auto is dangerous!
+  auto c1 = s1; // c1 : QState<rho, T> => it is a copy!
+  auto c2 = s2; // c2 : QState<rho&, T&> => it is a duplicate!
+  c1[T] = 3;    // s1[T] == 2
+  c2[T] = 3;    // s2[T] == 3
+
+  // get the real copy using special method
+  auto c3 = s1.copy(); // c3 : QState<rho, T>
+  auto c4 = copy(s2);  // c4 : QState<rho, T>
+
+  // get the real copies by specifying exact type
+  QState<rho, T> c5 = s1;
+  QState<rho, T> c6 = s2;
+  \endcode
+  Note that both ways allow you to make more than just a copy! Namely you can slice
+  the state i.e. make a state with specific subset of the data (see below).
+
+  Currenlty there are two ways to get the components of a state: by type-name and
+  by variable of the corresponding type-name. The last one is shorter and uses less
+  parentheses but requires the global variables (see the unit tests file for examples).
+  Type-name access is ugly, global variables are evil... Another way is needed!
+  (I like this one https://stackoverflow.com/q/54617101/8802124 but it requires c++20.)
+  \code
+  s1[rho] = 4;
+  s1.get<rho_t>() = 4;
+  //s1.rho = 4; // this would be perfect: no globals, simple structure syntax.
+  \endcode
+  It's also possible to get several components at once by specifying their names to the
+  corresponding methods (so called slicing). The result is a new state with copies
+  or references (depends on method) of the original values.
+  \code
+  auto hd4 = hd1.get<rho_t, Ti_t, w_t>(); // hd3 : QState<rho_t&, Ti_t&, w_t&>
+  auto hd5 = hd2.copy(rho, Ti, w); // hd5 : QState<rho_t, Ti_t, w_t>
+  QState<rho_t, Ti_t, w_t> hd6 = hd2; // explicit way is also possible
+  auto hd7 = hd2.copy(); // full copy
+  \endcode
+
+  Class is accompanying by a set of arithmetic, logical and IO operations. Note that
+  both arithmetic and logical operations are not symmetric! This is done in order to allow
+  these operations on states with different sets of components, when one set is a subset
+  of the other, or when the order of components is differ.
+  \code
+  hd3 = (hd1 + hd2) / 2; // hd{1,2,3} are the same type, HD2T_s
+  hd4 = (hd1 + hd2) / 2; // it's also OK, both hd{1,2} have all needed components
+  //hd1 = hd4; // COMPILE ERROR: Te_t is not presented in the hd4 state
+  \endcode
+
+  Note that all operations with states are constexpr and can be done in compile-time,
+  most misusages lead to a compilation error! For example, access to a component
+  which is not presented in a state, mixing states with unmatched list of quantities.
+
+  \see QDetails.h for implementation details.
 */
 
 #endif // QSTATE_H_INCLUDED
