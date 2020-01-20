@@ -48,7 +48,7 @@ TEST_CASE("io ops")
 
   ss.str("");
   //ss.clear(); // doesn't needed because ss is not in eof state and contains ')'
-  ss << bareComponents << v3;
+  ss << V3i::bareComponents << v3;
   CHECK(ss.str() == "1 2 3");
   v4 = V3i(0);
   ss >> v4;
@@ -64,7 +64,7 @@ TEST_CASE("io ops")
 
   ss.str("");
   ss.clear(); // clear eof bit
-  ss << inBrackets << v1;
+  ss << V3i::inBrackets << v1;
   CHECK(ss.str() == "(1, 1, 1)");
   v2 = V3i(0);
   ss >> v2;

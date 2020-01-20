@@ -7,10 +7,9 @@
   \brief Euclidian (or not) vector of arbitrary dimension, definition and documentation.
 */
 
-#include "IOMode.h"
 #include "Utils.h"
-
 #include <cctype> // isspace
+#include <locale>
 #include <cstddef> // size_t
 #include <ostream>
 #include <istream>
@@ -52,12 +51,45 @@ public:
   constexpr Vector& operator*=(const T &a) noexcept;
   constexpr Vector& operator+=(const Vector &v) noexcept;
   constexpr Vector& operator-=(const Vector &v) noexcept;
+
+  // io manipulators
+  static std::ios_base& inBrackets(std::ios_base &stream) noexcept;
+  static std::ios_base& bareComponents(std::ios_base &stream) noexcept;
+
+  template<size_t I, class U, bool B>
+    friend std::istream& operator>>(std::istream &in, Vector<I, U, B> &v) noexcept;
+  template<size_t I, class U, bool B>
+    friend std::ostream& operator<<(std::ostream &out, const Vector<I, U, B> &v) noexcept;
+
+private:
+  // io facet
+  class io_mode final : public std::locale::facet
+  {
+    mutable bool use;
+
+  public:
+    ~io_mode() = default;
+    static std::locale::id id;
+
+    static const io_mode& get_mode(std::ios_base &stream)
+    {
+      std::locale loc = stream.getloc();
+      if (!std::has_facet<io_mode>(loc))
+        stream.imbue(std::locale(loc, new io_mode));
+      return std::use_facet<io_mode>(stream.getloc());
+    }
+
+    bool use_brackets() const { return use; }
+    void use_brackets(bool flag) const { use = flag; }
+  };
 }; // class Vector<N, T, is_array>
 
 using Vector2D = Vector<2>;
 using Vector3D = Vector<3>;
 
-template<size_t N, class T> using Array = Vector<N, T, false>;
+template<size_t N, class T = double> using Array = Vector<N, T, false>;
+
+template<size_t N, class T, bool B> std::locale::id Vector<N, T, B>::io_mode::id;
 
 /*---------------------------------------------------------------------------------------*/
 
@@ -204,7 +236,23 @@ template<size_t N, class T, bool B>
 /*---------------------------------------------------------------------------------------*/
 
 template<size_t N, class T, bool B>
-  std::istream& operator>>(std::istream &in, Vector<N, T, B> &v) noexcept
+  std::ios_base& Vector<N, T, B>::bareComponents(std::ios_base &stream) noexcept
+{
+  Vector<N, T, B>::io_mode::get_mode(stream).use_brackets(false);
+  return stream;
+}
+
+template<size_t N, class T, bool B>
+  std::ios_base& Vector<N, T, B>::inBrackets(std::ios_base &stream) noexcept
+{
+  Vector<N, T, B>::io_mode::get_mode(stream).use_brackets(true);
+  return stream;
+}
+
+/*---------------------------------------------------------------------------------------*/
+
+template<size_t I, class U, bool B>
+  std::istream& operator>>(std::istream &in, Vector<I, U, B> &v) noexcept
 {
   char c;
   bool in_brackets = true;
@@ -216,7 +264,7 @@ template<size_t N, class T, bool B>
       break;
     }
 
-  for (size_t i = 0; i < N; ++i)
+  for (size_t i = 0; i < I; ++i)
   {
     while (in.get(c) && c != ',')
       if (!std::isspace(c))
@@ -239,17 +287,17 @@ template<size_t N, class T, bool B>
 
 /*---------------------------------------------------------------------------------------*/
 
-template<size_t N, class T, bool B>
-  std::ostream& operator<<(std::ostream &out, const Vector<N, T, B> &v) noexcept
+template<size_t I, class U, bool B>
+  std::ostream& operator<<(std::ostream &out, const Vector<I, U, B> &v) noexcept
 {
   const std::locale &loc = out.getloc();
   bool use_brackets =
-    std::has_facet<IO_mode>(loc)?
-      std::use_facet<IO_mode>(loc).use_brackets() : true;
+    std::has_facet<typename Vector<I, U, B>::io_mode>(loc)?
+      std::use_facet<typename Vector<I, U, B>::io_mode>(loc).use_brackets() : true;
 
   out << (use_brackets? "(" : "") << v[0];
 
-  for (size_t i = 1; i < N; ++i)
+  for (size_t i = 1; i < I; ++i)
     out << (use_brackets? ", " : " ") << v[i];
 
   return out << (use_brackets? ")" : "");
@@ -546,6 +594,21 @@ namespace vector_tests
   \brief Substruction assignment with vector.
   \param v Substrahend, a vector of the same size (N) and type (T) of the components.
   \return The difference of the given vector and the substrahend "v".
+*/
+
+/*!
+  \fn std::ios_base& Vector::bareComponents(std::ios_base &stream)
+  \brief Manipulator for the output stream - bare components.
+    stream << Vector::bareComponents results in that all output of the vectors
+    in that stream will be performed in the form of N numbers separated by spaces.
+*/
+
+/*!
+  \fn std::ios_base& Vector::inBrackets(std::ios_base &stream)
+  \brief Manipulator for the output stream - brackets form.
+    stream << Vector::inBrackets results in that all output of the vectors
+    in that stream will be performed in the form of N numbers separated by commas
+    and enclosed into the round brackets, (x, y, z, ...). This regime is default.
 */
 
 /*!

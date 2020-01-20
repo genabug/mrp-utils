@@ -48,6 +48,37 @@ public:
   constexpr Tensor invert() const noexcept;
   constexpr Tensor transpose() const noexcept;
 
+  // io manipulators
+  static std::ios_base& inBrackets(std::ios_base &stream) noexcept;
+  static std::ios_base& bareComponents(std::ios_base &stream) noexcept;
+
+  template<size_t I, class U>
+    friend std::istream& operator>>(std::istream &in, Tensor<I, U> &v) noexcept;
+  template<size_t I, class U>
+    friend std::ostream& operator<<(std::ostream &out, const Tensor<I, U> &v) noexcept;
+
+private:
+  // io facet
+  class io_mode final : public std::locale::facet
+  {
+    mutable bool use;
+
+  public:
+    ~io_mode() = default;
+    static std::locale::id id;
+
+    static const io_mode& get_mode(std::ios_base &stream)
+    {
+      std::locale loc = stream.getloc();
+      if (!std::has_facet<io_mode>(loc))
+        stream.imbue(std::locale(loc, new io_mode));
+      return std::use_facet<io_mode>(stream.getloc());
+    }
+
+    bool use_brackets() const { return use; }
+    void use_brackets(bool flag) const { use = flag; }
+  };
+
 private:
   constexpr Tensor<N-1, T> M(size_t I, size_t J) const noexcept;
 
@@ -80,6 +111,9 @@ private:
   template<size_t I, class = std::enable_if_t<I == N*N>, class = T> // full init
     constexpr void init(const array<I> &arr) noexcept;
 }; // class Tensor<N, T>
+
+
+template<size_t N, class T> std::locale::id Tensor<N, T>::io_mode::id;
 
 /*---------------------------------------------------------------------------------------*/
 
@@ -364,7 +398,23 @@ template<size_t N, class T>
 /*---------------------------------------------------------------------------------------*/
 
 template<size_t N, class T>
-  std::istream& operator>>(std::istream &in, Tensor<N, T> &A) noexcept
+  std::ios_base& Tensor<N, T>::inBrackets(std::ios_base &stream) noexcept
+{
+  Tensor<N, T>::io_mode::get_mode(stream).use_brackets(true);
+  return stream;
+}
+
+template<size_t N, class T>
+  std::ios_base& Tensor<N, T>::bareComponents(std::ios_base &stream) noexcept
+{
+  Tensor<N, T>::io_mode::get_mode(stream).use_brackets(false);
+  return stream;
+}
+
+/*---------------------------------------------------------------------------------------*/
+
+template<size_t I, class U>
+  std::istream& operator>>(std::istream &in, Tensor<I, U> &A) noexcept
 {
   char c;
   bool in_brackets = true;
@@ -376,8 +426,8 @@ template<size_t N, class T>
       break;
     }
 
-  for (size_t i = 0; i < N; ++i)
-    for (size_t j = 0; j < N; ++j)
+  for (size_t i = 0; i < I; ++i)
+    for (size_t j = 0; j < I; ++j)
     {
       while (in.get(c) && c != ',')
         if (!std::isspace(c))
@@ -400,20 +450,20 @@ template<size_t N, class T>
 
 /*---------------------------------------------------------------------------------------*/
 
-template<size_t N, class T>
-  std::ostream& operator<<(std::ostream &out, const Tensor<N, T> &A) noexcept
+template<size_t I, class U>
+  std::ostream& operator<<(std::ostream &out, const Tensor<I, U> &A) noexcept
 {
   const std::locale &loc = out.getloc();
   bool use_brackets =
-    std::has_facet<IO_mode>(loc)?
-      std::use_facet<IO_mode>(loc).use_brackets() : true;
+    std::has_facet<typename Tensor<I, U>::io_mode>(loc)?
+      std::use_facet<typename Tensor<I, U>::io_mode>(loc).use_brackets() : true;
 
   out << (use_brackets? "[" : "") << A[0][0];
-  for (size_t j = 1; j < N; ++j)
+  for (size_t j = 1; j < I; ++j)
     out << (use_brackets? ", " : " ") << A[0][j];
 
-  for (size_t i = 1; i < N; ++i)
-    for (size_t j = 0; j < N; ++j)
+  for (size_t i = 1; i < I; ++i)
+    for (size_t j = 0; j < I; ++j)
       out << (use_brackets? ", " : " ") << A[i][j];
 
   return out << (use_brackets? "]" : "");
@@ -824,6 +874,21 @@ namespace tensor_tests
   \brief Get the transposed tensor.
   \return Tensor "B" with flipped components, i.e. B[i][j] == A[j][i]
   \see Tensor::operator~()
+*/
+
+/*!
+  \fn std::ios_base& Tensor::bareComponents(std::ios_base &stream)
+  \brief Manipulator for the output stream - bare components.
+    stream << Tensor::bareComponents results in that all output of the tensors
+    in that stream will be performed in the form of N numbers separated by spaces.
+*/
+
+/*!
+  \fn std::ios_base& Tensor::inBrackets(std::ios_base &stream)
+  \brief Manipulator for the output stream - brackets form.
+    stream << Tensor::inBrackets results in that all output of the tensors
+    in that stream will be performed in the form of N numbers separated by commas
+    and enclosed into the squared brackets, [xx, xy, xz, ...]. This regime is default.
 */
 
 /*!
