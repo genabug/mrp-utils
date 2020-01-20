@@ -11,7 +11,6 @@
 #include "Utils.h"
 
 #include <cctype> // isspace
-#include <locale>
 #include <cstddef> // size_t
 #include <ostream>
 #include <istream>
