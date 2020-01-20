@@ -11,12 +11,13 @@
 #include "Utils.h"
 
 #include <cctype> // isspace
+#include <locale>
 #include <cstddef> // size_t
 #include <ostream>
 #include <istream>
 #include <type_traits> // enable_if_t
 
-template<size_t N, class T = double, bool is_array = false> class Vector
+template<size_t N, class T = double, bool is_euclidian = true> class Vector
 {
   T data[N];
   static_assert(N != 0, "Vector of zero size is meaningless.");
@@ -29,8 +30,10 @@ public:
     constexpr explicit Vector(Ts... as) noexcept : data{static_cast<T>(as)...} {}
 
   // converters
-  template<class U> constexpr explicit Vector(const Vector<N, U, is_array> &v) noexcept;
-  template<class U> constexpr Vector& operator=(const Vector<N, U, is_array> &v) noexcept;
+  template<class U>
+    constexpr explicit Vector(const Vector<N, U, is_euclidian> &v) noexcept;
+  template<class U>
+    constexpr Vector& operator=(const Vector<N, U, is_euclidian> &v) noexcept;
 
   // access
   static constexpr size_t X = 0;
@@ -50,12 +53,12 @@ public:
   constexpr Vector& operator*=(const T &a) noexcept;
   constexpr Vector& operator+=(const Vector &v) noexcept;
   constexpr Vector& operator-=(const Vector &v) noexcept;
-}; // class Vector<N, T, ST>
+}; // class Vector<N, T, is_array>
 
 using Vector2D = Vector<2>;
 using Vector3D = Vector<3>;
 
-template<size_t N, class T> using Array = Vector<N, T, true>;
+template<size_t N, class T> using Array = Vector<N, T, false>;
 
 /*---------------------------------------------------------------------------------------*/
 
@@ -141,7 +144,8 @@ template<size_t N, class T, bool B>
 
 template<size_t N, class T, bool B>
   template<class U>
-    constexpr Vector<N, T, B>& Vector<N, T, B>::operator=(const Vector<N, U, B> &v) noexcept
+    constexpr Vector<N, T, B>&
+      Vector<N, T, B>::operator=(const Vector<N, U, B> &v) noexcept
 {
   for (size_t i = 0; i < N; ++i)
     data[i] = v[i];
@@ -411,8 +415,8 @@ namespace vector_tests
   \brief Euclidian (or not) vector of arbitrary dimension and type.
   \tparam N Number of components.
   \tparam T Type of the components.
-  \tparam is_array Boolean flag, used to distinguish eucliadian vector (false)
-    from just an array (true) with additional componentwise arithmetic operatrions.
+  \tparam is_euclidian Boolean flag, used to distinguish vector in euclidian space (true)
+    from just an array of components with the same type (false) with some operatrions.
 
   If vector is not euclidian one then only minimal, componentwise set of operations
   are defined for it, like multiplication and division by scalar, addition to
