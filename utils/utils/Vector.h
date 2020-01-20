@@ -4,7 +4,7 @@
 /*!
   \file Vector.h
   \author gennadiy (gennadiy3.14@gmail.com)
-  \brief Euclidian vector of arbitrary dimension, definition and documentation.
+  \brief Euclidian (or not) vector of arbitrary dimension, definition and documentation.
 */
 
 #include "IOMode.h"
@@ -16,7 +16,7 @@
 #include <istream>
 #include <type_traits> // enable_if_t
 
-template<size_t N, class T = double, class ST = int> class Vector
+template<size_t N, class T = double, bool is_array = false> class Vector
 {
   T data[N];
   static_assert(N != 0, "Vector of zero size is meaningless.");
@@ -29,8 +29,8 @@ public:
     constexpr explicit Vector(Ts... as) noexcept : data{static_cast<T>(as)...} {}
 
   // converters
-  template<class U> constexpr explicit Vector(const Vector<N, U, ST> &v) noexcept;
-  template<class U> constexpr Vector& operator=(const Vector<N, U, ST> &v) noexcept;
+  template<class U> constexpr explicit Vector(const Vector<N, U, is_array> &v) noexcept;
+  template<class U> constexpr Vector& operator=(const Vector<N, U, is_array> &v) noexcept;
 
   // access
   static constexpr size_t X = 0;
@@ -52,78 +52,76 @@ public:
   constexpr Vector& operator-=(const Vector &v) noexcept;
 }; // class Vector<N, T, ST>
 
+using Vector2D = Vector<2>;
+using Vector3D = Vector<3>;
+
+template<size_t N, class T> using Array = Vector<N, T, true>;
+
 /*---------------------------------------------------------------------------------------*/
 
 // arithmetic ops
-template<size_t N, class T, class ST>
+template<size_t N, class T, bool B>
   constexpr auto operator+(
-    Vector<N, T, ST> v1, const Vector<N, T, ST> &v2) noexcept { v1 += v2; return v1; }
+    Vector<N, T, B> v1, const Vector<N, T, B> &v2) noexcept { v1 += v2; return v1; }
 
-template<size_t N, class T, class ST>
+template<size_t N, class T, bool B>
   constexpr auto operator-(
-    Vector<N, T, ST> v1, const Vector<N, T, ST> &v2) noexcept { v1 -= v2; return v1; }
+    Vector<N, T, B> v1, const Vector<N, T, B> &v2) noexcept { v1 -= v2; return v1; }
 
-template<size_t N, class T, class ST>
-  constexpr auto operator*(const T &a, Vector<N, T, ST> v) noexcept { v *= a; return v; }
+template<size_t N, class T, bool B>
+  constexpr auto operator*(const T &a, Vector<N, T, B> v) noexcept { v *= a; return v; }
 
-template<size_t N, class T, class ST>
-  constexpr auto operator*(Vector<N, T, ST> v, const T &a) noexcept { v *= a; return v; }
+template<size_t N, class T, bool B>
+  constexpr auto operator*(Vector<N, T, B> v, const T &a) noexcept { v *= a; return v; }
 
-template<size_t N, class T, class ST>
-  constexpr auto operator/(Vector<N, T, ST> v, const T &a) noexcept { v /= a; return v; }
-
-template<size_t N, class T, class ST>
-  constexpr auto operator*(
-    const Vector<N, T, ST> &v1, const Vector<N, T, ST> &v2) noexcept;
+template<size_t N, class T, bool B>
+  constexpr auto operator/(Vector<N, T, B> v, const T &a) noexcept { v /= a; return v; }
 
 // boolean ops
-template<size_t N, class T, class ST>
-  constexpr bool operator==(
-    const Vector<N, T, ST> &v1, const Vector<N, T, ST> &v2) noexcept;
+template<size_t N, class T, bool B>
+  constexpr bool operator==(const Vector<N, T, B> &v1, const Vector<N, T, B> &v2) noexcept;
 
-template<size_t N, class T, class ST>
+template<size_t N, class T, bool B>
   constexpr bool operator!=(
-    const Vector<N, T, ST> &v1, const Vector<N, T, ST> &v2) noexcept { return !(v1 == v2);}
+    const Vector<N, T, B> &v1, const Vector<N, T, B> &v2) noexcept { return !(v1 == v2); }
 
 // IO ops
-template<size_t N, class T, class ST>
-  std::istream& operator>>(std::istream &in, Vector<N, T, ST> &v) noexcept;
+template<size_t N, class T, bool B>
+  std::istream& operator>>(std::istream &in, Vector<N, T, B> &v) noexcept;
 
-template<size_t N, class T, class ST>
-  std::ostream& operator<<(std::ostream &out, const Vector<N, T, ST> &v) noexcept;
+template<size_t N, class T, bool B>
+  std::ostream& operator<<(std::ostream &out, const Vector<N, T, B> &v) noexcept;
 
-// useful functions
-template<size_t N, class T, class ST>
-  constexpr auto sqs(const Vector<N, T, ST> &v) noexcept { return v*v; }
+// useful functions for euclidian vector only! note the lack of third tparam
+template<size_t N, class T>
+  constexpr auto operator*(const Vector<N, T> &v1, const Vector<N, T> &v2) noexcept;
 
-template<size_t N, class T, class ST>
-  constexpr auto fabs(const Vector<N, T, ST> &v) noexcept { return Utils::sqrt(v*v); }
+template<size_t N, class T>
+  constexpr auto sqs(const Vector<N, T> &v) noexcept { return v*v; }
 
-template<size_t N, class T, class ST>
-  constexpr auto cos(const Vector<N, T, ST> &v1, const Vector<N, T, ST> &v2) noexcept;
+template<size_t N, class T>
+  constexpr auto fabs(const Vector<N, T> &v) noexcept { return Utils::sqrt(v*v); }
 
-template<size_t N, class T, class ST>
-  constexpr auto sin(const Vector<N, T, ST> &v1, const Vector<N, T, ST> &v2) noexcept;
+template<size_t N, class T>
+  constexpr auto cos(const Vector<N, T> &v1, const Vector<N, T> &v2) noexcept;
 
-template<class T, class ST>
-  constexpr auto operator%(
-    const Vector<2, T, ST> &v1, const Vector<2, T, ST> &v2) noexcept;
+template<size_t N, class T>
+  constexpr auto sin(const Vector<N, T> &v1, const Vector<N, T> &v2) noexcept;
 
-template<class T, class ST>
-  constexpr auto operator%(
-    const Vector<3, T, ST> &v1, const Vector<3, T, ST> &v2) noexcept;
+template<class T>
+  constexpr auto operator%(const Vector<2, T> &v1, const Vector<2, T> &v2) noexcept;
 
-template<class T, class ST> constexpr auto operator~(const Vector<2, T, ST> &v) noexcept;
+template<class T>
+  constexpr auto operator%(const Vector<3, T> &v1, const Vector<3, T> &v2) noexcept;
 
-using Vector2D = Vector<2>;
-using Vector3D = Vector<3>;
+template<class T> constexpr auto operator~(const Vector<2, T> &v) noexcept;
 
 /*---------------------------------------------------------------------------------------*/
 /*------------------------------------ definition ---------------------------------------*/
 /*---------------------------------------------------------------------------------------*/
 
-template<size_t N, class T, class ST>
-  constexpr Vector<N, T, ST>::Vector(const T &a) noexcept : data{}
+template<size_t N, class T, bool B>
+  constexpr Vector<N, T, B>::Vector(const T &a) noexcept : data{}
 {
   for (auto &d : data)
     d = a;
@@ -131,9 +129,9 @@ template<size_t N, class T, class ST>
 
 /*---------------------------------------------------------------------------------------*/
 
-template<size_t N, class T, class ST>
+template<size_t N, class T, bool B>
   template<class U>
-    constexpr Vector<N, T, ST>::Vector(const Vector<N, U, ST> &v) noexcept : data{}
+    constexpr Vector<N, T, B>::Vector(const Vector<N, U, B> &v) noexcept : data{}
 {
   for (size_t i = 0; i < N; ++i)
     data[i] = static_cast<T>(v[i]);
@@ -141,9 +139,9 @@ template<size_t N, class T, class ST>
 
 /*---------------------------------------------------------------------------------------*/
 
-template<size_t N, class T, class ST>
+template<size_t N, class T, bool B>
   template<class U>
-    constexpr Vector<N, T, ST>& Vector<N, T, ST>::operator=(const Vector<N, U, ST> &v) noexcept
+    constexpr Vector<N, T, B>& Vector<N, T, B>::operator=(const Vector<N, U, B> &v) noexcept
 {
   for (size_t i = 0; i < N; ++i)
     data[i] = v[i];
@@ -151,8 +149,8 @@ template<size_t N, class T, class ST>
 
 /*---------------------------------------------------------------------------------------*/
 
-template<size_t N, class T, class ST>
-  constexpr Vector<N, T, ST>& Vector<N, T, ST>::operator/=(const T &a) noexcept
+template<size_t N, class T, bool B>
+  constexpr Vector<N, T, B>& Vector<N, T, B>::operator/=(const T &a) noexcept
 {
   for (auto &d : data)
     d /= a;
@@ -161,8 +159,8 @@ template<size_t N, class T, class ST>
 
 /*---------------------------------------------------------------------------------------*/
 
-template<size_t N, class T, class ST>
-  constexpr Vector<N, T, ST>& Vector<N, T, ST>::operator*=(const T &a) noexcept
+template<size_t N, class T, bool B>
+  constexpr Vector<N, T, B>& Vector<N, T, B>::operator*=(const T &a) noexcept
 {
   for (auto &d : data)
     d *= a;
@@ -171,9 +169,8 @@ template<size_t N, class T, class ST>
 
 /*---------------------------------------------------------------------------------------*/
 
-template<size_t N, class T, class ST>
-  constexpr Vector<N, T, ST>&
-    Vector<N, T, ST>::operator+=(const Vector<N, T, ST> &v) noexcept
+template<size_t N, class T, bool B>
+  constexpr Vector<N, T, B>& Vector<N, T, B>::operator+=(const Vector<N, T, B> &v) noexcept
 {
   for (size_t i = 0; i < N; ++i)
     data[i] += v[i];
@@ -182,9 +179,8 @@ template<size_t N, class T, class ST>
 
 /*---------------------------------------------------------------------------------------*/
 
-template<size_t N, class T, class ST>
-  constexpr Vector<N, T, ST>&
-    Vector<N, T, ST>::operator-=(const Vector<N, T, ST> &v) noexcept
+template<size_t N, class T, bool B>
+  constexpr Vector<N, T, B>& Vector<N, T, B>::operator-=(const Vector<N, T, B> &v) noexcept
 {
   for (size_t i = 0; i < N; ++i)
     data[i] -= v[i];
@@ -193,20 +189,8 @@ template<size_t N, class T, class ST>
 
 /*---------------------------------------------------------------------------------------*/
 
-template<size_t N, class T, class ST>
-  constexpr auto operator*(const Vector<N, T, ST> &v1, const Vector<N, T, ST> &v2) noexcept
-{
-  auto t = v1[0] * v2[0];
-  for (size_t i = 1; i < N; ++i)
-    t += v1[i]*v2[i];
-  return t;
-}
-
-/*---------------------------------------------------------------------------------------*/
-
-template<size_t N, class T, class ST>
-  constexpr bool operator==(
-    const Vector<N, T, ST> &v1, const Vector<N, T, ST> &v2) noexcept
+template<size_t N, class T, bool B>
+  constexpr bool operator==(const Vector<N, T, B> &v1, const Vector<N, T, B> &v2) noexcept
 {
   for (size_t i = 0; i < N; ++i)
     if (v1[i] != v2[i])
@@ -216,8 +200,8 @@ template<size_t N, class T, class ST>
 
 /*---------------------------------------------------------------------------------------*/
 
-template<size_t N, class T, class ST>
-  std::istream& operator>>(std::istream &in, Vector<N, T, ST> &v) noexcept
+template<size_t N, class T, bool B>
+  std::istream& operator>>(std::istream &in, Vector<N, T, B> &v) noexcept
 {
   char c;
   bool in_brackets = true;
@@ -252,8 +236,8 @@ template<size_t N, class T, class ST>
 
 /*---------------------------------------------------------------------------------------*/
 
-template<size_t N, class T, class ST>
-  std::ostream& operator<<(std::ostream &out, const Vector<N, T, ST> &v) noexcept
+template<size_t N, class T, bool B>
+  std::ostream& operator<<(std::ostream &out, const Vector<N, T, B> &v) noexcept
 {
   const std::locale &loc = out.getloc();
   bool use_brackets =
@@ -270,8 +254,19 @@ template<size_t N, class T, class ST>
 
 /*---------------------------------------------------------------------------------------*/
 
-template<size_t N, class T, class ST>
-  constexpr auto cos(const Vector<N, T, ST> &v1, const Vector<N, T, ST> &v2) noexcept
+template<size_t N, class T>
+constexpr auto operator*(const Vector<N, T> &v1, const Vector<N, T> &v2) noexcept
+{
+  auto t = v1[0] * v2[0];
+  for (size_t i = 1; i < N; ++i)
+    t += v1[i]*v2[i];
+  return t;
+}
+
+/*---------------------------------------------------------------------------------------*/
+
+template<size_t N, class T>
+  constexpr auto cos(const Vector<N, T> &v1, const Vector<N, T> &v2) noexcept
 {
   static_assert(std::is_arithmetic<T>::value, "Component must has arithmetic type!");
   return v1 * v2 / (fabs(v1) * fabs(v2));
@@ -279,8 +274,8 @@ template<size_t N, class T, class ST>
 
 /*---------------------------------------------------------------------------------------*/
 
-template<size_t N, class T, class ST>
-  constexpr auto sin(const Vector<N, T, ST> &v1, const Vector<N, T, ST> &v2) noexcept
+template<size_t N, class T>
+  constexpr auto sin(const Vector<N, T> &v1, const Vector<N, T> &v2) noexcept
 {
   static_assert(std::is_arithmetic<T>::value, "Component must has arithmetic type!");
   auto x = cos(v1, v2);
@@ -289,18 +284,18 @@ template<size_t N, class T, class ST>
 
 /*---------------------------------------------------------------------------------------*/
 
-template<class T, class ST>
-  constexpr auto operator%(const Vector<2, T, ST> &v1, const Vector<2, T, ST> &v2) noexcept
+template<class T>
+  constexpr auto operator%(const Vector<2, T> &v1, const Vector<2, T> &v2) noexcept
 {
   return v1[0]*v2[1] - v1[1]*v2[0];
 }
 
 /*---------------------------------------------------------------------------------------*/
 
-template<class T, class ST>
-  constexpr auto operator%(const Vector<3, T, ST> &v1, const Vector<3, T, ST> &v2) noexcept
+template<class T>
+  constexpr auto operator%(const Vector<3, T> &v1, const Vector<3, T> &v2) noexcept
 {
-  return Vector<3, T, ST>(
+  return Vector<3, T>(
     v1[1]*v2[2] - v2[1]*v1[2],
     v1[2]*v2[0] - v2[2]*v1[0],
     v1[0]*v2[1] - v2[0]*v1[1]);
@@ -308,9 +303,9 @@ template<class T, class ST>
 
 /*---------------------------------------------------------------------------------------*/
 
-template<class T, class ST> constexpr auto operator~(const Vector<2, T, ST> &v) noexcept
+template<class T> constexpr auto operator~(const Vector<2, T> &v) noexcept
 {
-  return Vector<2, T, ST>(-v[1], v[0]);
+  return Vector<2, T>(-v[1], v[0]);
 }
 
 /*---------------------------------------------------------------------------------------*/
@@ -413,38 +408,22 @@ namespace vector_tests
 
 /*!
   \class Vector
-  \brief Euclidian vector of arbitrary dimension and type.
+  \brief Euclidian (or not) vector of arbitrary dimension and type.
   \tparam N Number of components.
   \tparam T Type of the components.
-  \tparam ST Subtype, used to distinguish vector value of various nature on the type-level.
-    [[deprecated]]
+  \tparam is_array Boolean flag, used to distinguish eucliadian vector (false)
+    from just an array (true) with additional componentwise arithmetic operatrions.
 
-  The vector values may have various physical nature and various behavior,
-  such as sliding vectors, localized vectors etc. Moreover, the class can be also used
-  for storage of sets of N numbers which, actually, are not the vectors...
-  For developing functions which have different functionality for different subtypes
-  of vectors, the parameter "ST" is added: for instance, next two function are different:
-  \code
-  void f(Vector<2, double, T1>)
-  void f(Vector<2, double, T2>)
-  \endcode
-  Since this parameter is a type, not a value, it's possible to group different subtypes
-  of vectors by introducing the template specializations:
-  \code
-  template<class T1> void f(Vector<2, double, T1>);
-  \endcode
-  handles the vector of any subtype, while
-  \code
-  template<class T2> class subtype;
-  template<class T2> void f(Vector<2, double, subtype<T2>>)
-  \endcode
-  defines the alternative behavior for some subtypes of vector.
+  If vector is not euclidian one then only minimal, componentwise set of operations
+  are defined for it, like multiplication and division by scalar, addition to
+  and substruction from another non-euclidian vector, as well as IO and equality ops.
+  For an euclidian vector additional operations are defined, e.g. dot and curl product,
+  magnitude, etc. Also several mixed operations with tensors/matricies are defined,
+  \see Tensor.
 
   NB! All operations are noexcept because I don't care about overflows! Just kidding!
   It's because there is no standard and cross-platform way to catch them in C++
   for types like int or double (which are the main type of the components IMO).
-
-  Several additional operations with tensors/matricies are also defined, \see Tensor.
 */
 
 /*!
@@ -471,7 +450,7 @@ namespace vector_tests
 */
 
 /*!
-  \fn constexpr explicit Vector::Vector(const Vector<N, U, ST> &v) noexcept
+  \fn constexpr explicit Vector::Vector(const Vector<N, U, is_array> &v) noexcept
   \brief Conversion constructor from a vector with arbitrary type of the components.
   \tparam U Type of the given vector' components.
   \param v Vector to be converted.
@@ -481,7 +460,7 @@ namespace vector_tests
 */
 
 /*!
-  \fn constexpr Vector& Vector::operator=(const Vector<N, U, ST> &v) noexcept
+  \fn constexpr Vector& Vector::operator=(const Vector<N, U, is_array> &v) noexcept
   \brief Conversion assignment from a vector with arbitrary type of the components.
   \tparam U Type of the given vector' components.
   \param t Vector to be converted.
