@@ -52,7 +52,7 @@ public:
   constexpr Vector& operator+=(const Vector &v) noexcept;
   constexpr Vector& operator-=(const Vector &v) noexcept;
 
-  // io manipulators
+  // io
   static std::ios_base& inBrackets(std::ios_base &stream) noexcept;
   static std::ios_base& bareComponents(std::ios_base &stream) noexcept;
 

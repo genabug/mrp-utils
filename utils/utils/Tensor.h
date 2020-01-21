@@ -48,7 +48,7 @@ public:
   constexpr Tensor invert() const noexcept;
   constexpr Tensor transpose() const noexcept;
 
-  // io manipulators
+  // io
   static std::ios_base& inBrackets(std::ios_base &stream) noexcept;
   static std::ios_base& bareComponents(std::ios_base &stream) noexcept;
 
@@ -95,23 +95,12 @@ private:
   template<size_t I = N> // common case for N > 3
     constexpr std::enable_if_t<(I > 3), T> det_impl() const noexcept;
 
-  // init helper struct
-  // had to use it instead of std::array
-  // because the last one doesn't have constexpr operator[] until c++17
-  template<size_t I = N, class U = T> struct array
-  {
-    U data[I? I : 1];
-    constexpr const T& operator[](size_t i) const noexcept { return data[i]; }
-  };
-
   // init helpers
-  template<size_t I, class = std::enable_if_t<I == N>> // diagonal init
-    constexpr void init(const array<I> &arr) noexcept;
-
-  template<size_t I, class = std::enable_if_t<I == N*N>, class = T> // full init
-    constexpr void init(const array<I> &arr) noexcept;
+  template<size_t I = N, class = std::enable_if_t<I == N>>
+    constexpr void init(const Array<N, T> &arr) noexcept;
+  template<size_t I = N*N, class = std::enable_if_t<I == N*N>, class = T>
+    constexpr void init(const Array<N*N, T> &arr) noexcept;
 }; // class Tensor<N, T>
-
 
 template<size_t N, class T> std::locale::id Tensor<N, T>::io_mode::id;
 
@@ -217,7 +206,7 @@ template<size_t N, class T> template<class... Ts>
 {
   constexpr auto n = sizeof...(Ts);
   static_assert(n == N || n == N*N, "Ambiguous number of arguments.");
-  init<n>({as...});
+  init(Array<n, T>(as...));
 }
 
 /*---------------------------------------------------------------------------------------*/
@@ -578,15 +567,15 @@ template<size_t N, class T> template<size_t I>
 
 /*---------------------------------------------------------------------------------------*/
 
-template<size_t N, class T> template<size_t I, class> // diagonal init
-  constexpr void Tensor<N, T>::init(const Tensor<N, T>::array<I> &arr) noexcept
+template<size_t N, class T> template<size_t I, class>
+  constexpr void Tensor<N, T>::init(const Array<N, T> &arr) noexcept
 {
-  for (size_t i = 0; i < N; ++i)
+  for (size_t i = 0; i < I; ++i)
     data[i][i] = arr[i];
 }
 
-template<size_t N, class T> template<size_t I, class, class> // full init
-  constexpr void Tensor<N, T>::init(const Tensor<N, T>::array<I> &arr) noexcept
+template<size_t N, class T> template<size_t I, class, class>
+  constexpr void Tensor<N, T>::init(const Array<N*N, T> &arr) noexcept
 {
   for (size_t i = 0; i < N; ++i)
     for (size_t j = 0; j < N; ++j)
