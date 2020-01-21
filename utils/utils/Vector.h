@@ -82,7 +82,7 @@ private:
     bool use_brackets() const { return use; }
     void use_brackets(bool flag) const { use = flag; }
   };
-}; // class Vector<N, T, is_array>
+}; // class Vector<N, T, is_euclidian>
 
 using Vector2D = Vector<2>;
 using Vector3D = Vector<3>;
