@@ -23,7 +23,7 @@ template<size_t N, class T = double, bool is_euclidian = true> class Vector
 public:
   // ctors
   constexpr explicit Vector() noexcept : data{} {}
-  constexpr explicit Vector(const T &a) noexcept;
+  template<class U> constexpr explicit Vector(const U &a) noexcept;
   template<class... Ts, class = std::enable_if_t<sizeof...(Ts) == N>>
     constexpr explicit Vector(Ts... as) noexcept : data{static_cast<T>(as)...} {}
 
@@ -155,10 +155,10 @@ template<class T> constexpr auto operator~(const Vector<2, T> &v) noexcept;
 /*---------------------------------------------------------------------------------------*/
 
 template<size_t N, class T, bool B>
-  constexpr Vector<N, T, B>::Vector(const T &a) noexcept : data{}
+  template<class U> constexpr Vector<N, T, B>::Vector(const U &a) noexcept : data{}
 {
   for (auto &d : data)
-    d = a;
+    d = static_cast<T>(a);
 }
 
 /*---------------------------------------------------------------------------------------*/
