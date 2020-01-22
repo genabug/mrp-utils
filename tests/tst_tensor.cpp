@@ -73,7 +73,7 @@ TEST_CASE("io ops")
   CHECK(t2 == t2r);
 
   ss.str("");
-  ss << T2i::bareComponents << t2;
+  ss << Tensors::bareComponents << t2;
   CHECK(ss.str() == "1 2 3 4");
   t2r = T2i(0);
   ss >> t2r;
@@ -82,14 +82,14 @@ TEST_CASE("io ops")
   ss.str("");
   ss.clear(); // clear eof bit
   T3i t3(1, 2, 3, 4, 5, 6, 7, 8, 9), t3r;
-  ss << T3i::bareComponents << t3;
+  ss << t3;
   CHECK(ss.str() == "1 2 3 4 5 6 7 8 9");
   ss >> t3r;
   CHECK(t3 == t3r);
 
   ss.str("");
   ss.clear(); // clear eof bit
-  ss << T3i::inBrackets << t3;
+  ss << Tensors::inBrackets << t3;
   CHECK(ss.str() == "[1, 2, 3, 4, 5, 6, 7, 8, 9]");
   t3r = T3i(0);
   ss >> t3r;

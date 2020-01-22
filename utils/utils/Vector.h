@@ -8,8 +8,8 @@
 */
 
 #include "Utils.h"
+#include "IOMode.h"
 #include <cctype> // isspace
-#include <locale>
 #include <cstddef> // size_t
 #include <ostream>
 #include <istream>
@@ -51,45 +51,12 @@ public:
   constexpr Vector& operator*=(const T &a) noexcept;
   constexpr Vector& operator+=(const Vector &v) noexcept;
   constexpr Vector& operator-=(const Vector &v) noexcept;
-
-  // io
-  static std::ios_base& inBrackets(std::ios_base &stream) noexcept;
-  static std::ios_base& bareComponents(std::ios_base &stream) noexcept;
-
-  template<size_t I, class U, bool B>
-    friend std::istream& operator>>(std::istream &in, Vector<I, U, B> &v) noexcept;
-  template<size_t I, class U, bool B>
-    friend std::ostream& operator<<(std::ostream &out, const Vector<I, U, B> &v) noexcept;
-
-private:
-  // io facet
-  class io_mode final : public std::locale::facet
-  {
-    mutable bool use;
-
-  public:
-    ~io_mode() = default;
-    static std::locale::id id;
-
-    static const io_mode& get_mode(std::ios_base &stream)
-    {
-      std::locale loc = stream.getloc();
-      if (!std::has_facet<io_mode>(loc))
-        stream.imbue(std::locale(loc, new io_mode));
-      return std::use_facet<io_mode>(stream.getloc());
-    }
-
-    bool use_brackets() const { return use; }
-    void use_brackets(bool flag) const { use = flag; }
-  };
 }; // class Vector<N, T, is_euclidian>
 
 using Vector2D = Vector<2>;
 using Vector3D = Vector<3>;
 
 template<size_t N, class T = double> using Array = Vector<N, T, false>;
-
-template<size_t N, class T, bool B> std::locale::id Vector<N, T, B>::io_mode::id;
 
 /*---------------------------------------------------------------------------------------*/
 
@@ -120,6 +87,8 @@ template<size_t N, class T, bool B>
     const Vector<N, T, B> &v1, const Vector<N, T, B> &v2) noexcept { return !(v1 == v2); }
 
 // IO ops
+class Vectors : public Manipulators<Vectors> {};
+
 template<size_t N, class T, bool B>
   std::istream& operator>>(std::istream &in, Vector<N, T, B> &v) noexcept;
 
@@ -236,23 +205,7 @@ template<size_t N, class T, bool B>
 /*---------------------------------------------------------------------------------------*/
 
 template<size_t N, class T, bool B>
-  std::ios_base& Vector<N, T, B>::bareComponents(std::ios_base &stream) noexcept
-{
-  Vector<N, T, B>::io_mode::get_mode(stream).use_brackets(false);
-  return stream;
-}
-
-template<size_t N, class T, bool B>
-  std::ios_base& Vector<N, T, B>::inBrackets(std::ios_base &stream) noexcept
-{
-  Vector<N, T, B>::io_mode::get_mode(stream).use_brackets(true);
-  return stream;
-}
-
-/*---------------------------------------------------------------------------------------*/
-
-template<size_t I, class U, bool B>
-  std::istream& operator>>(std::istream &in, Vector<I, U, B> &v) noexcept
+  std::istream& operator>>(std::istream &in, Vector<N, T, B> &v) noexcept
 {
   char c;
   bool in_brackets = true;
@@ -264,7 +217,7 @@ template<size_t I, class U, bool B>
       break;
     }
 
-  for (size_t i = 0; i < I; ++i)
+  for (size_t i = 0; i < N; ++i)
   {
     while (in.get(c) && c != ',')
       if (!std::isspace(c))
@@ -287,17 +240,17 @@ template<size_t I, class U, bool B>
 
 /*---------------------------------------------------------------------------------------*/
 
-template<size_t I, class U, bool B>
-  std::ostream& operator<<(std::ostream &out, const Vector<I, U, B> &v) noexcept
+template<size_t N, class T, bool B>
+  std::ostream& operator<<(std::ostream &out, const Vector<N, T, B> &v) noexcept
 {
   const std::locale &loc = out.getloc();
   bool use_brackets =
-    std::has_facet<typename Vector<I, U, B>::io_mode>(loc)?
-      std::use_facet<typename Vector<I, U, B>::io_mode>(loc).use_brackets() : true;
+    std::has_facet<IO_mode<Vectors>>(loc)?
+      std::use_facet<IO_mode<Vectors>>(loc).use_brackets() : true;
 
   out << (use_brackets? "(" : "") << v[0];
 
-  for (size_t i = 1; i < I; ++i)
+  for (size_t i = 1; i < N; ++i)
     out << (use_brackets? ", " : " ") << v[i];
 
   return out << (use_brackets? ")" : "");
