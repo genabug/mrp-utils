@@ -8,6 +8,7 @@
 */
 
 #include <limits>
+#include <cstddef>
 #include <type_traits>
 
 namespace Utils
@@ -24,7 +25,7 @@ namespace Utils
   // floating-point comparison with specific epsilon
   template<class T>
     constexpr std::enable_if_t<std::is_floating_point<T>::value, bool>
-      fp_equal(T x, T y, int ulp = 1) noexcept;
+      fp_equal(T x, T y, size_t ulp = 1) noexcept;
 
   // equality for c-strings
   constexpr bool cstr_equal(const char *a, const char *b) noexcept;
@@ -50,7 +51,7 @@ namespace Utils
 
     template<class T> constexpr T sqrt_real(T x, T lo, T hi) noexcept
     {
-      return (lo == hi) ? lo : sqrt_real(x, static_cast<T>(0.5) * (lo + x / lo), lo);
+      return (lo == hi) ? lo : sqrt_real(x, T(0.5) * (lo + x / lo), lo);
     }
   }
 }
@@ -58,20 +59,20 @@ namespace Utils
 template<class T>
   constexpr std::enable_if_t<std::is_floating_point<T>::value, T> Utils::sqrt(T x) noexcept
 {
-  return Utils::details::sqrt_real(x, x, static_cast<T>(0));
+  return (x < 0)? T(-1) : Utils::details::sqrt_real(x, x, T(0));
 }
 
 template<class T>
   constexpr std::enable_if_t<std::is_integral<T>::value, T> Utils::sqrt(T x) noexcept
 {
-  return Utils::details::sqrt_int(x, static_cast<T>(0), x / 2 + static_cast<T>(1));
+  return (x < 0)? T(-1) : Utils::details::sqrt_int(x, T(0), x / 2 + T(1));
 }
 
 /*---------------------------------------------------------------------------------------*/
 
 template<class T>
   constexpr std::enable_if_t<std::is_floating_point<T>::value, bool>
-    Utils::fp_equal(T x, T y, int ulp) noexcept
+    Utils::fp_equal(T x, T y, size_t ulp) noexcept
 {
   // the machine epsilon has to be scaled to the magnitude of the values used
   // and multiplied by the desired precision in ULPs (units of least precision)
@@ -87,7 +88,33 @@ constexpr bool Utils::cstr_equal(const char *a, const char *b) noexcept
   return (*a && *b)? (*a == *b && Utils::cstr_equal(a + 1, b + 1)) : (!*a && !*b);
 }
 
-static_assert(Utils::cstr_equal("one", "one"), "HECK!");
-static_assert(!Utils::cstr_equal("one", "two"), "FECK!");
+/*---------------------------------------------------------------------------------------*/
+/*--------------------------------------- tests -----------------------------------------*/
+/*---------------------------------------------------------------------------------------*/
+
+static_assert(Utils::abs(-1) == 1, "abs failed");
+static_assert(Utils::abs(1.) == 1., "abs failed");
+
+static_assert(Utils::sqrt(-1) == -1, "sqrt failed");
+static_assert(Utils::sqrt(-2.) == -1., "sqrt failed");
+static_assert(Utils::sqrt(-3.f) == -1.f, "sqrt failed");
+static_assert(Utils::sqrt(0) == 0, "sqrt failed");
+static_assert(Utils::sqrt(0.) == 0., "sqrt failed");
+static_assert(Utils::sqrt(0.f) == 0.f, "sqrt failed");
+static_assert(Utils::sqrt(1) == 1, "sqrt failed");
+static_assert(Utils::sqrt(1.) == 1., "sqrt failed");
+static_assert(Utils::sqrt(1.f) == 1.f, "sqrt failed");
+static_assert(Utils::sqrt(4) == 2, "sqrt failed");
+static_assert(Utils::sqrt(4.) == 2., "sqrt failed");
+static_assert(Utils::sqrt(4.f) == 2.f, "sqrt failed");
+
+static_assert(Utils::fp_equal(6.022140857e+23, 6.022140857e+23 + 2e8), "fp equal failed");
+static_assert(!Utils::fp_equal(6.022140857e+23, 6.022140857e+23 + 3e8), "fp equal failed");
+
+static_assert(Utils::cstr_equal("", ""), "cstr equal failed");
+static_assert(!Utils::cstr_equal("one", ""), "cstr equal failed");
+static_assert(!Utils::cstr_equal("", "two"), "cstr equal failed");
+static_assert(Utils::cstr_equal("one", "one"), "cstr equal failed");
+static_assert(!Utils::cstr_equal("one", "two"), "cstr equal failed");
 
 #endif // UTILS_H_INCLUDED
