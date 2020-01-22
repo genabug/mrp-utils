@@ -53,9 +53,11 @@ public:
   constexpr Vector& operator-=(const Vector &v) noexcept;
 }; // class Vector<N, T, is_euclidian>
 
-using Vector2D = Vector<2>;
-using Vector3D = Vector<3>;
+using Vector2D = Vector<2>; //! Shortcut for 2D vector in euclidian space.
+using Vector3D = Vector<3>; //! Shortcut for 3D vector in euclidian space.
 
+//! Shortcut for non-euclidian vector i.e. array with componentwise arithmetic,
+//! equality and IO operations defined.
 template<size_t N, class T = double> using Array = Vector<N, T, false>;
 
 /*---------------------------------------------------------------------------------------*/
@@ -78,7 +80,7 @@ template<size_t N, class T, bool B>
 template<size_t N, class T, bool B>
   constexpr auto operator/(Vector<N, T, B> v, const T &a) noexcept { v /= a; return v; }
 
-// boolean ops
+// equality ops
 template<size_t N, class T, bool B>
   constexpr bool operator==(const Vector<N, T, B> &v1, const Vector<N, T, B> &v2) noexcept;
 

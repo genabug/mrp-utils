@@ -99,7 +99,7 @@ template<size_t N, class T>
   constexpr auto
     operator/(Tensor<N, T> A, const Tensor<N, T> &B) noexcept { A /= B; return A; }
 
-// boolean ops
+// equality ops
 template<size_t N, class T>
   constexpr bool operator==(const Tensor<N, T> &A, const Tensor<N, T> &B) noexcept;
 
