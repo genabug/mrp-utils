@@ -51,7 +51,7 @@ namespace Utils
 
     template<class T> constexpr T sqrt_real(T x, T lo, T hi) noexcept
     {
-      return (lo == hi) ? lo : sqrt_real(x, T(0.5) * (lo + x / lo), lo);
+      return (lo == hi) ? lo : sqrt_real(x, T{0.5} * (lo + x / lo), lo);
     }
   }
 }
@@ -59,13 +59,13 @@ namespace Utils
 template<class T>
   constexpr std::enable_if_t<std::is_floating_point<T>::value, T> Utils::sqrt(T x) noexcept
 {
-  return (x < 0)? T(-1) : Utils::details::sqrt_real(x, x, T(0));
+  return (x < T{0})? T{-1} : Utils::details::sqrt_real(x, x, T{0});
 }
 
 template<class T>
   constexpr std::enable_if_t<std::is_integral<T>::value, T> Utils::sqrt(T x) noexcept
 {
-  return (x < 0)? T(-1) : Utils::details::sqrt_int(x, T(0), x / 2 + T(1));
+  return (x < T{0})? T{-1} : Utils::details::sqrt_int(x, T{0}, x / 2 + T{1});
 }
 
 /*---------------------------------------------------------------------------------------*/
