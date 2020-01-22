@@ -913,7 +913,7 @@ namespace tensor_tests
   \param in Input stream from which tensor is read.
   \param A Tensor where read object will be stored.
   \return Input stream after reading the tensor from it.
-  \see IO_Mode
+  \see IOMode
 
   Tensor may be represented in two formats -- w/ brackets, e.g.
   "[1, 2, 3, 4]" and "1 2 3 4" both represent the same tensor.
@@ -927,7 +927,7 @@ namespace tensor_tests
   \param out Output stream where tensor is written.
   \param A Tensor which will be written to the output stream.
   \return Output stream after writing the tensor to it.
-  \see IO_Mode
+  \see IOMode
 
   Tensor may be represented in two formats -- w/ brackets, e.g.
   "[1, 2, 3, 4]" and "1 2 3 4" both represent the same tensor.

@@ -63,15 +63,15 @@ public:
 */
 
 /*!
-  \fn const IO_mode& IO_mode::get_mode(std::ios_base &stream)
-  \brief Create new IO_mode if necessary and it in the current locale
-    of the stream "stream", and return the pointer to IO_mode stored in the current locale.
+  \fn const IOMode& IOMode::get_mode(std::ios_base &stream)
+  \brief Create new IOMode if necessary and it in the current locale
+    of the stream "stream", and return the pointer to IOMode stored in the current locale.
 */
 
 /*!
   \class Manipulators
   \tparam User Arbitraty type in order to apply IO mode to a specific user(s) only.
-  \brief Set of IO manipulators for the specified user(s) of IO_mode.
+  \brief Set of IO manipulators for the specified user(s) of IOMode.
 
   The goal is to reduce code duplication for the different users. The implementation
   is the same for anyone -- one is used to setup the flag, another discards it.
