@@ -4,7 +4,7 @@
 /*!
   \file QState.h
   \author gennadiy (gennadiy3.14@gmail.com)
-  \brief Vector/state of quantities with arbitrary types, definition and documentation.
+  \brief Vector of quantities with arbitrary types, definition and documentation.
 */
 
 #include "QDetails.h"
@@ -14,14 +14,12 @@ namespace Quantities
 
   template<class... Qs> class QState
   {
-    static_assert(sizeof...(Qs) != 0, "empty state is useless");
-
     std::tuple<
       std::conditional_t<
         std::is_reference<Qs>::value,
         std::conditional_t<
           std::is_const<std::remove_reference_t<Qs>>::value,
-          typename std::decay_t<Qs>::type,
+          const typename std::decay_t<Qs>::type&,
           typename std::decay_t<Qs>::type&
         >,
         typename std::decay_t<Qs>::type
@@ -30,8 +28,12 @@ namespace Quantities
 
   public:
     template<class... Args>
-      constexpr explicit QState(Args &&... args) noexcept
+      constexpr explicit QState(Args&&... args) noexcept
         : data(std::forward<Args>(args)...) {}
+
+    template<class... Ts>
+      constexpr QState(QState<Ts...> &&s) noexcept
+        : data(std::move(s).template get<Qs>()...) {}
 
     // copy ctor
     // WARNING: be careful when use it with auto due to the fact that exact types of data
@@ -46,8 +48,10 @@ namespace Quantities
       constexpr QState(const QState<Ts...> &s) noexcept : data(s.template get<Qs>()...) {}
 
     // access by index (mainly to implement basic ops, see details)
-    template<size_t I> constexpr auto& get() & noexcept { return std::get<I>(data); }
-    template<size_t I> constexpr auto& get() const & noexcept { return std::get<I>(data); }
+    template<size_t I>
+      constexpr decltype(auto) get() & noexcept { return std::get<I>(data); }
+    template<size_t I>
+      constexpr decltype(auto) get() const & noexcept { return std::get<I>(data); }
 
     // access and slices by type-name (for generic code)
     template<class Q> constexpr auto& get() & noexcept;
@@ -61,6 +65,14 @@ namespace Quantities
     template<class... Ts>
       constexpr std::enable_if_t<sizeof...(Ts) >= 2, QState<std::decay_t<Ts>&...>>
         get() & noexcept { return QState<std::decay_t<Ts>&...>(get<Ts>()...); }
+
+    template<class... Ts>
+      constexpr std::enable_if_t<sizeof...(Ts) == 0, QState<const std::decay_t<Qs>&...>>
+        get() const & noexcept { return QState<const std::decay_t<Qs>&...>(get<Qs>()...); }
+
+    template<class... Ts>
+      constexpr std::enable_if_t<sizeof...(Ts) >= 2, QState<const std::decay_t<Ts>&...>>
+        get() const & noexcept { return QState<const std::decay_t<Ts>&...>(get<Ts>()...); }
 
     // slice/copies by type-name
     template<class Q> constexpr auto copy() const noexcept { return get<Q>(); }
@@ -81,11 +93,14 @@ namespace Quantities
     template<class... Ts, class = std::enable_if_t<sizeof...(Ts) != 0>>
       constexpr decltype(auto) get(Ts...) & noexcept { return get<Ts...>(); }
 
+    template<class... Ts, class = std::enable_if_t<sizeof...(Ts) != 0>>
+      constexpr decltype(auto) get(Ts...) const & noexcept { return get<Ts...>(); }
+
     // slice/copies by variable
     template<class... Ts, class = std::enable_if_t<sizeof...(Ts) != 0>>
       constexpr decltype(auto) copy(Ts...) const noexcept { return copy<Ts...>(); }
 
-    // some arithmetics
+    // some ops
     template<class T> constexpr QState<Qs...>& operator=(T);
     template<class... Ts> constexpr QState<Qs...>& operator=(const QState<Ts...> &);
     template<class... Ts> constexpr QState<Qs...>& operator+=(const QState<Ts...> &);
@@ -94,19 +109,24 @@ namespace Quantities
     template<class T> constexpr QState<Qs...>& operator*=(T);
     template<class T> constexpr QState<Qs...>& operator/=(T);
 
-    // unary ops return the copy!
+    // unary ops return a copy!
     constexpr QState<std::decay_t<Qs>...> operator-() const;
     constexpr QState<std::decay_t<Qs>...> operator+() const { return *this; }
 
     // some traits
     template<size_t I> using type_of = details::type_by_index<I, std::decay_t<Qs>...>;
 
-    template<class Q> static constexpr size_t index_of()
+    template<class Q> static constexpr size_t index()
     { return details::index_by_type_v<std::decay_t<Q>, std::decay_t<Qs>...>; }
 
-    template<class Q> static constexpr bool has() { return index_of<Q>() < ncomps; }
+    template<class Q> static constexpr size_t index(Q)
+    { return details::index_by_type_v<std::decay_t<Q>, std::decay_t<Qs>...>; }
 
-    static constexpr auto names = details::quantity_names<std::decay_t<Qs>...>;
+    static constexpr size_t index(const char *id)
+    { return details::index_by_id<std::decay_t<Qs>...>(id); }
+
+    static constexpr bool has(const char *id) { return index(id) < ncomps; }
+    template<class Q> static constexpr bool has() { return index<Q>() < ncomps; }
 
     // helpers for QTraits
     static constexpr int size = details::size_of_v<std::decay_t<Qs>...>;
@@ -152,6 +172,12 @@ namespace Quantities
   {
     return s.template get<Qs...>();
   }
+
+  template<class... Qs, class... Ts>
+    constexpr decltype(auto) get(const QState<Ts...> &s) noexcept
+  {
+    return s.template get<Qs...>();
+  }
 } // namespace Quantities
 
 // IO operations
@@ -163,8 +189,8 @@ template<class... Qs>
   std::ostream& operator<<(std::ostream &, const Quantities::QState<Qs...> &);
 
 // binary arithmetic operations
-// WARNING: operations are not symmetric, i.e. in general case l + r != r + l.
-// This is done in order to do arithmetic with states of different sets of elements,
+// WARNING: operations are not symmetric, i.e. in general case l + r != r + l
+// This is done in order to do arithmetic with states with different set of elements,
 // when one of a set is a subset of the other, or when the order of elements is differ.
 // For example:
 // auto s1 = make_state<rho, Te, w>(...);
@@ -200,7 +226,7 @@ template<class... Ls, class... Rs>
   constexpr bool operator!=(
     const Quantities::QState<Ls...> &l, const Quantities::QState<Rs...> &r)
 {
-  return !(l == r);
+    return !(l == r);
 }
 
 /*---------------------------------------------------------------------------------------*/
@@ -209,12 +235,12 @@ template<class... Ls, class... Rs>
 
 namespace Quantities
 {
-  // Helper function to create a state using given arguments.
-  // In order to preserve the exact types of arguments (ref or copy)
+  // helper function to create a state using given arguments.
+  // in order to preserve the exact types of arguments (ref, const ref or copy)
   // we transfer this information to the template arguments of the state
   // and then, inside the state, restore them to the final types
-  // (see data definition in the class QState<Qs...>).
-  // Thus we get state with values tagged by the quantity types.
+  // (see data definition in the class QState<Qs...>)
+  // Thus we get state with values tagges by the quantity types!
   // NB! It's a user responsibility to correctly match list of tags with list values!
   template<class... Qs, class... Args> constexpr auto make_state(Args&&... args) noexcept
   {
@@ -224,7 +250,7 @@ namespace Quantities
         std::is_reference<Args>::value,
         std::conditional_t<
           std::is_const<std::remove_reference_t<Args>>::value,
-          Qs, Qs&
+          const Qs&, Qs&
         >,
         Qs
       >...
@@ -236,18 +262,18 @@ namespace Quantities
   template<class... Qs> template<class Q>
     constexpr auto& QState<Qs...>::get() & noexcept
   {
-    constexpr auto idx = index_of<Q>();
+    constexpr auto idx = index<Q>();
     static_assert(idx < ncomps, "quantity is not presented in the state!");
+    // it'd be great if name of non-presented quantity will be in the error message...
+    // UPD: impossible due to second argument must be a string literal (standard requires)
     return std::get<idx>(data);
   }
 
   template<class... Qs> template<class Q>
     constexpr auto& QState<Qs...>::get() const & noexcept
   {
-    constexpr auto idx = index_of<Q>();
+    constexpr auto idx = index<Q>();
     static_assert(idx < ncomps, "quantity is not presented in the state!");
-    // it'll be good if name of non-presented quantity will be in the error message...
-    // UPD: impossible due to second argument must be a string literal (standard requires)
     return std::get<idx>(data);
   }
 
@@ -395,7 +421,7 @@ template<class... Ls, class... Rs>
 /*!
   \class Quantities::QState
   \tparam Qs Type-names (tags) of the data.
-  \brief Vector/state of quantities with arbitrary types.
+  \brief Vector of quantities with arbitrary types.
 
   Class is aimed for aggregation and processing an arbitrary set of heterogeneous
   values as a single structure with a set of basic operations (arithmetic, logical, IO)
@@ -437,8 +463,8 @@ template<class... Ls, class... Rs>
   explicitely.
   \code
   // auto is dangerous!
-  auto c1 = s1; // c1 : QState<rho, T> => it is a copy!
-  auto c2 = s2; // c2 : QState<rho&, T&> => it is a duplicate!
+  auto c1 = s1; // c1 : QState<rho_t, T_t> => it is a copy!
+  auto c2 = s2; // c2 : QState<rho_t&, T_t&> => it is a duplicate!
   c1[T] = 3;    // s1[T] == 2
   c2[T] = 3;    // s2[T] == 3
 
@@ -447,8 +473,8 @@ template<class... Ls, class... Rs>
   auto c4 = copy(s2);  // c4 : QState<rho, T>
 
   // get the real copies by specifying exact type
-  QState<rho, T> c5 = s1;
-  QState<rho, T> c6 = s2;
+  QState<rho_t, T_t> c5 = s1;
+  QState<rho_t, T_t> c6 = s2;
   \endcode
   Note that both ways allow you to make more than just a copy! Namely you can slice
   the state i.e. make a state with specific subset of the data (see below).
@@ -460,7 +486,7 @@ template<class... Ls, class... Rs>
   (I like this one https://stackoverflow.com/q/54617101/8802124 but it requires c++20.)
   \code
   s1[rho] = 4;
-  s1.get<rho_t>() = 4;
+  s1[rho] = 4;
   //s1.rho = 4; // this would be perfect: no globals, simple structure syntax.
   \endcode
   It's also possible to get several components at once by specifying their names to the
@@ -484,8 +510,9 @@ template<class... Ls, class... Rs>
   \endcode
 
   Note that all operations with states are constexpr and can be done in compile-time,
-  most misusages lead to a compilation error! For example, access to a component
-  which is not presented in a state, mixing states with unmatched list of quantities.
+  thus most misusages lead to a compilation error! For example, access to a component
+  which is not presented in a state, mixing states with unmatched list of quantities,
+  etc...
 
   \see QDetails.h for implementation details.
 */
