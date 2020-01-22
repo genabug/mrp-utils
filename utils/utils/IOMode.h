@@ -10,27 +10,27 @@
 #include <locale>
 
 template<class User>
-  class IO_mode final : public std::locale::facet
+  class IOMode final : public std::locale::facet
 {
   mutable bool use;
 
 public:
-  ~IO_mode() = default;
+  ~IOMode() = default;
   static std::locale::id id;
 
-  static const IO_mode& get_mode(std::ios_base &stream)
+  static const IOMode& get_mode(std::ios_base &stream)
   {
     std::locale loc = stream.getloc();
-    if (!std::has_facet<IO_mode<User>>(loc))
-      stream.imbue(std::locale(loc, new IO_mode<User>));
-    return std::use_facet<IO_mode<User>>(stream.getloc());
+    if (!std::has_facet<IOMode<User>>(loc))
+      stream.imbue(std::locale(loc, new IOMode<User>));
+    return std::use_facet<IOMode<User>>(stream.getloc());
   }
 
   bool use_brackets() const { return use; }
   void use_brackets(bool flag) const { use = flag; }
 };
 
-template<class User> std::locale::id IO_mode<User>::id;
+template<class User> std::locale::id IOMode<User>::id;
 
 
 template<class User> class Manipulators
@@ -38,13 +38,13 @@ template<class User> class Manipulators
 public:
   static std::ios_base& bareComponents(std::ios_base &stream)
   {
-    IO_mode<User>::get_mode(stream).use_brackets(false);
+    IOMode<User>::get_mode(stream).use_brackets(false);
     return stream;
   }
 
   static std::ios_base& inBrackets(std::ios_base &stream)
   {
-    IO_mode<User>::get_mode(stream).use_brackets(true);
+    IOMode<User>::get_mode(stream).use_brackets(true);
     return stream;
   }
 };
@@ -54,7 +54,7 @@ public:
 /*---------------------------------------------------------------------------------------*/
 
 /*!
-  \class IO_mode
+  \class IOMode
   \tparam User Arbitraty type in order to apply IO mode to a specific user(s) only.
   \brief Facet for localization which defines the mode of user input/output:
     in brackets or bare components.

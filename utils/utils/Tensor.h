@@ -397,8 +397,8 @@ template<size_t N, class U>
 {
   const std::locale &loc = out.getloc();
   bool use_brackets =
-    std::has_facet<IO_mode<Tensors>>(loc)?
-      std::use_facet<IO_mode<Tensors>>(loc).use_brackets() : true;
+    std::has_facet<IOMode<Tensors>>(loc)?
+      std::use_facet<IOMode<Tensors>>(loc).use_brackets() : true;
 
   out << (use_brackets? "[" : "") << A[0][0];
   for (size_t j = 1; j < N; ++j)

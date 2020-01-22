@@ -245,8 +245,8 @@ template<size_t N, class T, bool B>
 {
   const std::locale &loc = out.getloc();
   bool use_brackets =
-    std::has_facet<IO_mode<Vectors>>(loc)?
-      std::use_facet<IO_mode<Vectors>>(loc).use_brackets() : true;
+    std::has_facet<IOMode<Vectors>>(loc)?
+      std::use_facet<IOMode<Vectors>>(loc).use_brackets() : true;
 
   out << (use_brackets? "(" : "") << v[0];
 
