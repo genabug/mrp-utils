@@ -7,7 +7,6 @@
   \brief Various utilities needed here and there all over the code.
 */
 
-#include <cmath>
 #include <limits>
 #include <type_traits>
 
