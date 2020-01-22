@@ -413,6 +413,11 @@ namespace vector_tests
 /*---------------------------------------------------------------------------------------*/
 
 /*!
+  \class Vectors
+  \brief Specialization of generic IO manipulators for the Vector objects.
+*/
+
+/*!
   \class Vector
   \brief Euclidian (or not) vector of arbitrary dimension and type.
   \tparam N Number of components.
@@ -549,21 +554,6 @@ namespace vector_tests
   \brief Substruction assignment with vector.
   \param v Substrahend, a vector of the same size (N) and type (T) of the components.
   \return The difference of the given vector and the substrahend "v".
-*/
-
-/*!
-  \fn std::ios_base& Vector::bareComponents(std::ios_base &stream)
-  \brief Manipulator for the output stream - bare components.
-    stream << Vector::bareComponents results in that all output of the vectors
-    in that stream will be performed in the form of N numbers separated by spaces.
-*/
-
-/*!
-  \fn std::ios_base& Vector::inBrackets(std::ios_base &stream)
-  \brief Manipulator for the output stream - brackets form.
-    stream << Vector::inBrackets results in that all output of the vectors
-    in that stream will be performed in the form of N numbers separated by commas
-    and enclosed into the round brackets, (x, y, z, ...). This regime is default.
 */
 
 /*!

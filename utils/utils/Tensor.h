@@ -648,6 +648,11 @@ namespace tensor_tests
 /*---------------------------------------------------------------------------------------*/
 
 /*!
+  \class Tensors
+  \brief Specialization of generic IO manipulators for the Tensor objects.
+*/
+
+/*!
   \class Tensor.
   \brief Tensor of rank 2.
   \tparam N Spatial dimension (total number of tensor components is N*N).
@@ -816,21 +821,6 @@ namespace tensor_tests
   \brief Get the transposed tensor.
   \return Tensor "B" with flipped components, i.e. B[i][j] == A[j][i]
   \see Tensor::operator~()
-*/
-
-/*!
-  \fn std::ios_base& Tensor::bareComponents(std::ios_base &stream)
-  \brief Manipulator for the output stream - bare components.
-    stream << Tensor::bareComponents results in that all output of the tensors
-    in that stream will be performed in the form of N numbers separated by spaces.
-*/
-
-/*!
-  \fn std::ios_base& Tensor::inBrackets(std::ios_base &stream)
-  \brief Manipulator for the output stream - brackets form.
-    stream << Tensor::inBrackets results in that all output of the tensors
-    in that stream will be performed in the form of N numbers separated by commas
-    and enclosed into the squared brackets, [xx, xy, xz, ...]. This regime is default.
 */
 
 /*!
