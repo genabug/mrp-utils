@@ -19,11 +19,15 @@ using V3i = Vector<3, int>;
 
 
 // init
-constexpr T2i td, Z(0), E(1, 1), t1(1, 2), t2(3, 4, 5, 6);
+constexpr T2i Z, E(1), t1(1, 2), t2(3, 4, 5, 6);
 
 // access
 static_assert(
   (Z[0][0] == 0) && (Z[0][1] == 0) && (Z[1][0] == 0) && (Z[1][1] == 0),
+  "default init failed");
+
+static_assert(
+  (E[0][0] == 1) && (E[0][1] == 0) && (E[1][0] == 0) && (E[1][1] == 1),
   "single init failed");
 
 static_assert(
@@ -42,8 +46,8 @@ static_assert(
   "conversion d -> i failed");
 
 // ops
-static_assert(td == td, "t == t failed");
-static_assert(td != t1, "t != t failed");
+static_assert(Z == Z, "t == t failed");
+static_assert(Z != E, "t != t failed");
 
 constexpr T2i t1_plus_t1(2, 4), t1_plus_t2(4, 4, 5, 8);
 static_assert(Z + Z == Z, "Z + Z failed");
@@ -121,12 +125,15 @@ static_assert(t * t.invert() == E, "t * t^-1 failed");
 TEST_CASE("init")
 {
   T3i td; // default zero init
+  CHECK((td[0][0] == 0 && td[0][1] == 0 && td[0][2] == 0 &&
+         td[1][0] == 0 && td[1][1] == 0 && td[1][2] == 0 &&
+         td[2][0] == 0 && td[2][1] == 0 && td[2][2] == 0));
 
-  // single init -- assign all elements to 1
+  // single init -- assign diagonal elements to 1, rest are zeroes
   T3i t1(1);
-  CHECK((t1[0][0] == 1 && t1[0][1] == 1 && t1[0][2] == 1 &&
-         t1[1][0] == 1 && t1[1][1] == 1 && t1[1][2] == 1 &&
-         t1[2][0] == 1 && t1[2][1] == 1 && t1[2][2] == 1));
+  CHECK((t1[0][0] == 1 && t1[0][1] == 0 && t1[0][2] == 0 &&
+         t1[1][0] == 0 && t1[1][1] == 1 && t1[1][2] == 0 &&
+         t1[2][0] == 0 && t1[2][1] == 0 && t1[2][2] == 1));
 
   // diagonal init -- assign diag elements to the given ones, rest are 0
   T3i t2{1, 2, 3};
@@ -142,9 +149,9 @@ TEST_CASE("init")
 
   // copying
   T3i t1c(t1);
-  CHECK((t1c[0][0] == 1 && t1c[0][1] == 1 && t1c[0][2] == 1 &&
-         t1c[1][0] == 1 && t1c[1][1] == 1 && t1c[1][2] == 1 &&
-         t1c[2][0] == 1 && t1c[2][1] == 1 && t1c[2][2] == 1));
+  CHECK((t1c[0][0] == 1 && t1c[0][1] == 0 && t1c[0][2] == 0 &&
+         t1c[1][0] == 0 && t1c[1][1] == 1 && t1c[1][2] == 0 &&
+         t1c[2][0] == 0 && t1c[2][1] == 0 && t1c[2][2] == 1));
 
   T3i t2c = t2;
   CHECK((t2c[0][0] == 1 && t2c[0][1] == 0 && t2c[0][2] == 0 &&
