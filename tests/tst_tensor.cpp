@@ -1,10 +1,3 @@
-/*!
-  \file tst_tensor.cpp
-  \author gennadiy (gennadiy3.14@gmail.com)
-  \brief Tensor of rank 2 tests.
-  \see Tensor.h
-*/
-
 #include "doctest.h"
 #include "utils/Tensor.h"
 #include <sstream>

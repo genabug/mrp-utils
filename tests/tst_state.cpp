@@ -39,6 +39,11 @@ constexpr auto sc3 = make_state<ti_t, td_t>(2, 4.);
 constexpr auto sc3_div_2 = make_state<ti_t, td_t>(1, 2.);
 //static_assert(sc3/2 == sc3_div_2, "fuck!");
 
+TEST_CASE("vector")
+{
+  using s = QState<ti_t, td_t, tv_t>;
+  Vector<3, s> v;
+}
 
 TEST_CASE("init")
 {

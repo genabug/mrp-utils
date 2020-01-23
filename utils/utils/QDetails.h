@@ -3,7 +3,7 @@
 
 /*!
   \file QDetails.h
-  \author gennadiy (gennadiy3.14@gmail.com)
+  \author gennadiy
   \brief A bunch of helpers to implement quantities (well, mostly Quantities::QState).
 */
 

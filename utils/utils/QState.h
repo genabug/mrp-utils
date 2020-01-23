@@ -3,7 +3,7 @@
 
 /*!
   \file QState.h
-  \author gennadiy (gennadiy3.14@gmail.com)
+  \author gennadiy
   \brief Vector of quantities with arbitrary types, definition and documentation.
 */
 

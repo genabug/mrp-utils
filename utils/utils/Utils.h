@@ -3,7 +3,7 @@
 
 /*!
   \file Utils.h
-  \author gennadiy (gennadiy3.14@gmail.com)
+  \author gennadiy
   \brief Various utilities needed here and there all over the code.
 */
 

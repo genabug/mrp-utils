@@ -3,7 +3,7 @@
 
 /*!
   \file Vector.h
-  \author gennadiy (gennadiy3.14@gmail.com)
+  \author gennadiy
   \brief Euclidian (or not) vector of arbitrary dimension, definition and documentation.
 */
 

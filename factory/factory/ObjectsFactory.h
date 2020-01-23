@@ -3,7 +3,7 @@
 
 /*!
   \file ObjectsFactory.h
-  \author gennadiy (gennadiy3.14@gmail.com)
+  \author gennadiy
   \brief Define a factory to create objects with arbitrary arguments
     in their create function. It's very similar to ObjectRegister factory
     but with a little bit simpler syntax (probably). Also a logger class is defined here.

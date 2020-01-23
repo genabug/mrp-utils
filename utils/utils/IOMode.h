@@ -3,7 +3,7 @@
 
 /*!
   \file IOMode.h
-  \authors A.S.Boldarev, gennadiy (gennadiy3.14@gmail.com)
+  \authors boldar, gennadiy
   \brief ...
 */
 

@@ -3,7 +3,7 @@
 
 /*!
   \file QTraits.h
-  \author gennadiy (gennadiy3.14@gmail.com)
+  \author gennadiy
   \brief Quantity traits class definition.
   ...
 */

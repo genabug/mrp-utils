@@ -1,10 +1,3 @@
-/*!
-  \file tst_vector.cpp
-  \author gennadiy (gennadiy3.14@gmail.com)
-  \brief Euclidian vector tests.
-  \see Vector.h
-*/
-
 #include "doctest.h"
 #include "utils/Vector.h"
 #include <limits>

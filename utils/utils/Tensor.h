@@ -3,7 +3,7 @@
 
 /*!
   \file Tensor.h
-  \author gennadiy (gennadiy3.14@gmail.com)
+  \author gennadiy
   \brief Tensor of rank 2 with arbitrary type definition and documentation.
 */
 
