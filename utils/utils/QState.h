@@ -27,6 +27,8 @@ namespace Quantities
     > data;
 
   public:
+    constexpr QState() noexcept : data{} {}
+
     template<class... Args>
       constexpr explicit QState(Args&&... args) noexcept
         : data(std::forward<Args>(args)...) {}
