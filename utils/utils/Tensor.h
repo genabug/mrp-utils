@@ -71,6 +71,9 @@ private:
     constexpr void init(const Array<N*N, T> &arr) noexcept;
 }; // class Tensor<N, T>
 
+using Tensor2D = Tensor<2>;
+using Tensor3D = Tensor<3>;
+
 /*---------------------------------------------------------------------------------------*/
 
 // arithmetic ops
@@ -594,7 +597,7 @@ template<size_t N, class T> template<size_t I, class, class>
 */
 
 /*!
-  \fn constexpr explicit Tensor::Tensor(const Tensor<N, U> &t) noexcept
+  \fn constexpr explicit Tensor::Tensor(const Tensor &t) noexcept
   \brief Conversion constructor from a tensor with arbitrary type of the components.
   \tparam U Type of the given tensor' components.
   \param t Tensor to be converted.
@@ -604,7 +607,7 @@ template<size_t N, class T> template<size_t I, class, class>
 */
 
 /*!
-  \fn constexpr Tensor& Tensor::operator=(const Tensor<N, U> &t) noexcept
+  \fn constexpr Tensor& Tensor::operator=(const Tensor &t) noexcept
   \brief Conversion assignment from a tensor with arbitrary type of the components.
   \tparam U Type of the given tensor' components.
   \param t Tensor to be converted.
@@ -797,7 +800,7 @@ template<size_t N, class T> template<size_t I, class, class>
   \return Input stream after reading the tensor from it.
   \see IOMode
 
-  Tensor may be represented in two formats -- w/ brackets, e.g.
+  Tensor may be represented in two formats -- w/ and w/o brackets, e.g.
   "[1, 2, 3, 4]" and "1 2 3 4" both represent the same tensor.
   This function is able to read in both formats, none additional actions needed
   in order to successfully read a tensor.
@@ -811,14 +814,14 @@ template<size_t N, class T> template<size_t I, class, class>
   \return Output stream after writing the tensor to it.
   \see IOMode
 
-  Tensor may be represented in two formats -- w/ brackets, e.g.
+  Tensor may be represented in two formats -- w/ and w/o brackets, e.g.
   "[1, 2, 3, 4]" and "1 2 3 4" both represent the same tensor.
   You can choose the format using special manipulators inBrackets() and bareComponents(),
   the default is inBrackets. The second one may be useful for e.g. backup purposes.
 */
 
 /*!
-  \fn constexpr auto& operator*=(Vector<N, T> &a, const Tensor<N, T> &A) noexcept
+  \fn constexpr auto& operator*=(Vector &a, const Tensor &A) noexcept
   \brief Post-multiplication with assignment of vector by tensor.
   \param a Vector multiplicand.
   \param A Tensor multiplier.
@@ -826,7 +829,7 @@ template<size_t N, class T> template<size_t I, class, class>
 */
 
 /*!
-  \fn constexpr auto operator*(Vector<N, T> a, const Tensor<N, T> &A) noexcept
+  \fn constexpr auto operator*(Vector a, const Tensor &A) noexcept
   \brief Post-multiplication of vector by tensor.
   \param a Vector multiplicand.
   \param A Tensor multiplier.
@@ -834,7 +837,7 @@ template<size_t N, class T> template<size_t I, class, class>
 */
 
 /*!
-  \fn constexpr auto operator*(const Tensor<N, T> &A, Vector<N, T> a) noexcept
+  \fn constexpr auto operator*(const Tensor &A, Vector a) noexcept
   \brief Pre-multiplication of vector by tensor (matrix).
   \param A Tensor multiplicand.
   \param a Vector multiplier.
@@ -842,7 +845,7 @@ template<size_t N, class T> template<size_t I, class, class>
 */
 
 /*!
-  \fn constexpr auto& operator/=(Vector<N, T> &a, const Tensor<N, T> &A) noexcept
+  \fn constexpr auto& operator/=(Vector &a, const Tensor &A) noexcept
   \brief A shortcut for post-multiplication with assignment of vector by inverse tensor,
     a /= A == a *= A.inverse()
   \param a Vector divident.
@@ -852,7 +855,7 @@ template<size_t N, class T> template<size_t I, class, class>
 */
 
 /*!
-  \fn constexpr auto operator/(Vector<N, T> a, const Tensor<N, T> &A) noexcept
+  \fn constexpr auto operator/(Vector a, const Tensor &A) noexcept
   \brief A shortcut for post-multiplication of vector by inverse tensor,
     a / A == a * A.inverse()
   \param a Vector divident.
@@ -862,7 +865,7 @@ template<size_t N, class T> template<size_t I, class, class>
 */
 
 /*!
-  \fn constexpr auto operator^(const Vector<N, T> &a, const Vector<N, T> &b) noexcept
+  \fn constexpr auto operator^(const Vector &a, const Vector &b) noexcept
   \brief Diadic product of two vectors, e.g. for two 2D vectors:
     a^b == (ax, ay) ^ (bx, by) = [ax*bx, ax*by, ay*bx, ay*by]
   \param a First vector.
@@ -871,7 +874,7 @@ template<size_t N, class T> template<size_t I, class, class>
 */
 
 /*!
-  \fn constexpr auto operator%(const Tensor<2, T> &A, const Vector<2, T> &a) noexcept
+  \fn constexpr auto operator%(const Tensor &A, const Vector &a) noexcept
   \brief Vector product of tensor by vector in 2D, i.e.
     A % a == (Axx*ay - Axy*ax, Ayx*ay - Ayy*ax)
   \param A 2D tensor, multiplicand
@@ -880,7 +883,7 @@ template<size_t N, class T> template<size_t I, class, class>
 */
 
 /*!
-  \fn constexpr auto operator%(const Vector<2, T> &a, const Tensor<2, T> &A) noexcept
+  \fn constexpr auto operator%(const Vector &a, const Tensor &A) noexcept
   \brief Vector product of vector by tensor in 2D, i.e.
     a % A == (ax*Ayx - ay*Axx, ax*Ayy - ay*Axy)
   \param a 2D vector, multiplicand
@@ -889,7 +892,7 @@ template<size_t N, class T> template<size_t I, class, class>
 */
 
 /*!
-  \fn constexpr auto operator%(const Tensor<2, T> &A, const Tensor<2, T> &B) noexcept
+  \fn constexpr auto operator%(const Tensor &A, const Tensor &B) noexcept
   \brief Vector product of two tensors in 2D
     \code
       A % B == [Axx * Byx - Axy * Bxx    Axx * Byy - Axy * Bxy]
@@ -901,7 +904,7 @@ template<size_t N, class T> template<size_t I, class, class>
 */
 
 /*!
-  \fn constexpr Tensor<3, T> operator~(const Vector<3, T> &a) noexcept
+  \fn constexpr Tensor<3, T> operator~(const Vector &a) noexcept
   \brief Useful operation to represent vector product of two vectors in tensor form, i.e.
     for two vectors "a" and "b", ~a*b = a%b. From the formula
     \code
@@ -915,7 +918,7 @@ template<size_t N, class T> template<size_t I, class, class>
 */
 
 /*!
-  \fn constexpr auto operator%(const Tensor<3, T> &A, const Vector<3, T> &a) noexcept
+  \fn constexpr auto operator%(const Tensor &A, const Vector &a) noexcept
   \brief Vector product of tensor by vector in 3D, i.e.
     \code
       A % a ==
@@ -929,7 +932,7 @@ template<size_t N, class T> template<size_t I, class, class>
 */
 
 /*!
-  \fn constexpr auto operator%(const Vector<3, T> &a, const Tensor<3, T> &A) noexcept
+  \fn constexpr auto operator%(const Vector &a, const Tensor &A) noexcept
   \brief Vector product of vector by tensor in 3D, i.e.
     \code
       a % A ==

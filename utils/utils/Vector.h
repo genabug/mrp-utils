@@ -367,7 +367,7 @@ template<class T> constexpr auto operator~(const Vector<2, T> &v) noexcept
 */
 
 /*!
-  \fn constexpr explicit Vector::Vector(const Vector<N, U, is_array> &v) noexcept
+  \fn constexpr explicit Vector::Vector(const Vector &v) noexcept
   \brief Conversion constructor from a vector with arbitrary type of the components.
   \tparam U Type of the given vector' components.
   \param v Vector to be converted.
@@ -377,7 +377,7 @@ template<class T> constexpr auto operator~(const Vector<2, T> &v) noexcept
 */
 
 /*!
-  \fn constexpr Vector& Vector::operator=(const Vector<N, U, is_array> &v) noexcept
+  \fn constexpr Vector& Vector::operator=(const Vector &v) noexcept
   \brief Conversion assignment from a vector with arbitrary type of the components.
   \tparam U Type of the given vector' components.
   \param t Vector to be converted.
@@ -534,9 +534,9 @@ template<class T> constexpr auto operator~(const Vector<2, T> &v) noexcept
   \param in Input stream from which tensor is read.
   \param v Vector where read object will be stored.
   \return Input stream after reading the tensor from it.
-  \see IO_Mode
+  \see IOMode
 
-  Vector may be represented in two formats -- w/ brackets, e.g.
+  Vector may be represented in two formats -- w/ and w/o brackets, e.g.
   "(1, 2, 3)" and "1 2 3" both represent the same vector.
   This function is able to read in both formats, none additional actions needed
   in order to successfully read a vector.
@@ -548,9 +548,9 @@ template<class T> constexpr auto operator~(const Vector<2, T> &v) noexcept
   \param out Output stream where tensor is written.
   \param v Vector which will be written to the output stream.
   \return Output stream after writing the tensor to it.
-  \see IO_Mode
+  \see IOMode
 
-  Vector may be represented in two formats -- w/ brackets, e.g.
+  Vector may be represented in two formats -- w/ and w/o brackets, e.g.
   "(1, 2, 3)" and "1 2 3" both represent the same vector.
   You can choose the format using special manipulators inBrackets() and bareComponents(),
   the default is inBrackets. The second one may be useful for e.g. backup purposes.
@@ -587,8 +587,7 @@ template<class T> constexpr auto operator~(const Vector<2, T> &v) noexcept
 */
 
 /*!
-  \fn constexpr auto operator%(
-    const Vector<2, T, ST> &v1, const Vector<2, T, ST> &v2) noexcept
+  \fn constexpr auto operator%(const Vector &v1, const Vector &v2) noexcept
   \brief Cross product in 2D i.e. signed(!) area of a parallelogram formed by two vectors.
   \param v1 Left term.
   \param v2 Right term.
@@ -596,8 +595,7 @@ template<class T> constexpr auto operator~(const Vector<2, T> &v) noexcept
 */
 
 /*!
-  \fn constexpr auto operator%(
-    const Vector<3, T, ST> &v1, const Vector<3, T, ST> &v2) noexcept
+  \fn constexpr auto operator%(const Vector &v1, const Vector &v2) noexcept
   \brief Cross product in 3D.
   \param v1 Left term.
   \param v2 Right term.
@@ -607,7 +605,7 @@ template<class T> constexpr auto operator~(const Vector<2, T> &v) noexcept
 */
 
 /*!
-  \fn constexpr auto operator~(const Vector<2, T, ST> &v) noexcept
+  \fn constexpr auto operator~(const Vector &v) noexcept
   \brief Counterclockwise rotation of a 2D vector.
   \param v Vector
   \return A vector rotated by 90 degrees in the positive direction (counterclockwise)
