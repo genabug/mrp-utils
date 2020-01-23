@@ -169,8 +169,7 @@ template<size_t N, class T> template<class U>
   constexpr Tensor<N, T>::Tensor(const U &a) noexcept : data{}
 {
   for (size_t i = 0; i < N; ++i)
-    for (size_t j = 0; j < N; ++j)
-      data[i][j] = static_cast<T>(a);
+    data[i][i] = static_cast<T>(a);
 }
 
 template<size_t N, class T> template<class... Ts>
@@ -569,9 +568,8 @@ template<size_t N, class T> template<size_t I, class, class>
 
   Four variants of initialization are possible depends on the number of parameters:
   - no parameters: all components are set to zero;
-  - one parameter: all components are set to the given value;
-  - N parameters: diagonal components are set to the given values,
-    the rest are set to zero;
+  - one parameter: diagonal components are set to the given value, rest are zeroes;
+  - N parameters: diagonal components are set to the given values, rest are zeroes;
   - N*N parameters: all components are set to the given values, row by row.
 
   Only these combinations are possible, any other leads to a compilation error
@@ -582,8 +580,8 @@ template<size_t N, class T> template<size_t I, class, class>
   T2i td;             // [0, 0, 0, 0] ~ [0 0]
                       //                [0 0]
 
-  T2i t1(1);          // [1, 1, 1, 1] ~ [1 1]
-                      //                [1 1]
+  T2i t1(1);          // [1, 0, 0, 1] ~ [1 0]
+                      //                [0 1]
 
   T2i t2(1, 2);       // [1, 0, 0, 2] ~ [1 0]
                       //                [0 2]
