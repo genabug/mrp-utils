@@ -24,7 +24,7 @@ namespace Quantities
 
   namespace details
   {
-    // implementation of helper indexers
+    // implementation of a helper indexers
     template<size_t N, class T, class... Ts>
       struct index_by_type_impl {
         static constexpr size_t value = N; }; // stop
@@ -46,7 +46,7 @@ namespace Quantities
 
     // just a useful shortcut -- get i-th type in a pack
     template<size_t I, class... Ts>
-      using type_by_index = std::tuple_element_t<I, std::tuple<Ts...>>;
+      using type_by_index = std::decay_t<std::tuple_element_t<I, std::tuple<Ts...>>>;
 
 /*---------------------------------------------------------------------------------------*/
 
@@ -73,7 +73,7 @@ namespace Quantities
 
 /*---------------------------------------------------------------------------------------*/
 
-    // total number of components of the given quantities
+    // compute total number of components of the given quantities
     template<class... Qs> struct ncomps_of { static constexpr size_t value = 0; };
 
     template<class Q, class... Qs> struct ncomps_of<Q, Qs...> {
@@ -145,7 +145,8 @@ namespace Quantities
         constexpr add_to(QState<Ls...> &self, const QState<Rs...> &other)
     {
       using L = type_by_index<I, Ls...>;
-      static_assert(other.template has<L>(), "other state doesn't have enough quantities");
+      static_assert(QState<Rs...>::template has<L>(),
+                    "other state doesn't have enough quantities");
       self.template get<L>() += other.template get<L>();
       add_to<I + 1>(self, other);
     }
@@ -161,7 +162,8 @@ namespace Quantities
         sub_from(QState<Ls...> &self, const QState<Rs...> &other)
     {
       using L = type_by_index<I, Ls...>;
-      static_assert(other.template has<L>(), "other state doesn't have enough quantities");
+      static_assert(QState<Rs...>::template has<L>(),
+                    "other state doesn't have enough quantities");
       self.template get<L>() -= other.template get<L>();
       sub_from<I + 1>(self, other);
     }
@@ -177,7 +179,8 @@ namespace Quantities
         copy_to(QState<Ls...> &self, const QState<Rs...> &other)
     {
       using L = type_by_index<I, Ls...>;
-      static_assert(other.template has<L>(), "other state doesn't have emough quantities");
+      static_assert(QState<Rs...>::template has<L>(),
+                    "other state doesn't have enough quantities");
       self.template get<L>() = other.template get<L>();
       copy_to<I + 1>(self, other);
     }
@@ -221,7 +224,7 @@ namespace Quantities
         set_to(QState<Qs...> &s, Value value)
     {
       using Q = typename type_by_index<I, Qs...>::type;
-      s.template get<I>() = Q{value};
+      s.template get<I>() = static_cast<Q>(value);
       set_to<I + 1>(s, value);
     }
 
@@ -236,7 +239,8 @@ namespace Quantities
         equal(const QState<Ls...> &l, const QState<Rs...> &r)
     {
       using L = type_by_index<I, Ls...>;
-      static_assert(r.template has<L>(), "right state doesn't have enough quantities");
+      static_assert(QState<Rs...>::template has<L>(),
+                    "right state doesn't have enough quantities");
       return (l.template get<L>() == r.template get<L>()) && equal<I + 1>(l, r);
     }
 
