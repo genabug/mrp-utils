@@ -16,6 +16,8 @@ function(add_marple_test tst_name)
   add_dependencies(${tst_name} doctest ${tst_DEPENDS})
   target_link_libraries(${tst_name} PRIVATE doctest ${tst_DEPENDS})
   target_compile_definitions(${tst_name} PRIVATE "-DDOCTEST_CONFIG_IMPLEMENT_WITH_MAIN=1")
+
+  add_test(NAME ${tst_name} COMMAND ${tst_name})
 endfunction()
 
 add_marple_test(tst_state SOURCES tst_state.cpp DEPENDS utils)
