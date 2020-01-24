@@ -1,19 +1,19 @@
 # mrp-utils
 Some MARPLE low-level data structures:
 
-* Vector: Euclidian vector of arbitrary dimension.
-* Tensor: Tensor of rank 2.
+* Vector: Euclidian vector of arbitrary dimension and type.
+* Tensor: Tensor of rank 2 parametrized by dimension and type.
 * QState: Tuple of named quantities.
+* ObjectsFactory: Factory template by generating function.
 
 # Build
 ```bash
 mkdir build && cd build &&\
 cmake .. &&\
 make
+ctest
 ```
 
 # known issues
-* no documentation
-* QState is overcomplicated
-* clang/msvc can't build tst\_qstate due to their bugs (see https://stackoverflow.com/a/53576384/8802124)
+* QState seems to be overcomplicated a bit.. dunno.
 * ...
