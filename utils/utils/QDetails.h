@@ -46,7 +46,7 @@ namespace Quantities
 
     // just a useful shortcut -- get i-th type in a pack
     template<size_t I, class... Ts>
-      using type_by_index = std::decay_t<std::tuple_element_t<I, std::tuple<Ts...>>>;
+      using type_by_index = std::tuple_element_t<I, std::tuple<Ts...>>;
 
 /*---------------------------------------------------------------------------------------*/
 
@@ -93,155 +93,149 @@ namespace Quantities
 /*---------------------------------------------------------------------------------------*/
 
     // pretty printer
-    template<size_t I, class... Qs>
-      std::enable_if_t<I == sizeof...(Qs)>
-        print_state(std::ostream &, const QState<Qs...> &) {} // stop
+    template<size_t I, class S, class = std::enable_if_t<is_state_v<S>>>
+      std::enable_if_t<I == S::ncomps>
+        print_state(std::ostream &out, const S &) { out << "}"; } // stop
 
-    template<size_t I = 0, class... Qs>
-      std::enable_if_t<I != sizeof...(Qs)>
-        print_state(std::ostream &ostr, const QState<Qs...> &s)
+    template<size_t I = 0, class S, class = std::enable_if_t<is_state_v<S>>>
+      std::enable_if_t<I != S::ncomps>
+        print_state(std::ostream &out, const S &s)
     {
-      using Q = type_by_index<I, Qs...>;
-      ostr << (I? "" : "state:\n") << Q::id << ": " << s.template get<I>() << '\n';
-      print_state<I + 1>(ostr, s);
+      using Q = typename S::template type_of<I>;
+      out << (I? ", " : "{") << Q::id << ": " << s.template get<I>();
+      print_state<I + 1>(out, s);
     }
 
 /*---------------------------------------------------------------------------------------*/
 
-    template<size_t I, class... Qs>
-      std::enable_if_t<I == sizeof...(Qs)>
-        write_state(std::ostream &, const QState<Qs...> &) {} // stop
+    template<size_t I, class S, class = std::enable_if_t<is_state_v<S>>>
+      std::enable_if_t<I == S::ncomps>
+        write_state(std::ostream &, const S &) {} // stop
 
-    template<size_t I = 0, class... Qs>
-      std::enable_if_t<I != sizeof...(Qs)>
-        write_state(std::ostream &ostr, const QState<Qs...> &s)
+    template<size_t I = 0, class S, class = std::enable_if_t<is_state_v<S>>>
+      std::enable_if_t<I != S::ncomps>
+        write_state(std::ostream &out, const S &s)
     {
-      ostr << (I? " " : "") << s.template get<I>();
-      write_state<I + 1>(ostr, s);
+      out << (I? " " : "") << s.template get<I>();
+      write_state<I + 1>(out, s);
     }
 
 /*---------------------------------------------------------------------------------------*/
 
-    template<size_t I, class... Qs>
-      std::enable_if_t<I == sizeof...(Qs)>
-        read_state(std::istream &, QState<Qs...> &) {} // stop
+    template<size_t I, class S, class = std::enable_if_t<is_state_v<S>>>
+      std::enable_if_t<I == S::ncomps>
+        read_state(std::istream &, S &) {} // stop
 
-    template<size_t I = 0, class... Qs>
-      std::enable_if_t<I != sizeof...(Qs)>
-        read_state(std::istream &istr, QState<Qs...> &s)
+    template<size_t I = 0, class S, class = std::enable_if_t<is_state_v<S>>>
+      std::enable_if_t<I != S::ncomps>
+        read_state(std::istream &in, S &s)
     {
-      istr >> s.template get<I>();
-      read_state<I + 1>(istr, s);
+      in >> s.template get<I>();
+      read_state<I + 1>(in, s);
     }
 
 /*---------------------------------------------------------------------------------------*/
 
-    template<size_t I, class... Ls, class... Rs>
-      std::enable_if_t<I == sizeof...(Ls)>
-        constexpr add_to(QState<Ls...> &, const QState<Rs...> &) {} // stop
+    template<size_t I, class L, class R,
+             class = std::enable_if_t<is_state_v<L> && is_state_v<R>>>
+      constexpr std::enable_if_t<I == L::ncomps> add_to(L &, const R &) {} // stop
 
-    template<size_t I = 0, class... Ls, class... Rs>
-      std::enable_if_t<I != sizeof...(Ls)>
-        constexpr add_to(QState<Ls...> &self, const QState<Rs...> &other)
+    template<size_t I = 0, class L, class R,
+             class = std::enable_if_t<is_state_v<L> && is_state_v<R>>>
+      constexpr std::enable_if_t<I != L::ncomps> add_to(L &l, const R &r)
     {
-      using L = type_by_index<I, Ls...>;
-      static_assert(QState<Rs...>::template has<L>(),
-                    "other state doesn't have enough quantities");
-      self.template get<L>() += other.template get<L>();
-      add_to<I + 1>(self, other);
+      using T = typename L::template type_of<I>;
+      static_assert(R::template has<T>(), "other state doesn't have enough quantities");
+      l.template get<T>() += r.template get<T>();
+      add_to<I + 1>(l, r);
     }
 
 /*---------------------------------------------------------------------------------------*/
 
-    template<size_t I, class... Ls, class... Rs>
-      constexpr std::enable_if_t<I == sizeof...(Ls)>
-        sub_from(QState<Ls...> &, const QState<Rs...> &) {} // stop
+    template<size_t I, class L, class R,
+             class = std::enable_if_t<is_state_v<L> && is_state_v<R>>>
+      constexpr std::enable_if_t<I == L::ncomps> sub_from(L &, const R &) {} // stop
 
-    template<size_t I = 0, class... Ls, class... Rs>
-      constexpr std::enable_if_t<I != sizeof...(Ls)>
-        sub_from(QState<Ls...> &self, const QState<Rs...> &other)
+    template<size_t I = 0, class L, class R,
+             class = std::enable_if_t<is_state_v<L> && is_state_v<R>>>
+      constexpr std::enable_if_t<I != L::ncomps> sub_from(L &l, const R &r)
     {
-      using L = type_by_index<I, Ls...>;
-      static_assert(QState<Rs...>::template has<L>(),
-                    "other state doesn't have enough quantities");
-      self.template get<L>() -= other.template get<L>();
-      sub_from<I + 1>(self, other);
+      using T = typename L::template type_of<I>;
+      static_assert(R::template has<T>(), "other state doesn't have enough quantities");
+      l.template get<T>() -= r.template get<T>();
+      sub_from<I + 1>(l, r);
     }
 
 /*---------------------------------------------------------------------------------------*/
 
-    template<size_t I, class... Ls, class... Rs>
-      constexpr std::enable_if_t<I == sizeof...(Ls)>
-        copy_to(QState<Ls...> &, const QState<Rs...> &) {} // stop
+    template<size_t I, class L, class R,
+             class = std::enable_if_t<is_state_v<L> && is_state_v<R>>>
+      constexpr std::enable_if_t<I == L::ncomps> copy_to(L &, const R &) {} // stop
 
-    template<size_t I = 0, class... Ls, class... Rs>
-      constexpr std::enable_if_t<I != sizeof...(Ls)>
-        copy_to(QState<Ls...> &self, const QState<Rs...> &other)
+    template<size_t I = 0, class L, class R,
+             class = std::enable_if_t<is_state_v<L> && is_state_v<R>>>
+      constexpr std::enable_if_t<I != L::ncomps> copy_to(L &l, const R &r)
     {
-      using L = type_by_index<I, Ls...>;
-      static_assert(QState<Rs...>::template has<L>(),
-                    "other state doesn't have enough quantities");
-      self.template get<L>() = other.template get<L>();
-      copy_to<I + 1>(self, other);
+      using T = typename L::template type_of<I>;
+      static_assert(R::template has<T>(), "other state doesn't have enough quantities");
+      l.template get<T>() = r.template get<T>();
+      copy_to<I + 1>(l, r);
     }
 
 /*---------------------------------------------------------------------------------------*/
 
-    template<size_t I, class Coeff, class... Qs>
-      constexpr std::enable_if_t<I == sizeof...(Qs)>
-        mult_by(QState<Qs...> &, const Coeff &) {} // stop
+    template<size_t I, class S, class T, class = std::enable_if_t<is_state_v<S>>>
+      constexpr std::enable_if_t<I == S::ncomps> mult_by(S &, T) {} // stop
 
-    template<size_t I = 0, class Coeff, class... Qs>
-      constexpr std::enable_if_t<I != sizeof...(Qs)>
-        mult_by(QState<Qs...> &self, const Coeff &coeff)
+    template<size_t I = 0, class S, class T, class = std::enable_if_t<is_state_v<S>>>
+      constexpr std::enable_if_t<I != S::ncomps> mult_by(S &s, T coeff)
     {
-      self.template get<I>() *= coeff;
-      mult_by<I + 1>(self, coeff);
+      s.template get<I>() *= coeff;
+      mult_by<I + 1>(s, coeff);
     }
 
 /*---------------------------------------------------------------------------------------*/
 
-    template<size_t I, class Coeff, class... Qs>
-      constexpr std::enable_if_t<I == sizeof...(Qs)>
-        div_by(QState<Qs...> &, Coeff) {} // stop
+    template<size_t I, class S, class T, class = std::enable_if_t<is_state_v<S>>>
+      constexpr std::enable_if_t<I == S::ncomps> div_by(S &, T) {} // stop
 
-    template<size_t I = 0, class Coeff, class... Qs>
-      constexpr std::enable_if_t<I != sizeof...(Qs)>
-        div_by(QState<Qs...> &self, Coeff coeff)
+    template<size_t I = 0, class S, class T, class = std::enable_if_t<is_state_v<S>>>
+      constexpr std::enable_if_t<I != S::ncomps> div_by(S &s, T coeff)
     {
-      self.template get<I>() /= coeff;
-      div_by<I + 1>(self, coeff);
+      s.template get<I>() /= coeff;
+      div_by<I + 1>(s, coeff);
     }
 
 /*---------------------------------------------------------------------------------------*/
 
-    template<size_t I, class Value, class... Qs>
-      constexpr std::enable_if_t<I == sizeof...(Qs)>
-        set_to(QState<Qs...> &, Value) {} // stop
+    template<size_t I, class S, class T, class = std::enable_if_t<is_state_v<S>>>
+      constexpr std::enable_if_t<I == S::ncomps>
+        set_to(S &, T) {} // stop
 
-    template<size_t I = 0, class Value, class... Qs>
-      constexpr std::enable_if_t<I != sizeof...(Qs)>
-        set_to(QState<Qs...> &s, Value value)
+    template<size_t I = 0, class S, class T, class = std::enable_if_t<is_state_v<S>>>
+      constexpr std::enable_if_t<I != S::ncomps>
+        set_to(S &s, T value)
     {
-      using Q = typename type_by_index<I, Qs...>::type;
+      using Q = typename S::template type_of<I>::type;
       s.template get<I>() = static_cast<Q>(value);
       set_to<I + 1>(s, value);
     }
 
 /*---------------------------------------------------------------------------------------*/
 
-    template<size_t I, class... Ls, class... Rs>
-      constexpr std::enable_if_t<I == sizeof...(Ls), bool>
-        equal(const QState<Ls...> &, const QState<Rs...> &) { return true; } // stop
+    template<size_t I, class L, class R,
+             class = std::enable_if_t<is_state_v<L> && is_state_v<R>>>
+      constexpr std::enable_if_t<I == L::ncomps, bool>
+        equal(const L &, const R &) { return true; } // stop
 
-    template<size_t I = 0, class... Ls, class... Rs>
-      constexpr std::enable_if_t<I != sizeof...(Ls), bool>
-        equal(const QState<Ls...> &l, const QState<Rs...> &r)
+    template<size_t I = 0, class L, class R,
+             class = std::enable_if_t<is_state_v<L> && is_state_v<R>>>
+      constexpr std::enable_if_t<I != L::ncomps, bool>
+        equal(const L &l, const R &r)
     {
-      using L = type_by_index<I, Ls...>;
-      static_assert(QState<Rs...>::template has<L>(),
-                    "right state doesn't have enough quantities");
-      return (l.template get<L>() == r.template get<L>()) && equal<I + 1>(l, r);
+      using T = typename L::template type_of<I>;
+      static_assert(R::template has<T>(), "right state doesn't have enough quantities");
+      return (l.template get<T>() == r.template get<T>()) && equal<I + 1>(l, r);
     }
 
   } // namespace details
