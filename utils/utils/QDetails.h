@@ -18,9 +18,20 @@ namespace Quantities
 {
   template<class... Qs> class QState; // fwd declaration
 
-  template<class> struct is_state : std::false_type {};
+  template<class...> struct is_state : std::false_type {};
   template<class... Qs> struct is_state<QState<Qs...>> : std::true_type {};
   template<class T> static constexpr bool is_state_v = is_state<std::decay_t<T>>::value;
+
+  template<class...> struct enable_if {};
+  template<class T> struct enable_if<T> : std::enable_if<is_state_v<T>> {};
+  template<class L, class R>
+    struct enable_if<L, R> : std::enable_if<is_state_v<L> && is_state_v<R>> {};
+
+  template<class... Ts> using enable_if_s = typename enable_if<Ts...>::type;
+
+  // workaround for buggy icc17
+  template<class T> static constexpr bool is_not_state_v = !is_state_v<T>;
+  template<class T> using enable_if_not_s = std::enable_if_t<is_not_state_v<T>>;
 
   namespace details
   {
@@ -93,11 +104,11 @@ namespace Quantities
 /*---------------------------------------------------------------------------------------*/
 
     // pretty printer
-    template<size_t I, class S, class = std::enable_if_t<is_state_v<S>>>
+    template<size_t I, class S, class = enable_if_s<S>>
       std::enable_if_t<I == S::ncomps>
         print_state(std::ostream &out, const S &) { out << "}"; } // stop
 
-    template<size_t I = 0, class S, class = std::enable_if_t<is_state_v<S>>>
+    template<size_t I = 0, class S, class = enable_if_s<S>>
       std::enable_if_t<I != S::ncomps>
         print_state(std::ostream &out, const S &s)
     {
@@ -108,11 +119,11 @@ namespace Quantities
 
 /*---------------------------------------------------------------------------------------*/
 
-    template<size_t I, class S, class = std::enable_if_t<is_state_v<S>>>
+    template<size_t I, class S, class = enable_if_s<S>>
       std::enable_if_t<I == S::ncomps>
         write_state(std::ostream &, const S &) {} // stop
 
-    template<size_t I = 0, class S, class = std::enable_if_t<is_state_v<S>>>
+    template<size_t I = 0, class S, class = enable_if_s<S>>
       std::enable_if_t<I != S::ncomps>
         write_state(std::ostream &out, const S &s)
     {
@@ -122,11 +133,11 @@ namespace Quantities
 
 /*---------------------------------------------------------------------------------------*/
 
-    template<size_t I, class S, class = std::enable_if_t<is_state_v<S>>>
+    template<size_t I, class S, class = enable_if_s<S>>
       std::enable_if_t<I == S::ncomps>
         read_state(std::istream &, S &) {} // stop
 
-    template<size_t I = 0, class S, class = std::enable_if_t<is_state_v<S>>>
+    template<size_t I = 0, class S, class = enable_if_s<S>>
       std::enable_if_t<I != S::ncomps>
         read_state(std::istream &in, S &s)
     {
@@ -136,13 +147,13 @@ namespace Quantities
 
 /*---------------------------------------------------------------------------------------*/
 
-    template<size_t I, class L, class R,
-             class = std::enable_if_t<is_state_v<L> && is_state_v<R>>>
-      constexpr std::enable_if_t<I == L::ncomps> add_to(L &, const R &) {} // stop
+    template<size_t I, class L, class R, class = enable_if_s<L, R>>
+      constexpr std::enable_if_t<I == L::ncomps>
+        add_to(L &, const R &) {} // stop
 
-    template<size_t I = 0, class L, class R,
-             class = std::enable_if_t<is_state_v<L> && is_state_v<R>>>
-      constexpr std::enable_if_t<I != L::ncomps> add_to(L &l, const R &r)
+    template<size_t I = 0, class L, class R, class = enable_if_s<L, R>>
+      constexpr std::enable_if_t<I != L::ncomps>
+        add_to(L &l, const R &r)
     {
       using T = typename L::template type_of<I>;
       static_assert(R::template has<T>(), "other state doesn't have enough quantities");
@@ -152,13 +163,13 @@ namespace Quantities
 
 /*---------------------------------------------------------------------------------------*/
 
-    template<size_t I, class L, class R,
-             class = std::enable_if_t<is_state_v<L> && is_state_v<R>>>
-      constexpr std::enable_if_t<I == L::ncomps> sub_from(L &, const R &) {} // stop
+    template<size_t I, class L, class R, class = enable_if_s<L, R>>
+      constexpr std::enable_if_t<I == L::ncomps>
+        sub_from(L &, const R &) {} // stop
 
-    template<size_t I = 0, class L, class R,
-             class = std::enable_if_t<is_state_v<L> && is_state_v<R>>>
-      constexpr std::enable_if_t<I != L::ncomps> sub_from(L &l, const R &r)
+    template<size_t I = 0, class L, class R, class = enable_if_s<L, R>>
+      constexpr std::enable_if_t<I != L::ncomps>
+        sub_from(L &l, const R &r)
     {
       using T = typename L::template type_of<I>;
       static_assert(R::template has<T>(), "other state doesn't have enough quantities");
@@ -168,13 +179,13 @@ namespace Quantities
 
 /*---------------------------------------------------------------------------------------*/
 
-    template<size_t I, class L, class R,
-             class = std::enable_if_t<is_state_v<L> && is_state_v<R>>>
-      constexpr std::enable_if_t<I == L::ncomps> copy_to(L &, const R &) {} // stop
+    template<size_t I, class L, class R, class = enable_if_s<L, R>>
+      constexpr std::enable_if_t<I == L::ncomps>
+        copy_to(L &, const R &) {} // stop
 
-    template<size_t I = 0, class L, class R,
-             class = std::enable_if_t<is_state_v<L> && is_state_v<R>>>
-      constexpr std::enable_if_t<I != L::ncomps> copy_to(L &l, const R &r)
+    template<size_t I = 0, class L, class R, class = enable_if_s<L, R>>
+      constexpr std::enable_if_t<I != L::ncomps>
+        copy_to(L &l, const R &r)
     {
       using T = typename L::template type_of<I>;
       static_assert(R::template has<T>(), "other state doesn't have enough quantities");
@@ -184,11 +195,13 @@ namespace Quantities
 
 /*---------------------------------------------------------------------------------------*/
 
-    template<size_t I, class S, class T, class = std::enable_if_t<is_state_v<S>>>
-      constexpr std::enable_if_t<I == S::ncomps> mult_by(S &, T) {} // stop
+    template<size_t I, class S, class T, class = enable_if_s<S>>
+      constexpr std::enable_if_t<I == S::ncomps>
+        mult_by(S &, T) {} // stop
 
-    template<size_t I = 0, class S, class T, class = std::enable_if_t<is_state_v<S>>>
-      constexpr std::enable_if_t<I != S::ncomps> mult_by(S &s, T coeff)
+    template<size_t I = 0, class S, class T, class = enable_if_s<S>>
+      constexpr std::enable_if_t<I != S::ncomps>
+        mult_by(S &s, T coeff)
     {
       s.template get<I>() *= coeff;
       mult_by<I + 1>(s, coeff);
@@ -196,11 +209,13 @@ namespace Quantities
 
 /*---------------------------------------------------------------------------------------*/
 
-    template<size_t I, class S, class T, class = std::enable_if_t<is_state_v<S>>>
-      constexpr std::enable_if_t<I == S::ncomps> div_by(S &, T) {} // stop
+    template<size_t I, class S, class T, class = enable_if_s<S>>
+      constexpr std::enable_if_t<I == S::ncomps>
+        div_by(S &, T) {} // stop
 
-    template<size_t I = 0, class S, class T, class = std::enable_if_t<is_state_v<S>>>
-      constexpr std::enable_if_t<I != S::ncomps> div_by(S &s, T coeff)
+    template<size_t I = 0, class S, class T, class = enable_if_s<S>>
+      constexpr std::enable_if_t<I != S::ncomps>
+        div_by(S &s, T coeff)
     {
       s.template get<I>() /= coeff;
       div_by<I + 1>(s, coeff);
@@ -208,11 +223,11 @@ namespace Quantities
 
 /*---------------------------------------------------------------------------------------*/
 
-    template<size_t I, class S, class T, class = std::enable_if_t<is_state_v<S>>>
+    template<size_t I, class S, class T, class = enable_if_s<S>>
       constexpr std::enable_if_t<I == S::ncomps>
         set_to(S &, T) {} // stop
 
-    template<size_t I = 0, class S, class T, class = std::enable_if_t<is_state_v<S>>>
+    template<size_t I = 0, class S, class T, class = enable_if_s<S>>
       constexpr std::enable_if_t<I != S::ncomps>
         set_to(S &s, T value)
     {
@@ -223,13 +238,11 @@ namespace Quantities
 
 /*---------------------------------------------------------------------------------------*/
 
-    template<size_t I, class L, class R,
-             class = std::enable_if_t<is_state_v<L> && is_state_v<R>>>
+    template<size_t I, class L, class R, class = enable_if_s<L, R>>
       constexpr std::enable_if_t<I == L::ncomps, bool>
         equal(const L &, const R &) { return true; } // stop
 
-    template<size_t I = 0, class L, class R,
-             class = std::enable_if_t<is_state_v<L> && is_state_v<R>>>
+    template<size_t I = 0, class L, class R, class = enable_if_s<L, R>>
       constexpr std::enable_if_t<I != L::ncomps, bool>
         equal(const L &l, const R &r)
     {
