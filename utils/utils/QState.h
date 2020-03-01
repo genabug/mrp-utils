@@ -33,9 +33,8 @@ namespace Quantities
       constexpr explicit QState(Args&&... args) noexcept
         : data(std::forward<Args>(args)...) {}
 
-    template<class... Ts>
-      constexpr QState(QState<Ts...> &&s) noexcept
-        : data(std::move(s).template get<Qs>()...) {}
+    template<class S, class = enable_if_s<S>>
+      constexpr QState(S &&s) noexcept : data(std::move(s).template get<Qs>()...) {}
 
     // copy ctor
     // WARNING: be careful when use it with auto due to the fact that exact types of data
@@ -46,46 +45,42 @@ namespace Quantities
     //  auto sr = make_state<rho, w>(r, v); // r and v are lvalues => s : QState<rho&, w&>
     //  auto c1 = sc; // c1 : QState<rho, w> => it is a copy!
     //  auto c2 = sr; // c2 : QState<rho&, w&> => it is NOT a copy!
-    template<class... Ts>
-      constexpr QState(const QState<Ts...> &s) noexcept : data(s.template get<Qs>()...) {}
+    template<class S, class = enable_if_s<S>>
+      constexpr QState(const S &s) noexcept : data(s.template get<Qs>()...) {}
 
     // access by index (mainly to implement basic ops, see details)
-    template<size_t I>
-      constexpr decltype(auto) get() & noexcept { return std::get<I>(data); }
-    template<size_t I>
-      constexpr decltype(auto) get() const & noexcept { return std::get<I>(data); }
+    template<size_t I> constexpr auto& get() & noexcept { return std::get<I>(data); }
+    template<size_t I> constexpr auto& get() const & noexcept { return std::get<I>(data); }
 
     // access and slices by type-name (for generic code)
     template<class Q> constexpr auto& get() & noexcept;
     template<class Q> constexpr auto& get() const & noexcept;
 
     // slice/refs by type-name
-    template<class... Ts>
-      constexpr std::enable_if_t<sizeof...(Ts) == 0, QState<std::decay_t<Qs>&...>>
+    template<class... Ts, class = std::enable_if_t<sizeof...(Ts) == 0>>
+      constexpr QState<std::decay_t<Qs>&...>
         get() & noexcept { return QState<std::decay_t<Qs>&...>(get<Qs>()...); }
 
-    template<class... Ts>
-      constexpr std::enable_if_t<sizeof...(Ts) >= 2, QState<std::decay_t<Ts>&...>>
+    template<class... Ts, class = std::enable_if_t<sizeof...(Ts) >= 2>>
+      constexpr QState<std::decay_t<Ts>&...>
         get() & noexcept { return QState<std::decay_t<Ts>&...>(get<Ts>()...); }
 
-    template<class... Ts>
-      constexpr std::enable_if_t<sizeof...(Ts) == 0, QState<const std::decay_t<Qs>&...>>
+    template<class... Ts, class = std::enable_if_t<sizeof...(Ts) == 0>>
+      constexpr QState<const std::decay_t<Qs>&...>
         get() const & noexcept { return QState<const std::decay_t<Qs>&...>(get<Qs>()...); }
 
-    template<class... Ts>
-      constexpr std::enable_if_t<sizeof...(Ts) >= 2, QState<const std::decay_t<Ts>&...>>
+    template<class... Ts, class = std::enable_if_t<sizeof...(Ts) >= 2>>
+      constexpr QState<const std::decay_t<Ts>&...>
         get() const & noexcept { return QState<const std::decay_t<Ts>&...>(get<Ts>()...); }
 
     // slice/copies by type-name
     template<class Q> constexpr auto copy() const noexcept { return get<Q>(); }
 
-    template<class... Ts>
-      constexpr std::enable_if_t<sizeof...(Ts) == 0, QState<std::decay_t<Qs>...>>
-        copy() const noexcept { return *this; }
+    template<class... Ts, class = std::enable_if_t<sizeof...(Ts) == 0>>
+      constexpr QState<std::decay_t<Qs>...> copy() const noexcept { return *this; }
 
-    template<class... Ts>
-      constexpr std::enable_if_t<sizeof...(Ts) >= 2, QState<std::decay_t<Ts>...>>
-        copy() const noexcept { return *this; }
+    template<class... Ts, class = std::enable_if_t<sizeof...(Ts) >= 2>>
+      constexpr QState<std::decay_t<Ts>...> copy() const noexcept { return *this; }
 
     // access and slices by variable (for end-user code)
     template<class Q> constexpr auto& operator[](Q) & noexcept { return get<Q>(); }
@@ -103,13 +98,13 @@ namespace Quantities
       constexpr decltype(auto) copy(Ts...) const noexcept { return copy<Ts...>(); }
 
     // some ops
-    template<class T> constexpr QState<Qs...>& operator=(T);
-    template<class... Ts> constexpr QState<Qs...>& operator=(const QState<Ts...> &);
-    template<class... Ts> constexpr QState<Qs...>& operator+=(const QState<Ts...> &);
-    template<class... Ts> constexpr QState<Qs...>& operator-=(const QState<Ts...> &);
+    template<class T, class = enable_if_not_s<T>> constexpr QState& operator=(T);
+    template<class S, class = enable_if_s<S>> constexpr QState& operator=(const S &);
+    template<class S, class = enable_if_s<S>> constexpr QState& operator+=(const S &);
+    template<class S, class = enable_if_s<S>> constexpr QState& operator-=(const S &);
 
-    template<class T> constexpr QState<Qs...>& operator*=(T);
-    template<class T> constexpr QState<Qs...>& operator/=(T);
+    template<class T> constexpr QState& operator*=(T);
+    template<class T> constexpr QState& operator/=(T);
 
     // unary ops return a copy!
     constexpr QState<std::decay_t<Qs>...> operator-() const;
@@ -156,39 +151,31 @@ namespace Quantities
   // while copy-function returns copies (value or state of values).
 
   // slice/copies
-  template<class..., class T>
-    constexpr std::enable_if_t<!is_state_v<T>, T> copy(T &&s) noexcept { return s; }
+  template<class..., class T, class = enable_if_not_s<T>>
+    constexpr T copy(T &&t) noexcept { return t; }
 
-  template<class... Qs, class... Ts>
-    constexpr decltype(auto) copy(const QState<Ts...> &s) noexcept
-  {
-    return s.template copy<Qs...>();
-  }
+  template<class... Qs, class S, class = enable_if_s<S>>
+    constexpr decltype(auto) copy(const S &s) noexcept { return s.template copy<Qs...>(); }
 
   // slice/refs
-  template<class..., class T>
-    constexpr std::enable_if_t<!is_state_v<T>, T&> get(T &s) noexcept { return s; }
+  template<class..., class T, class = enable_if_not_s<T>>
+    constexpr T& get(T &t) noexcept { return t; }
 
-  template<class... Qs, class... Ts>
-    constexpr decltype(auto) get(QState<Ts...> &s) noexcept
-  {
-    return s.template get<Qs...>();
-  }
+  template<class... Qs, class S, class = enable_if_s<S>>
+    constexpr decltype(auto) get(S &s) noexcept { return s.template get<Qs...>(); }
 
-  template<class... Qs, class... Ts>
-    constexpr decltype(auto) get(const QState<Ts...> &s) noexcept
-  {
-    return s.template get<Qs...>();
+  template<class... Qs, class S, class = enable_if_s<S>>
+    constexpr decltype(auto) get(const S &s) noexcept { return s.template get<Qs...>();
   }
 } // namespace Quantities
 
 // IO operations
 
-template<class... Qs>
-  std::istream& operator>>(std::istream &, Quantities::QState<Qs...> &);
+template<class S, class = Quantities::enable_if_s<S>>
+  std::istream& operator>>(std::istream &, S &);
 
-template<class... Qs>
-  std::ostream& operator<<(std::ostream &, const Quantities::QState<Qs...> &);
+template<class S, class = Quantities::enable_if_s<S>>
+  std::ostream& operator<<(std::ostream &, const S &);
 
 // binary arithmetic operations
 // WARNING: operations are not symmetric, i.e. in general case l + r != r + l
@@ -200,35 +187,29 @@ template<class... Qs>
 // auto s3 = s1 + s2; // s3 type is State<rho, Te, w>
 // auto s4 = s2 + s1; // COMPILE ERROR!!! s1 doesn't have needed variables
 
-template<class... Ls, class... Rs>
-  constexpr auto operator+(
-    const Quantities::QState<Ls...> &, const Quantities::QState<Rs...> &);
+template<class L, class R, class = Quantities::enable_if_s<L, R>>
+  constexpr auto operator+(const L &, const R &);
 
-template<class... Ls, class... Rs>
-  constexpr auto operator-(
-    const Quantities::QState<Ls...> &, const Quantities::QState<Rs...> &);
+template<class L, class R, class = Quantities::enable_if_s<L, R>>
+  constexpr auto operator-(const L &, const R &);
 
-template<class T, class... Qs>
-  constexpr auto operator*(const Quantities::QState<Qs...> &, T);
+template<class S, class T, class = Quantities::enable_if_s<S>>
+  constexpr auto operator*(const S &, T);
 
-template<class T, class... Qs>
-  constexpr auto operator*(T v, const Quantities::QState<Qs...> &s) { return s * v; }
+template<class T, class S, class = Quantities::enable_if_s<S>>
+  constexpr auto operator*(T v, const S &s) { return s * v; }
 
-template<class T, class... Qs>
-  constexpr auto operator/(const Quantities::QState<Qs...> &, T);
+template<class S, class T, class = Quantities::enable_if_s<S>>
+  constexpr auto operator/(const S &, T);
 
 // boolean operations
 // WARNING: operations are not symmetric too, i.e. l == r does not mean that r == l.
 
-template<class... Ls, class... Rs>
-  constexpr bool operator==(
-    const Quantities::QState<Ls...> &, const Quantities::QState<Rs...> &);
+template<class L, class R, class = Quantities::enable_if_s<L, R>>
+  constexpr bool operator==(const L &, const R &);
 
-template<class... Ls, class... Rs>
-  constexpr bool operator!=(
-    const Quantities::QState<Ls...> &l, const Quantities::QState<Rs...> &r)
-{
-    return !(l == r);
+template<class L, class R, class = Quantities::enable_if_s<L, R>>
+  constexpr bool operator!=(const L &l, const R &r) { return !(l == r);
 }
 
 /*---------------------------------------------------------------------------------------*/
@@ -281,7 +262,7 @@ namespace Quantities
 
 /*---------------------------------------------------------------------------------------*/
 
-  template<class... Qs> template<class T>
+  template<class... Qs> template<class T, class>
     constexpr QState<Qs...>& QState<Qs...>::operator=(T value)
   {
     details::set_to(*this, value);
@@ -290,8 +271,8 @@ namespace Quantities
 
 /*---------------------------------------------------------------------------------------*/
 
-  template<class... Qs> template<class... Ts>
-    constexpr QState<Qs...>& QState<Qs...>::operator=(const QState<Ts...> &other)
+  template<class... Qs> template<class S, class>
+    constexpr QState<Qs...>& QState<Qs...>::operator=(const S &other)
   {
     details::copy_to(*this, other);
     return *this;
@@ -299,8 +280,8 @@ namespace Quantities
 
 /*---------------------------------------------------------------------------------------*/
 
-  template<class... Qs> template<class... Ts>
-    constexpr QState<Qs...>& QState<Qs...>::operator+=(const QState<Ts...> &other)
+  template<class... Qs> template<class S, class>
+    constexpr QState<Qs...>& QState<Qs...>::operator+=(const S &other)
   {
     details::add_to(*this, other);
     return *this;
@@ -308,8 +289,8 @@ namespace Quantities
 
 /*---------------------------------------------------------------------------------------*/
 
-  template<class... Qs> template<class... Ts>
-    constexpr QState<Qs...>& QState<Qs...>::operator-=(const QState<Ts...> &other)
+  template<class... Qs> template<class S, class>
+    constexpr QState<Qs...>& QState<Qs...>::operator-=(const S &other)
   {
     details::sub_from(*this, other);
     return *this;
@@ -349,8 +330,8 @@ namespace Quantities
 /*---------------------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------------------*/
 
-template<class... Qs>
-  std::ostream& operator<<(std::ostream &ostr, const Quantities::QState<Qs...> &s)
+template<class S, class>
+  std::ostream& operator<<(std::ostream &ostr, const S &s)
 {
   Quantities::details::write_state(ostr, s);
   return ostr;
@@ -358,8 +339,8 @@ template<class... Qs>
 
 /*---------------------------------------------------------------------------------------*/
 
-template<class... Qs>
-  std::istream& operator>>(std::istream &istr, Quantities::QState<Qs...> &s)
+template<class S, class>
+  std::istream& operator>>(std::istream &istr, S &s)
 {
   Quantities::details::read_state(istr, s);
   return istr;
@@ -367,9 +348,8 @@ template<class... Qs>
 
 /*---------------------------------------------------------------------------------------*/
 
-template<class... Ls, class... Rs>
-  constexpr auto operator+(
-    const Quantities::QState<Ls...> &l, const Quantities::QState<Rs...> &r)
+template<class L, class R, class>
+  constexpr auto operator+(const L &l, const R &r)
 {
   auto s = l.copy();
   Quantities::details::add_to(s, r);
@@ -378,9 +358,8 @@ template<class... Ls, class... Rs>
 
 /*---------------------------------------------------------------------------------------*/
 
-template<class... Ls, class... Rs>
-  constexpr auto operator-(
-    const Quantities::QState<Ls...> &l, const Quantities::QState<Rs...> &r)
+template<class L, class R, class>
+  constexpr auto operator-(const L &l, const R &r)
 {
   auto s = l.copy();
   Quantities::details::sub_from(s, r);
@@ -389,8 +368,8 @@ template<class... Ls, class... Rs>
 
 /*---------------------------------------------------------------------------------------*/
 
-template<class T, class... Qs>
-  constexpr auto operator*(const Quantities::QState<Qs...> &s, T v)
+template<class S, class T, class>
+  constexpr auto operator*(const S &s, T v)
 {
   auto r = s.copy();
   Quantities::details::mult_by(r, v);
@@ -399,8 +378,8 @@ template<class T, class... Qs>
 
 /*---------------------------------------------------------------------------------------*/
 
-template<class T, class... Qs>
-  constexpr auto operator/(const Quantities::QState<Qs...> &s, T v)
+template<class S, class T, class>
+  constexpr auto operator/(const S &s, T v)
 {
   auto r = s.copy();
   Quantities::details::div_by(r, v);
@@ -409,9 +388,8 @@ template<class T, class... Qs>
 
 /*---------------------------------------------------------------------------------------*/
 
-template<class... Ls, class... Rs>
-  constexpr bool operator==(
-    const Quantities::QState<Ls...> &l, const Quantities::QState<Rs...> &r)
+template<class L, class R, class>
+  constexpr bool operator==(const L &l, const R &r)
 {
   return Quantities::details::equal(l, r);
 }
