@@ -11,3 +11,4 @@ CMakeLists.txt.user
 Debug/
 Release/
 build/
+.cmake/
