@@ -12,7 +12,7 @@
 #include <string>
 #include <functional>
 #include <utility>
-#include <exception>
+#include <stdexcept>
 
 template<class Factory> class ObjectsFactory;
 
