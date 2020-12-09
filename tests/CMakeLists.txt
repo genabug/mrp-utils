@@ -1,6 +1,6 @@
 add_library(doctest INTERFACE)
 target_sources(doctest INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/doctest.h")
-target_include_directories(doctest INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories(doctest INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}")
 
 function(add_marple_test tst_name)
   cmake_parse_arguments(tst "" "" "SOURCES;DEPENDS" ${ARGN})
@@ -24,4 +24,5 @@ add_marple_test(tst_state SOURCES tst_state.cpp DEPENDS utils)
 add_marple_test(tst_vector SOURCES tst_vector.cpp DEPENDS utils)
 add_marple_test(tst_tensor SOURCES tst_tensor.cpp DEPENDS utils)
 
-add_subdirectory(factory)
+add_subdirectory(lib)
+add_marple_test(tst_factory SOURCES tst_factory.cpp DEPENDS lib factory)

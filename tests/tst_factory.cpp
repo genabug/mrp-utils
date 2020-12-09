@@ -9,7 +9,7 @@ TEST_CASE("factory")
 {
   std::vector<std::string> names;
   ObjectsFactory<BaseF>::dump_names(names);
-  CHECK(names.size() > 1);
+  REQUIRE(names.size() > 1);
   CHECK(names[0] == "Derived2");
   CHECK(names[1] == "Derived1");
 
@@ -28,4 +28,3 @@ TEST_CASE("factory")
   CHECK(d1->id() == "Derived1");
   CHECK(d2->id() == "Derived2");
 }
-
