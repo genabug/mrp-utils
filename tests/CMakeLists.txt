@@ -1,3 +1,5 @@
+enable_testing()
+
 add_library(doctest INTERFACE)
 target_sources(doctest INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/doctest.h")
 target_include_directories(doctest INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}")
