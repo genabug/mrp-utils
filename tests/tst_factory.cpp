@@ -1,5 +1,6 @@
 #include "doctest.h"
-#include "lib/base.hpp"
+#include "lib1/base1.hpp"
+#include "lib2/base2.hpp"
 #include "factory/ObjectsFactory.h"
 
 #include <string>
@@ -8,23 +9,31 @@
 TEST_CASE("factory")
 {
   std::vector<std::string> names;
-  ObjectsFactory<BaseF>::dump_names(names);
+  ObjectsFactory<Base1F>::dump_names(names);
   REQUIRE(names.size() > 1);
-  CHECK(names[0] == "Derived2");
-  CHECK(names[1] == "Derived1");
+  CHECK(names[0] == "Derived12");
+  CHECK(names[1] == "Derived11");
 
-  auto *d1f = ObjectsFactory<BaseF>::find("Derived1");
-  auto *d2f = ObjectsFactory<BaseF>::find("Derived2");
-  auto *err = ObjectsFactory<BaseF>::find("Derived3");
+  auto *d1f = ObjectsFactory<Base1F>::find("Derived11");
+  auto *d2f = ObjectsFactory<Base1F>::find("Derived12");
+  auto *err = ObjectsFactory<Base1F>::find("Derived13");
 
   CHECK(d1f != nullptr);
   CHECK(d2f != nullptr);
   CHECK(err == nullptr);
 
-  auto *d1 = ObjectsFactory<BaseF>::build("Derived1");
-  auto *d2 = ObjectsFactory<BaseF>::build("Derived2");
-  CHECK_THROWS(ObjectsFactory<BaseF>::build("Derived3"));
+  auto *d11 = ObjectsFactory<Base1F>::build("Derived11");
+  auto *d12 = ObjectsFactory<Base1F>::build("Derived12");
+  CHECK_THROWS(ObjectsFactory<Base1F>::build("Derived13"));
 
-  CHECK(d1->id() == "Derived1");
-  CHECK(d2->id() == "Derived2");
+  CHECK(d11->id() == "Derived11");
+  CHECK(d12->id() == "Derived12");
+
+  if (ObjectsFactory<Base2F>::find("Derived21"))
+  {
+    auto *d21 = ObjectsFactory<Base2F>::build("Derived21");
+    std::cerr << "d11: " << d11->addr() << "\nd21: " << d21->addr() << '\n';
+  }
+  else
+    std::cerr << "Derived21 not found!\n";
 }

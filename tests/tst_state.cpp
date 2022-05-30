@@ -498,17 +498,23 @@ TEST_CASE("get function")
 }
 
 
-using st = QState<ti_t, tv_t>;
+using st_idv = QState<ti_t, td_t, tv_t>;
 
-st func_copy(st s) { s = 2; return s; }
-void func_ref(st &s) { s = 3; }
-st func_cref(const st &s) { st sc = s; return sc; }
-/*
+st_idv func_copy(st_idv s) { s = 2; return s; }
+void func_ref(st_idv &s) { s = 3; }
+st_idv func_cref(const st_idv &s) { st_idv sc = s; return sc; }
+
+template<class S> void func_id(S &s)
+{
+  s.template get<ti_t>() = 1;
+  s.template get<td_t>() = 2;
+}
+
 TEST_CASE("func")
 {
-  st s1; s1 = 1;
-  st s2 = func_copy(s1);
-  st s; s = 1;
+  st_idv s1; s1 = 1;
+  st_idv s2 = func_copy(s1);
+  st_idv s; s = 1;
   CHECK((s1 == s));
   s = 2;
   CHECK((s2 == s));
@@ -517,10 +523,14 @@ TEST_CASE("func")
   s = 3;
   CHECK((s2 == s));
 
-  st s3 = func_cref(s2);
+  st_idv s3 = func_cref(s2);
   CHECK((s3 == s2));
+
+  func_id(s3);
+  CHECK(s3.get<ti_t>() == 1);
+  CHECK(s3.get<td_t>() == 2.0);
 }
-*/
+
 
 TEST_CASE("arithmetic")
 {

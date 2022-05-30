@@ -15,7 +15,6 @@ function(add_marple_test tst_name)
   endif()
 
   add_executable(${tst_name} ${tst_SOURCES})
-  add_dependencies(${tst_name} doctest ${tst_DEPENDS})
   target_link_libraries(${tst_name} PRIVATE doctest ${tst_DEPENDS})
   target_compile_definitions(${tst_name} PRIVATE "-DDOCTEST_CONFIG_IMPLEMENT_WITH_MAIN=1")
 
@@ -26,5 +25,6 @@ add_marple_test(tst_state SOURCES tst_state.cpp DEPENDS utils)
 add_marple_test(tst_vector SOURCES tst_vector.cpp DEPENDS utils)
 add_marple_test(tst_tensor SOURCES tst_tensor.cpp DEPENDS utils)
 
-add_subdirectory(lib)
-add_marple_test(tst_factory SOURCES tst_factory.cpp DEPENDS lib factory)
+add_subdirectory(lib1)
+add_subdirectory(lib2)
+add_marple_test(tst_factory SOURCES tst_factory.cpp DEPENDS lib1 lib2 factory)
