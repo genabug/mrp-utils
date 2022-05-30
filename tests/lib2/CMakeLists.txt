@@ -1,5 +1,5 @@
 add_library(lib2)
-target_link_libraries(lib2 PRIVATE lib1 factory)
+target_link_libraries(lib2 PRIVATE lib1 PUBLIC factory)
 target_sources(lib2
 PUBLIC
   base2.hpp

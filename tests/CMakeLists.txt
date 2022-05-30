@@ -27,4 +27,5 @@ add_marple_test(tst_tensor SOURCES tst_tensor.cpp DEPENDS utils)
 
 add_subdirectory(lib1)
 add_subdirectory(lib2)
+add_marple_test(tst_lib2 SOURCES tst_lib2.cpp DEPENDS lib2)
 add_marple_test(tst_factory SOURCES tst_factory.cpp DEPENDS lib1 lib2 factory)
