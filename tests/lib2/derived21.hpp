@@ -9,6 +9,7 @@ struct LIB2_EXPORT Derived21 final : Base2
   std::string id() const final { return name; }
   std::string addr() const final;
 
+private:
   static const std::string name;
 };
 
