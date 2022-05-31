@@ -8,4 +8,7 @@ TEST_CASE("lib2")
 {
   Derived21 d21;
   CHECK_NOTHROW(d21.addr());
+
+  Derived22 d22;
+  CHECK_NOTHROW(d22.addr());
 }
