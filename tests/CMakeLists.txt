@@ -18,6 +18,11 @@ function(add_marple_test tst_name)
   target_link_libraries(${tst_name} PRIVATE doctest ${tst_DEPENDS})
   target_compile_definitions(${tst_name} PRIVATE "-DDOCTEST_CONFIG_IMPLEMENT_WITH_MAIN=1")
 
+  add_custom_command(
+    TARGET ${tst_name} POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_RUNTIME_DLLS:${tst_name}> $<TARGET_FILE_DIR:${tst_name}>
+    COMMAND_EXPAND_LISTS)
+
   add_test(NAME ${tst_name} COMMAND ${tst_name})
 endfunction()
 
@@ -27,5 +32,5 @@ add_marple_test(tst_tensor SOURCES tst_tensor.cpp DEPENDS utils)
 
 add_subdirectory(lib1)
 add_subdirectory(lib2)
-add_marple_test(tst_lib2 SOURCES tst_lib2.cpp DEPENDS lib1)
+add_marple_test(tst_lib2 SOURCES tst_lib2.cpp DEPENDS lib2)
 add_marple_test(tst_factory SOURCES tst_factory.cpp DEPENDS lib1 lib2 factory)
