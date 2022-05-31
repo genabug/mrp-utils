@@ -12,3 +12,5 @@ Debug/
 Release/
 build/
 .cmake/
+/.vs
+/CMakeSettings.json
