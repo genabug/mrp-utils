@@ -56,8 +56,8 @@ public:
 using Vector2D = Vector<2>; //! Shortcut for 2D vector in euclidian space.
 using Vector3D = Vector<3>; //! Shortcut for 3D vector in euclidian space.
 
-//! Shortcut for non-euclidian vector i.e. array with componentwise arithmetic,
-//! equality and IO operations defined.
+//! Shortcut for non-euclidian vector
+//! i.e. array with componentwise arithmetic, equality and IO operations.
 template<size_t N, class T = double> using Array = Vector<N, T, false>;
 
 /*---------------------------------------------------------------------------------------*/
@@ -329,7 +329,7 @@ template<class T> constexpr auto operator~(const Vector<2, T> &v) noexcept
   \tparam N Number of components.
   \tparam T Type of the components.
   \tparam is_euclidian Boolean flag, used to distinguish vector in euclidian space (true)
-    from just an array of components with the same type (false) with some operatrions.
+    from an array of components with the same type (false) and a subset of operatrions.
 
   If vector is not euclidian one then only minimal, componentwise set of operations
   are defined for it, like multiplication and division by scalar, addition to
