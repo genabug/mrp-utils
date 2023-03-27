@@ -1,16 +1,16 @@
-add_library(lib1)
+add_library(lib1 SHARED)
 target_link_libraries(lib1 PRIVATE factory)
 target_include_directories(lib1 PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
 
 target_sources(lib1
 PUBLIC
-  base1.hpp
-  derived11.hpp
-  derived12.hpp
+  lib1/base1.hpp
+  lib1/derived11.hpp
+  lib1/derived12.hpp
 PRIVATE
-  base1.cpp
-  derived11.cpp
-  derived12.cpp
+  lib1/base1.cpp
+  lib1/derived11.cpp
+  lib1/derived12.cpp
 )
 
 include(GenerateExportHeader)

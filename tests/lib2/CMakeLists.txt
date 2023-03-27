@@ -1,16 +1,16 @@
-add_library(lib2)
+add_library(lib2 SHARED)
 target_link_libraries(lib2 PRIVATE factory lib1)
 target_include_directories(lib2 PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
 
 target_sources(lib2
 PUBLIC
-  base2.hpp
-  derived21.hpp
-  derived22.hpp
+  lib2/base2.hpp
+  lib2/derived21.hpp
+  lib2/derived22.hpp
 PRIVATE
-  base2.cpp
-  derived21.cpp
-  derived22.cpp
+  lib2/base2.cpp
+  lib2/derived21.cpp
+  lib2/derived22.cpp
 )
 
 include(GenerateExportHeader)
