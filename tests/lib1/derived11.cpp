@@ -2,6 +2,7 @@
 #include <sstream>
 
 const std::string Derived11::name = "Derived11";
+ObjectsFactory<Base1F> reg_d11("Derived11", []() { return new Derived11; });
 
 std::string Derived11::addr() const
 {

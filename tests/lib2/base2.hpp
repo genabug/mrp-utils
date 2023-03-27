@@ -13,4 +13,7 @@ struct LIB2_EXPORT Base2
 
 using Base2F = Base2*();
 
+#include "factory/ObjectsFactory.h"
+extern template class LIB2_EXPORT ObjectsFactory<Base2F>;
+
 #endif // BASE2_HPP_INCLUDED

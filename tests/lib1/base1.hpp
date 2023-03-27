@@ -13,4 +13,7 @@ struct LIB1_EXPORT Base1
 
 using Base1F = Base1*();
 
+#include <factory/ObjectsFactory.h>
+extern template class LIB1_EXPORT ObjectsFactory<Base1F>;
+
 #endif // BASE1_HPP_INCLUDED

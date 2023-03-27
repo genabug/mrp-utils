@@ -1,8 +1,9 @@
 #include "derived21.hpp"
+
 #include "../lib1/base1.hpp"
-#include "factory/ObjectsFactory.h"
 
 const std::string Derived21::name = "Derived21";
+ObjectsFactory<Base2F> reg_d21("Derived21", []() { return new Derived21; });
 
 std::string Derived21::addr() const
 {
