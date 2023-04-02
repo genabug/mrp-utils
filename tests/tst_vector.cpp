@@ -114,6 +114,7 @@ TEST_CASE("union")
 TEST_CASE("io with brackets")
 {
   std::stringstream ss;
+  ss << Vectors::inBrackets;
   V3i v1(1, 2, 3), v2(1), v3, v4;
 
   ss.str("");
@@ -143,10 +144,11 @@ TEST_CASE("io with brackets")
 TEST_CASE("io with bare comps")
 {
   std::stringstream ss;
+  ss << Vectors::bareComponents;
   V3i v1(1, 2, 3), v2(1), v3, v4;
 
   ss.str("");
-  ss << Vectors::bareComponents << ", " << v1 << "   ";
+  ss << ", " << v1 << "   ";
   CHECK(ss.str() == ", 1 2 3   ");
   ss >> v3;
   CHECK(v1 == v3);
@@ -160,7 +162,7 @@ TEST_CASE("io with bare comps")
 
   ss.str("");
   ss.clear(); // clear eof bit
-  ss << Vectors::bareComponents << v1 << " 9 " << v2;
+  ss << v1 << " 9 " << v2;
   CHECK(ss.str() == "1 2 3 9 1 1 1");
   ss >> v4 >> v4;
   CHECK(v1 == v3);
