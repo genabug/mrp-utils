@@ -111,49 +111,58 @@ TEST_CASE("union")
   v = V3i(1);
 }
 
-TEST_CASE("io ops")
+TEST_CASE("io with brackets")
 {
   std::stringstream ss;
+  V3i v1(1, 2, 3), v2(1), v3, v4;
 
   ss.str("");
-  V3i v3(1, 2, 3), v4;
 
   ss.str("");
-  ss << v3;
-  CHECK(ss.str() == "(1, 2, 3)");
+  ss << ", " << v1 << "   ";
+  CHECK(ss.str() == ", (1, 2, 3)   ");
+  ss >> v3;
+  CHECK(v1 == v3);
+
+  ss.str("");
+  ss.clear(); // clear eof bit
+  ss << " ;, " << v2 << "))  s";
+  CHECK(ss.str() == " ;, (1, 1, 1)))  s");
   ss >> v4;
-  CHECK(v3 == v4);
+  CHECK(v2 == v4);
 
   ss.str("");
-  //ss.clear(); // doesn't needed because ss is not in eof state and contains ')'
-  ss << Vectors::bareComponents << v3;
-  CHECK(ss.str() == "1 2 3");
-  v4 = V3i(0);
+  ss.clear(); // clear eof bit
+  ss << ", ;"<< v1 << ") 1 " << v2;
+  CHECK(ss.str() == ", ;(1, 2, 3)) 1 (1, 1, 1)");
+  ss >> v3 >> v4;
+  CHECK(v1 == v3);
+  CHECK(v2 == v4);
+}
+
+TEST_CASE("io with bare comps")
+{
+  std::stringstream ss;
+  V3i v1(1, 2, 3), v2(1), v3, v4;
+
+  ss.str("");
+  ss << Vectors::bareComponents << ", " << v1 << "   ";
+  CHECK(ss.str() == ", 1 2 3   ");
+  ss >> v3;
+  CHECK(v1 == v3);
+
+  ss.str("");
+  ss.clear(); // clear eof bit
+  ss << v2 << "  1, ";
+  CHECK(ss.str() == "1 1 1  1, ");
   ss >> v4;
-  CHECK(v3 == v4);
+  CHECK(v2 == v4);
 
   ss.str("");
   ss.clear(); // clear eof bit
-  V3i v1(1), v2;
-  ss << v1;
-  CHECK(ss.str() == "1 1 1");
-  ss >> v2;
-  CHECK(v2 == v1);
-
-  ss.str("");
-  ss.clear(); // clear eof bit
-  ss << Vectors::inBrackets << v1;
-  CHECK(ss.str() == "(1, 1, 1)");
-  v2 = V3i(0);
-  ss >> v2;
-  CHECK(v2 == v1);
-
-  ss.str("");
-  ss.clear(); // clear eof bit
-  ss << Vectors::inBrackets << v1 << ",  " << v3;
-  CHECK(ss.str() == "(1, 1, 1),  (1, 2, 3)");
-  ss >> v4 >> v2;
-  CHECK(v1 == v4);
-  CHECK(v2 == v3);
-
+  ss << Vectors::bareComponents << v1 << " 9 " << v2;
+  CHECK(ss.str() == "1 2 3 9 1 1 1");
+  ss >> v4 >> v4;
+  CHECK(v1 == v3);
+  CHECK(v2 != v4); // it's expected
 }
