@@ -22,8 +22,8 @@ template<class T, class... Args> class ObjectsFactory<T(Args...)>
   std::string id;
   std::function<T(Args...)> fun;
 
-  ObjectsFactory<T(Args...)> *next = nullptr;
-  static ObjectsFactory<T(Args...)> *begin;
+  ObjectsFactory *next = nullptr;
+  inline static ObjectsFactory *begin = nullptr;
 
 public:
   ObjectsFactory() = delete;
@@ -51,7 +51,7 @@ public:
   }
 
   /// Find and return the object registered with label "id" or nullptr if not found.
-  static ObjectsFactory<T(Args...)>* find(const std::string &name)
+  static ObjectsFactory* find(const std::string &name)
   {
     for (auto *p = begin; p; p = p->next)
       if (p->id == name)
@@ -80,11 +80,7 @@ public:
 }; // class ObjectsFactory<T(Args...)>
 
 template<class T, class... Args>
-  ObjectsFactory<T(Args...)> *ObjectsFactory<T(Args...)>::begin = nullptr;
-
-// user deduction guide since c++17
-//template<class T, class... Args>
-//  ObjectsFactory(std::string, std::function<T(Args...)>) -> ObjectsFactory<T(Args...)>;
+  ObjectsFactory(std::string, std::function<T(Args...)>) -> ObjectsFactory<T(Args...)>;
 
 #include <vector>
 #include <sstream>

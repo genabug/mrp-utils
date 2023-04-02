@@ -104,14 +104,15 @@ namespace Quantities
 /*---------------------------------------------------------------------------------------*/
 
     // pretty printer
-    template<size_t I, class S, class = enable_if_s<S>>
-      std::enable_if_t<I == S::ncomps>
-        print_state(std::ostream &out, const S &) { out << "}"; } // stop
-
     template<size_t I = 0, class S, class = enable_if_s<S>>
-      std::enable_if_t<I != S::ncomps>
-        print_state(std::ostream &out, const S &s)
+      void print_state(std::ostream &out, const S &s)
     {
+      if constexpr (I == S::ncomps)
+      {
+        out << '}';
+        return;
+      }
+
       using Q = typename S::template type_of<I>;
       out << (I? ", " : "{") << Q::id << ": " << s.template get<I>();
       print_state<I + 1>(out, s);
@@ -119,136 +120,120 @@ namespace Quantities
 
 /*---------------------------------------------------------------------------------------*/
 
-    template<size_t I, class S, class = enable_if_s<S>>
-      std::enable_if_t<I == S::ncomps>
-        write_state(std::ostream &, const S &) {} // stop
+    template<size_t I = 0, class S, class = enable_if_s<S>>
+      void write_state(std::ostream &out, const S &s)
+    {
+      if constexpr (I != S::ncomps)
+      {
+        out << (I? " " : "") << s.template get<I>();
+        write_state<I + 1>(out, s);
+      }
+    }
+
+/*---------------------------------------------------------------------------------------*/
 
     template<size_t I = 0, class S, class = enable_if_s<S>>
-      std::enable_if_t<I != S::ncomps>
-        write_state(std::ostream &out, const S &s)
+      void read_state(std::istream &in, S &s)
     {
-      out << (I? " " : "") << s.template get<I>();
-      write_state<I + 1>(out, s);
+      if constexpr (I != S::ncomps)
+      {
+        in >> s.template get<I>();
+        read_state<I + 1>(in, s);
+      }
     }
 
 /*---------------------------------------------------------------------------------------*/
-
-    template<size_t I, class S, class = enable_if_s<S>>
-      std::enable_if_t<I == S::ncomps>
-        read_state(std::istream &, S &) {} // stop
-
-    template<size_t I = 0, class S, class = enable_if_s<S>>
-      std::enable_if_t<I != S::ncomps>
-        read_state(std::istream &in, S &s)
-    {
-      in >> s.template get<I>();
-      read_state<I + 1>(in, s);
-    }
-
-/*---------------------------------------------------------------------------------------*/
-
-    template<size_t I, class L, class R, class = enable_if_s<L, R>>
-      constexpr std::enable_if_t<I == L::ncomps>
-        add_to(L &, const R &) {} // stop
 
     template<size_t I = 0, class L, class R, class = enable_if_s<L, R>>
-      constexpr std::enable_if_t<I != L::ncomps>
-        add_to(L &l, const R &r)
+      void add_to(L &l, const R &r)
     {
-      using T = typename L::template type_of<I>;
-      static_assert(R::template has<T>(), "other state doesn't have enough quantities");
-      l.template get<T>() += r.template get<T>();
-      add_to<I + 1>(l, r);
+      if constexpr (I != L::ncomps)
+      {
+        using T = typename L::template type_of<I>;
+        static_assert(R::template has<T>(), "other state doesn't have enough quantities");
+        l.template get<T>() += r.template get<T>();
+        add_to<I + 1>(l, r);
+      }
     }
 
 /*---------------------------------------------------------------------------------------*/
-
-    template<size_t I, class L, class R, class = enable_if_s<L, R>>
-      constexpr std::enable_if_t<I == L::ncomps>
-        sub_from(L &, const R &) {} // stop
 
     template<size_t I = 0, class L, class R, class = enable_if_s<L, R>>
-      constexpr std::enable_if_t<I != L::ncomps>
-        sub_from(L &l, const R &r)
+      void sub_from(L &l, const R &r)
     {
-      using T = typename L::template type_of<I>;
-      static_assert(R::template has<T>(), "other state doesn't have enough quantities");
-      l.template get<T>() -= r.template get<T>();
-      sub_from<I + 1>(l, r);
+      if constexpr (I != L::ncomps)
+      {
+        using T = typename L::template type_of<I>;
+        static_assert(R::template has<T>(), "other state doesn't have enough quantities");
+        l.template get<T>() -= r.template get<T>();
+        sub_from<I + 1>(l, r);
+      }
     }
 
 /*---------------------------------------------------------------------------------------*/
-
-    template<size_t I, class L, class R, class = enable_if_s<L, R>>
-      constexpr std::enable_if_t<I == L::ncomps>
-        copy_to(L &, const R &) {} // stop
 
     template<size_t I = 0, class L, class R, class = enable_if_s<L, R>>
-      constexpr std::enable_if_t<I != L::ncomps>
-        copy_to(L &l, const R &r)
+      void copy_to(L &l, const R &r)
     {
-      using T = typename L::template type_of<I>;
-      static_assert(R::template has<T>(), "other state doesn't have enough quantities");
-      l.template get<T>() = r.template get<T>();
-      copy_to<I + 1>(l, r);
+      if constexpr (I != L::ncomps)
+      {
+        using T = typename L::template type_of<I>;
+        static_assert(R::template has<T>(), "other state doesn't have enough quantities");
+        l.template get<T>() = r.template get<T>();
+        copy_to<I + 1>(l, r);
+      }
     }
 
 /*---------------------------------------------------------------------------------------*/
-
-    template<size_t I, class S, class T, class = enable_if_s<S>>
-      constexpr std::enable_if_t<I == S::ncomps>
-        mult_by(S &, T) {} // stop
 
     template<size_t I = 0, class S, class T, class = enable_if_s<S>>
-      constexpr std::enable_if_t<I != S::ncomps>
-        mult_by(S &s, T coeff)
+      void mult_by(S &s, T coeff)
     {
-      s.template get<I>() *= coeff;
-      mult_by<I + 1>(s, coeff);
+      if constexpr (I != S::ncomps)
+      {
+        s.template get<I>() *= coeff;
+        mult_by<I + 1>(s, coeff);
+      }
     }
 
 /*---------------------------------------------------------------------------------------*/
-
-    template<size_t I, class S, class T, class = enable_if_s<S>>
-      constexpr std::enable_if_t<I == S::ncomps>
-        div_by(S &, T) {} // stop
 
     template<size_t I = 0, class S, class T, class = enable_if_s<S>>
-      constexpr std::enable_if_t<I != S::ncomps>
-        div_by(S &s, T coeff)
+      void div_by(S &s, T coeff)
     {
-      s.template get<I>() /= coeff;
-      div_by<I + 1>(s, coeff);
+      if constexpr (I != S::ncomps)
+      {
+        s.template get<I>() /= coeff;
+        div_by<I + 1>(s, coeff);
+      }
     }
 
 /*---------------------------------------------------------------------------------------*/
-
-    template<size_t I, class S, class T, class = enable_if_s<S>>
-      constexpr std::enable_if_t<I == S::ncomps>
-        set_to(S &, T) {} // stop
 
     template<size_t I = 0, class S, class T, class = enable_if_s<S>>
-      constexpr std::enable_if_t<I != S::ncomps>
-        set_to(S &s, T value)
+      void set_to(S &s, T value)
     {
-      using Q = typename S::template type_of<I>::type;
-      s.template get<I>() = static_cast<Q>(value);
-      set_to<I + 1>(s, value);
+      if constexpr (I != S::ncomps)
+      {
+        using Q = typename S::template type_of<I>::type;
+        s.template get<I>() = static_cast<Q>(value);
+        set_to<I + 1>(s, value);
+      }
     }
 
 /*---------------------------------------------------------------------------------------*/
-
-    template<size_t I, class L, class R, class = enable_if_s<L, R>>
-      constexpr std::enable_if_t<I == L::ncomps, bool>
-        equal(const L &, const R &) { return true; } // stop
 
     template<size_t I = 0, class L, class R, class = enable_if_s<L, R>>
-      constexpr std::enable_if_t<I != L::ncomps, bool>
-        equal(const L &l, const R &r)
+      bool equal(const L &l, const R &r)
     {
-      using T = typename L::template type_of<I>;
-      static_assert(R::template has<T>(), "right state doesn't have enough quantities");
-      return (l.template get<T>() == r.template get<T>()) && equal<I + 1>(l, r);
+      if constexpr (I != L::ncomps)
+      {
+        using T = typename L::template type_of<I>;
+        static_assert(R::template has<T>(), "right state doesn't have enough quantities");
+        return (l.template get<T>() == r.template get<T>()) && equal<I + 1>(l, r);
+      }
+      else
+        return true;
     }
 
   } // namespace details

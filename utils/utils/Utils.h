@@ -18,13 +18,13 @@ namespace Utils
 
   // constexpr version of std::sqrt for both integral and floating point types
   template<class T>
-    constexpr std::enable_if_t<std::is_integral<T>::value, T> sqrt(T x) noexcept;
+    constexpr std::enable_if_t<std::is_integral_v<T>, T> sqrt(T x) noexcept;
   template<class T>
-    constexpr std::enable_if_t<std::is_floating_point<T>::value, T> sqrt(T x) noexcept;
+    constexpr std::enable_if_t<std::is_floating_point_v<T>, T> sqrt(T x) noexcept;
 
   // floating-point comparison with specific epsilon
   template<class T>
-    constexpr std::enable_if_t<std::is_floating_point<T>::value, bool>
+    constexpr std::enable_if_t<std::is_floating_point_v<T>, bool>
       fp_equal(T x, T y, size_t ulp = 1) noexcept;
 
   // equality for c-strings
@@ -57,13 +57,13 @@ namespace Utils
 }
 
 template<class T>
-  constexpr std::enable_if_t<std::is_floating_point<T>::value, T> Utils::sqrt(T x) noexcept
+  constexpr std::enable_if_t<std::is_floating_point_v<T>, T> Utils::sqrt(T x) noexcept
 {
   return (x < T{0})? T{-1} : Utils::details::sqrt_real(x, x, T{0});
 }
 
 template<class T>
-  constexpr std::enable_if_t<std::is_integral<T>::value, T> Utils::sqrt(T x) noexcept
+  constexpr std::enable_if_t<std::is_integral_v<T>, T> Utils::sqrt(T x) noexcept
 {
   return (x < T{0})? T{-1} : Utils::details::sqrt_int(x, T{0}, x / 2 + T{1});
 }
@@ -71,7 +71,7 @@ template<class T>
 /*---------------------------------------------------------------------------------------*/
 
 template<class T>
-  constexpr std::enable_if_t<std::is_floating_point<T>::value, bool>
+  constexpr std::enable_if_t<std::is_floating_point_v<T>, bool>
     Utils::fp_equal(T x, T y, size_t ulp) noexcept
 {
   // the machine epsilon has to be scaled to the magnitude of the values used
