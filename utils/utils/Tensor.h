@@ -52,17 +52,7 @@ private:
   constexpr Tensor<N-1, T> M(size_t I, size_t J) const noexcept;
 
   // helper to calculate the determinant
-  template<size_t I = N> // stop case for N = 1
-    constexpr std::enable_if_t<I == 1, T> det_impl() const noexcept { return data[0][0]; }
-
-  template<size_t I = N> // direct calculation for N = 2
-    constexpr std::enable_if_t<I == 2, T> det_impl() const noexcept;
-
-  template<size_t I = N> // direct calculation for N = 3
-    constexpr std::enable_if_t<I == 3, T> det_impl() const noexcept;
-
-  template<size_t I = N> // common case for N > 3
-    constexpr std::enable_if_t<(I > 3), T> det_impl() const noexcept;
+  template<size_t I = N> constexpr T det_impl() const noexcept;
 
   // init helpers
   template<size_t I = N, class = std::enable_if_t<I == N>>
@@ -498,26 +488,28 @@ template<class T>
 /*---------------------------------------------------------------------------------------*/
 
 template<size_t N, class T> template<size_t I>
-  constexpr std::enable_if_t<I == 2, T> Tensor<N, T>::det_impl() const noexcept
+  constexpr T Tensor<N, T>::det_impl() const noexcept
 {
-  return data[0][0]*data[1][1] - data[0][1]*data[1][0];
-}
+  if constexpr (I == 1)
+    return data[0][0];
 
-template<size_t N, class T> template<size_t I>
-  constexpr std::enable_if_t<I == 3, T> Tensor<N, T>::det_impl() const noexcept
-{
-  return data[0][0] * (data[1][1]*data[2][2] - data[1][2]*data[2][1]) +
-         data[0][1] * (data[1][2]*data[2][0] - data[1][0]*data[2][2]) +
-         data[0][2] * (data[1][0]*data[2][1] - data[1][1]*data[2][0]);
-}
+  if constexpr (I == 2)
+    return data[0][0]*data[1][1] - data[0][1]*data[1][0];
 
-template<size_t N, class T> template<size_t I>
-  constexpr std::enable_if_t<(I > 3), T> Tensor<N, T>::det_impl() const noexcept
-{
-  T d = 0;
-  for (size_t j = 0; j < N; ++j)
-    d += ( (j & 1)? -1 : 1 ) * data[0][j] * M(0, j).det();
-  return d;
+  if constexpr (I == 3)
+    return data[0][0] * (data[1][1]*data[2][2] - data[1][2]*data[2][1]) +
+           data[0][1] * (data[1][2]*data[2][0] - data[1][0]*data[2][2]) +
+           data[0][2] * (data[1][0]*data[2][1] - data[1][1]*data[2][0]);
+
+  // generic case
+  if constexpr (I > 3)
+  {
+    T d = 0;
+    for (size_t j = 0; j < N; ++j)
+      d += ( (j & 1)? -1 : 1 ) * data[0][j] * M(0, j).det();
+
+    return d;
+  }
 }
 
 /*---------------------------------------------------------------------------------------*/
