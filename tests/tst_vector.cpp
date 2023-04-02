@@ -147,4 +147,13 @@ TEST_CASE("io ops")
   v2 = V3i(0);
   ss >> v2;
   CHECK(v2 == v1);
+
+  ss.str("");
+  ss.clear(); // clear eof bit
+  ss << Vectors::inBrackets << v1 << ",  " << v3;
+  CHECK(ss.str() == "(1, 1, 1),  (1, 2, 3)");
+  ss >> v4 >> v2;
+  CHECK(v1 == v4);
+  CHECK(v2 == v3);
+
 }

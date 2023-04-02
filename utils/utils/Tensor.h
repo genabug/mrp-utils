@@ -363,7 +363,7 @@ template<size_t N, class U>
   char c;
   bool in_brackets = true;
   while (in.get(c) && c != '[')
-    if (!std::isspace(c))
+    if (std::isdigit(c))
     {
       in.putback(c);
       in_brackets = false;
@@ -374,7 +374,7 @@ template<size_t N, class U>
     for (size_t j = 0; j < N; ++j)
     {
       while (in.get(c) && c != ',')
-        if (!std::isspace(c))
+        if (std::isdigit(c))
         {
           in.putback(c);
           break;
@@ -383,7 +383,7 @@ template<size_t N, class U>
     }
 
   while (in_brackets && in.get(c) && c != ']')
-    if (!std::isspace(c))
+    if (std::isdigit(c))
     {
       in.putback(c);
       break;

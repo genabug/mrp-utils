@@ -195,6 +195,16 @@ TEST_CASE("io ops")
   t3r = T3i(0);
   ss >> t3r;
   CHECK(t3 == t3r);
+
+  ss.str("");
+  ss.clear(); // clear eof bit
+  ss << Tensors::inBrackets << t2 << ", " << t3;
+  CHECK(ss.str() == "[1, 2, 3, 4], [1, 2, 3, 4, 5, 6, 7, 8, 9]");
+  t2r = T2i(0);
+  t3r = T3i(0);
+  ss >> t2r >> t3r;
+  CHECK(t2 == t2r);
+  CHECK(t3 == t3r);
 }
 
 TEST_CASE("boolean ops")
