@@ -19,6 +19,7 @@ set(CMAKE_VERBOSE_MAKEFILE ON)
 #  set(NO_AS_NEEDED "/WHOLEARCHIVE:")
 #endif()
 
+enable_testing()
 add_subdirectory(utils)
 add_subdirectory(factory)
 add_subdirectory(tests)
