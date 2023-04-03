@@ -43,16 +43,13 @@ public:
   constexpr Tensor& operator/=(const Tensor &A) noexcept { return *this *= A.invert(); }
 
   // other useful ops
-  constexpr T det() const noexcept { return det_impl(); }
+  constexpr T det() const noexcept;
   constexpr T trace() const noexcept;
   constexpr Tensor invert() const noexcept;
   constexpr Tensor transpose() const noexcept;
 
 private:
   constexpr Tensor<N-1, T> M(size_t I, size_t J) const noexcept;
-
-  // helper to calculate the determinant
-  template<size_t I = N> constexpr T det_impl() const noexcept;
 
   // init helpers
   template<size_t I = N, class = std::enable_if_t<I == N>>
@@ -487,26 +484,26 @@ template<class T>
 
 /*---------------------------------------------------------------------------------------*/
 
-template<size_t N, class T> template<size_t I>
-  constexpr T Tensor<N, T>::det_impl() const noexcept
+template<size_t N, class T>
+  constexpr T Tensor<N, T>::det() const noexcept
 {
-  if constexpr (I == 1)
+  if constexpr (N == 1)
     return data[0][0];
 
-  if constexpr (I == 2)
+  else if constexpr (N == 2)
     return data[0][0]*data[1][1] - data[0][1]*data[1][0];
 
-  if constexpr (I == 3)
+  else if constexpr (N == 3)
     return data[0][0] * (data[1][1]*data[2][2] - data[1][2]*data[2][1]) +
            data[0][1] * (data[1][2]*data[2][0] - data[1][0]*data[2][2]) +
            data[0][2] * (data[1][0]*data[2][1] - data[1][1]*data[2][0]);
-
-  // generic case
-  if constexpr (I > 3)
+  else // generic case N > 3
   {
     T d = 0;
     for (size_t j = 0; j < N; ++j)
-      d += ( (j & 1)? -1 : 1 ) * data[0][j] * M(0, j).det();
+      // coeff: -1 if odd, 1 else,
+      // (j & 1) returns 1 if odd, else 0; x << 1 ~ 2*x
+      d += (1 - ((j & 1) << 1)) * data[0][j] * M(0, j).det();
 
     return d;
   }
