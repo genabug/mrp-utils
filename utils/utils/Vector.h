@@ -17,12 +17,16 @@
 
 template<size_t N, class T = double, bool is_euclidian = true> class Vector
 {
-  T data[N];
+  T data[N] = {};
   static_assert(N != 0, "Vector of zero size is meaningless.");
+
+  static_assert(
+    std::is_default_constructible_v<T>,
+    "Components must be default constructible");
 
 public:
   // ctors
-  constexpr explicit Vector() noexcept : data{} {}
+  constexpr Vector() noexcept = default;
   template<class U> constexpr explicit Vector(const U &a) noexcept;
   template<class... Ts, class = std::enable_if_t<sizeof...(Ts) == N>>
     constexpr explicit Vector(Ts... as) noexcept : data{static_cast<T>(as)...} {}
@@ -126,7 +130,7 @@ template<class T> constexpr auto operator~(const Vector<2, T> &v) noexcept;
 /*---------------------------------------------------------------------------------------*/
 
 template<size_t N, class T, bool B>
-  template<class U> constexpr Vector<N, T, B>::Vector(const U &a) noexcept : data{}
+  template<class U> constexpr Vector<N, T, B>::Vector(const U &a) noexcept
 {
   for (auto &d : data)
     d = static_cast<T>(a);
@@ -136,7 +140,7 @@ template<size_t N, class T, bool B>
 
 template<size_t N, class T, bool B>
   template<class U>
-    constexpr Vector<N, T, B>::Vector(const Vector<N, U, B> &v) noexcept : data{}
+    constexpr Vector<N, T, B>::Vector(const Vector<N, U, B> &v) noexcept
 {
   for (size_t i = 0; i < N; ++i)
     data[i] = static_cast<T>(v[i]);

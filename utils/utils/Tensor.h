@@ -12,11 +12,14 @@
 
 template<size_t N, class T = double> class Tensor
 {
-  T data[N][N];
+  T data[N][N] = {};
   static_assert(N != 0, "Tensor of zero size is meaningless.");
+  static_assert(
+      std::is_default_constructible_v<T>,
+      "Components must be default constructible");
 
 public:
-  constexpr explicit Tensor() noexcept : data{} {}
+  constexpr Tensor() noexcept = default;
   template<class U> constexpr explicit Tensor(const U &a) noexcept;
   template<class... Ts> constexpr explicit Tensor(const Ts&... as) noexcept;
 
@@ -153,14 +156,14 @@ template<class T>
 /*---------------------------------------------------------------------------------------*/
 
 template<size_t N, class T> template<class U>
-  constexpr Tensor<N, T>::Tensor(const U &a) noexcept : data{}
+  constexpr Tensor<N, T>::Tensor(const U &a) noexcept
 {
   for (size_t i = 0; i < N; ++i)
     data[i][i] = static_cast<T>(a);
 }
 
 template<size_t N, class T> template<class... Ts>
-  constexpr Tensor<N, T>::Tensor(const Ts&... as) noexcept : data{}
+  constexpr Tensor<N, T>::Tensor(const Ts&... as) noexcept
 {
   constexpr auto n = sizeof...(Ts);
   static_assert(n == N || n == N*N, "Ambiguous number of arguments.");
@@ -171,7 +174,7 @@ template<size_t N, class T> template<class... Ts>
 
 template<size_t N, class T>
   template<class U>
-    constexpr Tensor<N, T>::Tensor(const Tensor<N, U> &t) noexcept : data{}
+    constexpr Tensor<N, T>::Tensor(const Tensor<N, U> &t) noexcept
 {
   for (size_t i = 0; i < N; ++i)
     for (size_t j = 0; j < N; ++j)

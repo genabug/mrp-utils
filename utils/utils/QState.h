@@ -24,10 +24,10 @@ namespace Quantities
         >,
         typename std::decay_t<Qs>::type
       >...
-    > data;
+    > data = {};
 
   public:
-    constexpr QState() noexcept : data{} {}
+    constexpr QState() noexcept = default;
 
     template<class... Args>
       constexpr explicit QState(Args&&... args) noexcept
