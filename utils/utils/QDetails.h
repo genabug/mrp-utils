@@ -150,7 +150,7 @@ namespace Quantities
       if constexpr (I != L::ncomps)
       {
         using T = typename L::template type_of<I>;
-        static_assert(R::template has<T>(), "other state doesn't have enough quantities");
+        static_assert(R::template has<T>(), "right-hand state doesn't have a quantity");
         l.template get<T>() += r.template get<T>();
         add_to<I + 1>(l, r);
       }
@@ -164,7 +164,7 @@ namespace Quantities
       if constexpr (I != L::ncomps)
       {
         using T = typename L::template type_of<I>;
-        static_assert(R::template has<T>(), "other state doesn't have enough quantities");
+        static_assert(R::template has<T>(), "right-hand state doesn't have a quantity");
         l.template get<T>() -= r.template get<T>();
         sub_from<I + 1>(l, r);
       }
@@ -178,7 +178,7 @@ namespace Quantities
       if constexpr (I != L::ncomps)
       {
         using T = typename L::template type_of<I>;
-        static_assert(R::template has<T>(), "other state doesn't have enough quantities");
+        static_assert(R::template has<T>(), "right-hand state doesn't have a quantity");
         l.template get<T>() = r.template get<T>();
         copy_to<I + 1>(l, r);
       }
@@ -229,7 +229,7 @@ namespace Quantities
       if constexpr (I != L::ncomps)
       {
         using T = typename L::template type_of<I>;
-        static_assert(R::template has<T>(), "right state doesn't have enough quantities");
+        static_assert(R::template has<T>(), "right-hand state doesn't have a quantity");
         return (l.template get<T>() == r.template get<T>()) && equal<I + 1>(l, r);
       }
       else
