@@ -63,12 +63,14 @@ public:
   template<class... Ts>
     static T build(const std::string &name, Ts&&... args)
   {
-    // TODO: are_same<Args..., Ts...>
+    static_assert(
+      sizeof...(Args) == sizeof...(Ts) &&
+      (std::is_same_v<Args, Ts> && ...), "arguments aren't match");
 
     auto *p = ObjectsFactory::find(name);
     if (!p)
-      throw std::logic_error(
-        "ObjectFactory: id \"" + name + "\" is not registered in program.");
+      throw std::runtime_error(
+        "ObjectsFactory: id \"" + name + "\" is not registered.");
     return p->fun(std::forward<Ts>(args)...);
   }
 
@@ -81,6 +83,7 @@ public:
 
 template<class T, class... Args>
   ObjectsFactory(std::string, std::function<T(Args...)>) -> ObjectsFactory<T(Args...)>;
+
 
 #include <vector>
 #include <sstream>
@@ -111,7 +114,7 @@ namespace IO
 
     int counter = 0;
     for (auto &name : names)
-      message << std::setw(2) << (++counter) << ". " << name << '\n';
+      message << std::setw(3) << (++counter) << ". " << name << '\n';
   }
 
 } // namespace IO
