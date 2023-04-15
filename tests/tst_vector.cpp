@@ -1,4 +1,4 @@
-#include "doctest.h"
+#include <gtest/gtest.h>
 #include "utils/Vector.h"
 #include <limits>
 #include <sstream>
@@ -91,27 +91,34 @@ constexpr Vector<2, long> vl(3, 4);
 static_assert(sqs(vl) == 25, "sqs failed");
 static_assert(fabs(vl) == 5, "abs failed");
 
-union Test
+union VectorAsUnionMemberTest // must compile
 {
   int i; // pod type
   V3i v; // type with non-trivial ctor
-  Test() {}
+  VectorAsUnionMemberTest() {}
 };
 
-TEST_CASE("union")
+TEST(Vector, access)
 {
-  Test t;
-  t.v = V3i(1);
-  t.i = 2;
-//  std::cerr << t.v << '\n';
-
-  V3i v{10};
-//  std::cerr << v << '\n';
-
-  v = V3i(1);
+  const int &a = V2i(1, 2)[0];
+  EXPECT_EQ(a, 1);
 }
 
-TEST_CASE("io with brackets")
+TEST(Vector, arithmetic_ops)
+{
+  V3i v = V3i(1, 2, 3) * 3;
+  EXPECT_EQ(v, V3i(3, 6, 9));
+
+  int a = V2i(4, 5)[1] / 2;
+  EXPECT_EQ(a, 2);
+
+  using A2i = Array<2, int>;
+  A2i arr = Array<1, A2i>(A2i(1, 2))[0];
+  arr *= 2;
+  EXPECT_EQ(arr[1], 4);
+}
+
+TEST(Vector, io_with_brackets)
 {
   std::stringstream ss;
   ss << Vectors::inBrackets;
@@ -121,27 +128,27 @@ TEST_CASE("io with brackets")
 
   ss.str("");
   ss << ", " << v1 << "   ";
-  CHECK(ss.str() == ", (1, 2, 3)   ");
+  EXPECT_EQ(ss.str(), ", (1, 2, 3)   ");
   ss >> v3;
-  CHECK(v1 == v3);
+  EXPECT_EQ(v1, v3);
 
   ss.str("");
   ss.clear(); // clear eof bit
   ss << " ;, " << v2 << "))  s";
-  CHECK(ss.str() == " ;, (1, 1, 1)))  s");
+  EXPECT_EQ(ss.str(), " ;, (1, 1, 1)))  s");
   ss >> v4;
-  CHECK(v2 == v4);
+  EXPECT_EQ(v2, v4);
 
   ss.str("");
   ss.clear(); // clear eof bit
   ss << ", ;"<< v1 << ") 1 " << v2;
-  CHECK(ss.str() == ", ;(1, 2, 3)) 1 (1, 1, 1)");
+  EXPECT_EQ(ss.str(), ", ;(1, 2, 3)) 1 (1, 1, 1)");
   ss >> v3 >> v4;
-  CHECK(v1 == v3);
-  CHECK(v2 == v4);
+  EXPECT_EQ(v1, v3);
+  EXPECT_EQ(v2, v4);
 }
 
-TEST_CASE("io with bare comps")
+TEST(Vector, io_with_bare_components)
 {
   std::stringstream ss;
   ss << Vectors::bareComponents;
@@ -149,22 +156,22 @@ TEST_CASE("io with bare comps")
 
   ss.str("");
   ss << ", " << v1 << "   ";
-  CHECK(ss.str() == ", 1 2 3   ");
+  EXPECT_EQ(ss.str(), ", 1 2 3   ");
   ss >> v3;
-  CHECK(v1 == v3);
+  EXPECT_EQ(v1, v3);
 
   ss.str("");
   ss.clear(); // clear eof bit
   ss << v2 << "  1, ";
-  CHECK(ss.str() == "1 1 1  1, ");
+  EXPECT_EQ(ss.str(), "1 1 1  1, ");
   ss >> v4;
-  CHECK(v2 == v4);
+  EXPECT_EQ(v2, v4);
 
   ss.str("");
   ss.clear(); // clear eof bit
   ss << v1 << " 9 " << v2;
-  CHECK(ss.str() == "1 2 3 9 1 1 1");
+  EXPECT_EQ(ss.str(), "1 2 3 9 1 1 1");
   ss >> v4 >> v4;
-  CHECK(v1 == v3);
-  CHECK(v2 != v4); // it's expected
+  EXPECT_EQ(v1, v3);
+  EXPECT_NE(v2, v4); // it's expected
 }
