@@ -29,8 +29,9 @@ public:
 
   // access
   static constexpr size_t dim = N;
-  constexpr T* operator[](size_t i) noexcept { assert(i < N); return data[i]; }
-  constexpr const T* operator[](size_t i) const noexcept { assert(i < N); return data[i]; }
+  constexpr T* operator[](size_t i) && noexcept = delete;
+  constexpr T* operator[](size_t i) & noexcept { assert(i < N); return data[i]; }
+  constexpr const T* operator[](size_t i) const & noexcept { assert(i < N); return data[i]; }
 
   // unary ops (NB! returns a copy!)
   constexpr Tensor operator-() const noexcept;

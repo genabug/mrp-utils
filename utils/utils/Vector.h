@@ -43,8 +43,9 @@ public:
   static constexpr size_t Z = (N > 1)? 2 : Y;
   static constexpr size_t dim = N;
 
-  constexpr T& operator[](size_t i) noexcept { return data[i]; }
-  constexpr const T& operator[](size_t i) const noexcept { return data[i]; }
+  constexpr T operator[](size_t i) && noexcept { return data[i]; }
+  constexpr T& operator[](size_t i) & noexcept { return data[i]; }
+  constexpr const T& operator[](size_t i) const & noexcept { return data[i]; }
 
   // unary ops (NB! returns a copy!)
   constexpr Vector operator+() const noexcept { return *this; }

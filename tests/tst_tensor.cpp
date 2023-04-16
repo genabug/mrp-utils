@@ -168,9 +168,8 @@ auto getT2i() { return T2i(1, 2, 3, 4); }
 
 TEST(Tensor, access)
 {
-  auto row = T2i(1, 2, 3, 4)[0];
-  EXPECT_EQ(row[0], 1);
-  EXPECT_EQ(row[1], 2);
+  //auto row0 = T2i(1, 2, 3, 4)[0]; // COMPILE ERROR: use of deleted function
+  //const auto row1 = T2i(4, 3, 2, 1)[1]; // same
 }
 
 TEST(Tensor, IO)

@@ -100,6 +100,7 @@ union VectorAsUnionMemberTest // must compile
 
 TEST(Vector, access)
 {
+  //int& i = V2i(3, 4)[1]; // compile error: cannot bind lvalue to rvalue
   const int &a = V2i(1, 2)[0];
   EXPECT_EQ(a, 1);
 }
