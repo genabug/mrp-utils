@@ -1,4 +1,10 @@
-find_package(GTest REQUIRED)
+find_package(GTest QUIET)
+if(NOT GTest_FOUND)
+  set(GOOGLETEST_VERSION 1.13.0)
+  message(STATUS "gtest not found, use project's copy '${GOOGLETEST_VERSION}'")
+  set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+  add_subdirectory(googletest)
+endif()
 
 include(CTest)
 include(GoogleTest)
@@ -14,9 +20,10 @@ function(add_marple_test tst_name)
   endif()
 
   add_executable(${tst_name} ${tst_SOURCES})
-  target_link_libraries(${tst_name} PRIVATE GTest::gtest GTest::gtest_main ${tst_DEPENDS})
+  target_link_libraries(${tst_name} PRIVATE GTest::gtest_main ${tst_DEPENDS})
 
-  gtest_discover_tests(${tst_name})
+  #gtest_discover_tests(${tst_name})
+  add_test(NAME ${tst_name} COMMAND ${tst_name})
 endfunction()
 
 add_marple_test(tst_state SOURCES tst_state.cpp DEPENDS utils)
