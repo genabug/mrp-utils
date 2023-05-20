@@ -1,3 +1,3 @@
 #include "base1.hpp"
 
-template class ObjectsFactory<Base1F>;
+template class LIB1_EXPORT ObjectsFactory<Base1F>;

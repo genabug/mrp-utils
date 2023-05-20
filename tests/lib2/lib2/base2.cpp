@@ -1,3 +1,3 @@
 #include "base2.hpp"
 
-template class ObjectsFactory<Base2F>;
+template class LIB2_EXPORT ObjectsFactory<Base2F>;
