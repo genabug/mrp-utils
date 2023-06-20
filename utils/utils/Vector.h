@@ -94,6 +94,7 @@ template<size_t N, class T, bool B>
     const Vector<N, T, B> &v1, const Vector<N, T, B> &v2) noexcept { return !(v1 == v2); }
 
 // IO ops
+// TODO: should throw an exception in case of unexpected format, symbols, ...
 class Vectors : public Manipulators<Vectors> {};
 
 template<size_t N, class T, bool B>
@@ -279,7 +280,7 @@ constexpr auto operator*(const Vector<N, T> &v1, const Vector<N, T> &v2) noexcep
 template<size_t N, class T>
   constexpr auto cos(const Vector<N, T> &v1, const Vector<N, T> &v2) noexcept
 {
-  static_assert(std::is_arithmetic<T>::value, "Component must has arithmetic type!");
+  static_assert(std::is_arithmetic<T>::value, "Component must be of arithmetic type!");
   return v1 * v2 / (fabs(v1) * fabs(v2));
 }
 
@@ -288,7 +289,7 @@ template<size_t N, class T>
 template<size_t N, class T>
   constexpr auto sin(const Vector<N, T> &v1, const Vector<N, T> &v2) noexcept
 {
-  static_assert(std::is_arithmetic<T>::value, "Component must has arithmetic type!");
+  static_assert(std::is_arithmetic<T>::value, "Component must be of arithmetic type!");
   auto x = cos(v1, v2);
   return Utils::sqrt(static_cast<T>(1) - x*x);
 }

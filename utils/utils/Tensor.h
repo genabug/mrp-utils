@@ -102,6 +102,7 @@ template<size_t N, class T>
     operator!=(const Tensor<N, T> &A, const Tensor<N, T> &B) noexcept { return !(A == B); }
 
 // io ops
+// TODO: error-handling: throw an exception in case of unexpected symbols, ...
 class Tensors : public Manipulators<Tensors> {};
 
 template<size_t N, class T>

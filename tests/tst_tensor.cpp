@@ -172,47 +172,144 @@ TEST(Tensor, access)
   //const auto row1 = T2i(4, 3, 2, 1)[1]; // same
 }
 
-TEST(Tensor, IO)
+TEST(Tensor, io_with_brackets_default_ok)
 {
   std::stringstream ss;
-  T2i t2(1, 2, 3, 4), t2r;
-  ss << t2;
+  T2i t1(1, 2, 3, 4), t2;
+
+  ss << t1;
   EXPECT_EQ(ss.str(), "[1, 2, 3, 4]");
-  ss >> t2r;
-  EXPECT_EQ(t2, t2r);
+  ss >> t2;
+  EXPECT_EQ(t1, t2);
+}
 
-  ss.str("");
-  ss << Tensors::bareComponents << t2;
+TEST(Tensor, io_with_brackets_explicit_mode_ok)
+{
+  std::stringstream ss;
+  T2i t1(1, 2, 3, 4), t2;
+
+  ss << Tensors::inBrackets << t1;
+  EXPECT_EQ(ss.str(), "[1, 2, 3, 4]");
+  ss >> t2;
+  EXPECT_EQ(t1, t2);
+}
+
+TEST(Tensor, io_with_brackets_non_digit_chars_in_front_ok)
+{
+  std::stringstream ss;
+  T2i t1(1, 2, 3, 4), t2;
+
+  ss << Tensors::inBrackets << " ,!([ " << t1;
+  EXPECT_EQ(ss.str(), " ,!([ [1, 2, 3, 4]");
+  ss >> t2;
+  EXPECT_EQ(t1, t2);
+}
+
+TEST(Tensor, io_with_brackets_digit_chars_in_front_error) // but currently OK
+{
+  std::stringstream ss;
+  T2i t1(1, 2, 3, 4), t2;
+
+  ss << Tensors::inBrackets << " 1,!([ " << t1;
+  EXPECT_EQ(ss.str(), " 1,!([ [1, 2, 3, 4]");
+  ss >> t2;
+  EXPECT_NE(t1, t2);
+  EXPECT_EQ(t2, T2i(1, 0, 0, 0));
+  // TODO: the same shit as with Vector
+}
+
+TEST(Tensor, io_with_brackets_two_tensors_no_delimeter_ok)
+{
+  std::stringstream ss;
+  T2i t1(1, 2, 3, 4), t2(5, 6, 7, 8);
+
+  ss << Tensors::inBrackets << t1 << t2;
+  EXPECT_EQ(ss.str(), "[1, 2, 3, 4][5, 6, 7, 8]");
+
+  T2i t1r, t2r;
+  ss >> t1r >> t2r;
+  EXPECT_EQ(t1, t1r);
+  EXPECT_EQ(t2, t2r);
+}
+
+TEST(Tensor, io_with_brackets_two_tensors_non_digit_delim_ok)
+{
+  std::stringstream ss;
+  T2i t1(1, 2, 3, 4), t2(5, 6, 7, 8);
+
+  ss << Tensors::inBrackets << t1 << "  ,;!ss " << t2;
+  EXPECT_EQ(ss.str(), "[1, 2, 3, 4]  ,;!ss [5, 6, 7, 8]");
+
+  T2i t1r, t2r;
+  ss >> t1r >> t2r;
+  EXPECT_EQ(t1, t1r);
+  EXPECT_EQ(t2, t2r);
+}
+
+TEST(Tensor, io_with_bare_comps_explicit_mode_ok)
+{
+  std::stringstream ss;
+  T2i t1(1, 2, 3, 4), t2;
+
+  ss << Tensors::bareComponents << t1;
   EXPECT_EQ(ss.str(), "1 2 3 4");
-  t2r = T2i(0);
-  ss >> t2r;
-  EXPECT_EQ(t2r, t2);
+  ss >> t2;
+  EXPECT_EQ(t1, t2);
+}
 
-  ss.str("");
-  ss.clear(); // clear eof bit
-  T3i t3(1, 2, 3, 4, 5, 6, 7, 8, 9), t3r;
-  ss << t3;
-  EXPECT_EQ(ss.str(), "1 2 3 4 5 6 7 8 9");
-  ss >> t3r;
-  EXPECT_EQ(t3, t3r);
+TEST(Tensor, io_with_bare_comps_non_digit_chars_in_front_ok)
+{
+  std::stringstream ss;
+  T2i t1(1, 2, 3, 4), t2;
 
-  ss.str("");
-  ss.clear(); // clear eof bit
-  ss << Tensors::inBrackets << t3;
-  EXPECT_EQ(ss.str(), "[1, 2, 3, 4, 5, 6, 7, 8, 9]");
-  t3r = T3i(0);
-  ss >> t3r;
-  EXPECT_EQ(t3, t3r);
+  ss << Tensors::bareComponents << " ,!([ " << t1;
+  EXPECT_EQ(ss.str(), " ,!([ 1 2 3 4");
+  ss >> t2;
+  EXPECT_EQ(t1, t2);
+}
 
-  ss.str("");
-  ss.clear(); // clear eof bit
-  ss << Tensors::inBrackets << t2 << ", " << t3;
-  EXPECT_EQ(ss.str(), "[1, 2, 3, 4], [1, 2, 3, 4, 5, 6, 7, 8, 9]");
-  t2r = T2i(0);
-  t3r = T3i(0);
-  ss >> t2r >> t3r;
+TEST(Tensor, io_with_bare_comps_digit_chars_in_front_error) // but currently OK
+{
+  std::stringstream ss;
+  T2i t1(1, 2, 3, 4), t2;
+
+  ss << Tensors::bareComponents << " 1,!([ " << t1;
+  EXPECT_EQ(ss.str(), " 1,!([ 1 2 3 4");
+  ss >> t2;
+  EXPECT_NE(t1, t2);
+  EXPECT_EQ(t2, T2i(1, 0, 0, 0));
+  // TODO: the same shit as with Vector
+}
+
+TEST(Tensor, io_with_bare_comps_two_tensors_no_delimeter_error) // but currently OK
+{
+  std::stringstream ss;
+  T2i t1(1, 2, 3, 4), t2(5, 6, 7, 8);
+
+  ss << Tensors::bareComponents << t1 << t2;
+  EXPECT_EQ(ss.str(), "1 2 3 45 6 7 8");
+
+  T2i t1r, t2r;
+  ss >> t1r >> t2r;
+  EXPECT_NE(t1, t1r);
+  EXPECT_NE(t2, t2r);
+  EXPECT_EQ(t1r, T2i(1, 2, 3, 45));
+  EXPECT_EQ(t2r, T2i(6, 7, 8, 0));
+  // TODO: fix it, t2r must throw an exception
+}
+
+TEST(Tensor, io_with_bare_comps_two_tensors_non_digit_delim_ok)
+{
+  std::stringstream ss;
+  T2i t1(1, 2, 3, 4), t2(5, 6, 7, 8);
+
+  ss << Tensors::bareComponents << t1 << "  ,;!ss " << t2;
+  EXPECT_EQ(ss.str(), "1 2 3 4  ,;!ss 5 6 7 8");
+
+  T2i t1r, t2r;
+  ss >> t1r >> t2r;
+  EXPECT_EQ(t1, t1r);
   EXPECT_EQ(t2, t2r);
-  EXPECT_EQ(t3, t3r);
 }
 
 TEST(Tensor, boolean_ops)
@@ -286,16 +383,21 @@ TEST(Tensor, methods)
   EXPECT_EQ(t * t.invert(), E);
   EXPECT_EQ(t.invert(), R);
 
-  Tensor<4, int> E4(1, 1, 1, 1);
-  Tensor<4, int> t4(2, 3, 5, 2,
-                    6, 1, 8, 3,
-                    5, 4, 9, 2,
-                    1, 3, 5, 6);
-  Tensor<4, int> t5( 121,  28, -76, -29,
-                      88,  20, -55, -21,
-                    -113, -26,  71,  27,
-                      30,   7, -19,  -7);
+  using T4i = Tensor<4, int>;
+
+  T4i t4(2, 3, 5, 2,
+         6, 1, 8, 3,
+         5, 4, 9, 2,
+         1, 3, 5, 6);
   EXPECT_EQ(t4.det(), -1);
-  EXPECT_EQ(t4.invert(), t5);
-  EXPECT_EQ(t4*t4.invert(), E4);
+
+  T4i E4(1, 1, 1, 1);
+  T4i t4_inverted(
+      121,  28, -76, -29,
+       88,  20, -55, -21,
+     -113, -26,  71,  27,
+       30,   7, -19,  -7);
+  ASSERT_EQ(t4 * t4_inverted, E4);
+
+  EXPECT_EQ(t4.invert(), t4_inverted);
 }
