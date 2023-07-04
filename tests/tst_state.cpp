@@ -35,9 +35,6 @@ constexpr auto sc3 = make_state<ti_t, td_t>(2, 4.);
 constexpr auto sc3_div_2 = make_state<ti_t, td_t>(1, 2.);
 //static_assert(sc3/2 == sc3_div_2, "fuck!");
 
-class StateTest : testing::Test
-{
-};
 
 TEST(State, with_vector_comps_compiled)
 {
