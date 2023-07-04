@@ -1,4 +1,5 @@
 #include <gtest/gtest.h>
+#include <gmock/gmock.h>
 #include "lib1/base1.h"
 #include "lib2/base2.h"
 #include "factory/ObjectsFactory.h"
@@ -9,11 +10,9 @@
 
 TEST(factory_static, lib1)
 {
-  std::vector<std::string> names;
+  std::vector<std::string> names, expected{"Derived11", "Derived12"};
   ObjectsFactory<Base1F>::dump_names(names);
-  ASSERT_GT(names.size(), 1);
-  EXPECT_EQ(names[0], "Derived12");
-  EXPECT_EQ(names[1], "Derived11");
+  ASSERT_THAT(names, ::testing::ContainerEq(expected));
 
   auto *d1f = ObjectsFactory<Base1F>::find("Derived11");
   auto *d2f = ObjectsFactory<Base1F>::find("Derived12");
@@ -33,11 +32,9 @@ TEST(factory_static, lib1)
 
 TEST(factory_static, lib2)
 {
-  std::vector<std::string> names;
+  std::vector<std::string> names, expected{"Derived21", "Derived22"};
   ObjectsFactory<Base2F>::dump_names(names);
-  ASSERT_GT(names.size(), 1);
-  EXPECT_EQ(names[0], "Derived22");
-  EXPECT_EQ(names[1], "Derived21");
+  ASSERT_THAT(names, ::testing::ContainerEq(expected));
 
   auto *d1f = ObjectsFactory<Base2F>::find("Derived21");
   auto *d2f = ObjectsFactory<Base2F>::find("Derived22");

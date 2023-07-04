@@ -20,7 +20,7 @@ function(add_marple_test tst_name)
   endif()
 
   add_executable(${tst_name} ${tst_SOURCES})
-  target_link_libraries(${tst_name} PRIVATE GTest::gtest_main ${tst_DEPENDS})
+  target_link_libraries(${tst_name} PRIVATE GTest::gmock GTest::gtest_main ${tst_DEPENDS})
 
   gtest_discover_tests(${tst_name})
 endfunction()
