@@ -32,7 +32,7 @@ add_marple_test(tst_tensor SOURCES tst_tensor.cpp DEPENDS utils)
 add_subdirectory(lib1)
 add_subdirectory(lib2)
 
-# put lib1 and lib2 together with executables to make Windows happy
+# put lib1 and lib2 together with test executables to make Windows happy
 set_target_properties(lib1
 PROPERTIES
   LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}

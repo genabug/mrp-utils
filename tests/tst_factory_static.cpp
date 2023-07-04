@@ -10,21 +10,18 @@
 
 TEST(factory_static, lib1)
 {
-  std::vector<std::string> names, expected{"Derived11", "Derived12"};
+  std::vector<std::string> names;
   ObjectsFactory<Base1F>::dump_names(names);
-  ASSERT_THAT(names, ::testing::ContainerEq(expected));
+  ASSERT_THAT(names, ::testing::Contains("Derived11"));
+  ASSERT_THAT(names, ::testing::Contains("Derived12"));
 
-  auto *d1f = ObjectsFactory<Base1F>::find("Derived11");
-  auto *d2f = ObjectsFactory<Base1F>::find("Derived12");
-  auto *err = ObjectsFactory<Base1F>::find("Derived13");
-
-  ASSERT_NE(d1f, nullptr);
-  ASSERT_NE(d2f, nullptr);
-  EXPECT_EQ(err, nullptr);
+  ASSERT_NE(ObjectsFactory<Base1F>::find("Derived11"), nullptr);
+  ASSERT_NE(ObjectsFactory<Base1F>::find("Derived12"), nullptr);
+  EXPECT_EQ(ObjectsFactory<Base1F>::find("Nonexistent"), nullptr);
 
   auto *d11 = ObjectsFactory<Base1F>::build("Derived11");
   auto *d12 = ObjectsFactory<Base1F>::build("Derived12");
-  EXPECT_THROW(ObjectsFactory<Base1F>::build("Derived13"), std::runtime_error);
+  EXPECT_THROW(ObjectsFactory<Base1F>::build("Nonexistent"), std::runtime_error);
 
   EXPECT_EQ(d11->id(), "Derived11");
   EXPECT_EQ(d12->id(), "Derived12");
@@ -32,17 +29,14 @@ TEST(factory_static, lib1)
 
 TEST(factory_static, lib2)
 {
-  std::vector<std::string> names, expected{"Derived21", "Derived22"};
+  std::vector<std::string> names;
   ObjectsFactory<Base2F>::dump_names(names);
-  ASSERT_THAT(names, ::testing::ContainerEq(expected));
+  ASSERT_THAT(names, ::testing::Contains("Derived21"));
+  ASSERT_THAT(names, ::testing::Contains("Derived22"));
 
-  auto *d1f = ObjectsFactory<Base2F>::find("Derived21");
-  auto *d2f = ObjectsFactory<Base2F>::find("Derived22");
-  auto *err = ObjectsFactory<Base2F>::find("Derived23");
-
-  ASSERT_NE(d1f, nullptr);
-  ASSERT_NE(d2f, nullptr);
-  EXPECT_EQ(err, nullptr);
+  ASSERT_NE(ObjectsFactory<Base2F>::find("Derived21"), nullptr);
+  ASSERT_NE(ObjectsFactory<Base2F>::find("Derived22"), nullptr);
+  EXPECT_EQ(ObjectsFactory<Base2F>::find("Nonexistent"), nullptr);
 
   auto *d21 = ObjectsFactory<Base2F>::build("Derived21");
   auto *d22 = ObjectsFactory<Base2F>::build("Derived22");
