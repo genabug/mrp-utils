@@ -45,3 +45,9 @@ PROPERTIES
 
 add_marple_test(tst_lib2 SOURCES tst_lib2.cpp DEPENDS lib2 factory)
 add_marple_test(tst_factory SOURCES tst_factory.cpp DEPENDS lib1 lib2 factory)
+
+add_subdirectory(lib1_static)
+add_subdirectory(lib2_static)
+
+add_marple_test(tst_lib2_static SOURCES tst_lib2_static.cpp DEPENDS lib2_static factory)
+add_marple_test(tst_factory_static SOURCES tst_factory_static.cpp DEPENDS lib1_static lib2_static factory)
