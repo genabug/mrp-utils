@@ -1,10 +1,4 @@
-find_package(GTest QUIET)
-if(NOT GTest_FOUND)
-  set(GOOGLETEST_VERSION 1.13.0)
-  message(STATUS "gtest not found, use project's copy '${GOOGLETEST_VERSION}'")
-  set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
-  add_subdirectory(googletest)
-endif()
+find_package(GTest REQUIRED)
 
 include(CTest)
 include(GoogleTest)
