@@ -14,3 +14,5 @@ build/
 .cmake/
 /.vs
 /CMakeSettings.json
+.vscode/
+.cache/
