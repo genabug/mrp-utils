@@ -4,7 +4,6 @@
 
 #include <gtest/gtest.h>
 #include <string>
-#include <array>
 
 using namespace Quantities;
 using namespace std::string_literals;

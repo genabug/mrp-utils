@@ -1,6 +1,5 @@
 #include <gtest/gtest.h>
 #include "utils/Vector.h"
-#include <limits>
 #include <sstream>
 
 using V2d = Vector<2>;

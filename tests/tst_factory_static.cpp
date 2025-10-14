@@ -6,7 +6,6 @@
 
 #include <string>
 #include <vector>
-#include <iostream>
 
 TEST(factory_static, lib1)
 {

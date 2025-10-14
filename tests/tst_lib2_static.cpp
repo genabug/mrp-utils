@@ -1,8 +1,6 @@
 #include "lib2/derived21.h"
 #include "lib2/derived22.h"
 #include <gtest/gtest.h>
-#include <string>
-#include <vector>
 
 TEST(lib2_static, basic1)
 {
