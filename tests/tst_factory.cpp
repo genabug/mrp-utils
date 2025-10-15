@@ -10,7 +10,7 @@ TEST(factory, dump_names_ok)
 {
   std::vector<std::string> names;
   ObjectsFactory<Base1F>::dump_names(names);
-  ASSERT_EQ(names.size(), 1);
+  ASSERT_EQ(names.size(), 2);
   EXPECT_EQ(names[0], "Derived12");
   EXPECT_EQ(names[1], "Derived11");
 }
