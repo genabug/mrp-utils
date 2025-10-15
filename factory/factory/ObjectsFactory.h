@@ -4,62 +4,42 @@
 /*!
   \file ObjectsFactory.h
   \author gennadiy
-  \brief Define a factory to create objects with arbitrary arguments
-    in their create function. It's very similar to ObjectRegister factory
-    but with a little bit simpler syntax (probably). Also a logger class is defined here.
+  \brief Define a factory to create objects of arbitraty types by their string ids.
 */
 
 #include <string>
 #include <functional>
 #include <utility>
 #include <stdexcept>
+#include <unordered_map>
 
 template<class Factory> class ObjectsFactory;
 
-/// Factory to create objects (T) with arbitrary arguments (Args...)
+/// Factory to create objects of arbitrary types by their string ids.
+/// ...
 template<class T, class... Args> class ObjectsFactory<T(Args...)>
 {
-  std::string id;
-  std::function<T(Args...)> fun;
-
-  ObjectsFactory *next = nullptr;
-  inline static ObjectsFactory *begin = nullptr;
+  inline static std::unordered_map<
+    std::string,
+    std::function<T(Args...)>> factory;
 
 public:
   ObjectsFactory() = delete;
+  ~ObjectsFactory() = default;
   ObjectsFactory(ObjectsFactory &&) = delete;
   ObjectsFactory(const ObjectsFactory &) = delete;
   ObjectsFactory& operator=(ObjectsFactory &&) = delete;
   ObjectsFactory& operator=(const ObjectsFactory &) = delete;
 
-  ObjectsFactory(std::string name, std::function<T(Args...)> f)
-    : id(std::move(name)), fun(std::move(f))
+  ObjectsFactory(std::string name, std::function<T(Args...)> fun)
   {
-    if (ObjectsFactory::find(id) != nullptr)
+    if (factory.find(name) != factory.end())
       throw std::logic_error(
-        "ObjectFactory: id \"" + id + "\" defined more than once!");
-
-    next = begin;
-    begin = this;
+        "ObjectFactory: id \"" + name + "\" defined more than once!");
+    factory.emplace(name, fun);
   }
 
-  ~ObjectsFactory()
-  {
-    auto **p = &begin;
-    for (; *p != this; p = &((*p)->next));
-    *p = next;
-  }
-
-  /// Find and return the object registered with label "id" or nullptr if not found.
-  static ObjectsFactory* find(const std::string &name)
-  {
-    for (auto *p = begin; p; p = p->next)
-      if (p->id == name)
-        return p;
-    return nullptr;
-  }
-
-  /// Build the object registered with label "id".
+  /// Build the object registered with label "name".
   template<class... Ts>
     static T build(const std::string &name, Ts&&... args)
   {
@@ -67,17 +47,17 @@ public:
       sizeof...(Args) == sizeof...(Ts) &&
       (std::is_same_v<Args, Ts> && ...), "arguments aren't match");
 
-    auto *p = ObjectsFactory::find(name);
-    if (!p)
+    auto it = factory.find(name);
+    if (it == factory.end())
       throw std::runtime_error(
         "ObjectsFactory: id \"" + name + "\" is not registered.");
-    return p->fun(std::forward<Ts>(args)...);
+    return it->second(std::forward<Ts>(args)...);
   }
 
   template<class Cont> static void dump_names(Cont &cont)
   {
-    for (auto *p = begin; p; p = p->next)
-      cont.emplace_back(p->id);
+    for (auto f : factory)
+      cont.push_back(f.first);
   }
 }; // class ObjectsFactory<T(Args...)>
 
@@ -86,7 +66,6 @@ template<class T, class... Args>
 
 
 #include <vector>
-#include <sstream>
 #include <iomanip>
 #include <algorithm>
 
