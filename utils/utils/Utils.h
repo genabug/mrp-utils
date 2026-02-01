@@ -9,70 +9,64 @@
 
 #include <limits>
 #include <cstddef>
+#include <concepts>
 #include <type_traits>
 
 namespace Utils
 {
   // constexpr version of std::abs
-  template<class T> constexpr T abs(T x) noexcept { return (x < 0)? -x : x; }
+  // TODO: remove after switching to c++23
+  constexpr auto abs(auto x) noexcept { return (x < 0)? -x : x; }
 
   // constexpr version of std::sqrt for both integral and floating point types
-  template<class T>
-    constexpr std::enable_if_t<std::is_integral_v<T>, T> sqrt(T x) noexcept;
-  template<class T>
-    constexpr std::enable_if_t<std::is_floating_point_v<T>, T> sqrt(T x) noexcept;
+  // TODO: remove after switching to c++26
+  constexpr auto sqrt(std::integral auto x) noexcept;
+  constexpr auto sqrt(std::floating_point auto x) noexcept;
 
   // floating-point comparison with specific epsilon
-  template<class T>
-    constexpr std::enable_if_t<std::is_floating_point_v<T>, bool>
-      fp_equal(T x, T y, size_t ulp = 1) noexcept;
+  template<std::floating_point T>
+    constexpr T fp_equal(T x, T y, size_t ulp = 1) noexcept;
 
   // equality for c-strings
   constexpr bool cstr_equal(const char *a, const char *b) noexcept;
-
 } // namespace Utils
 
 /*---------------------------------------------------------------------------------------*/
-/*------------------------------------ definition ---------------------------------------*/
+/*------------------------------------ definitions --------------------------------------*/
 /*---------------------------------------------------------------------------------------*/
 
-namespace Utils
+namespace Utils::details
 {
-  namespace details
+  template<std::integral T> constexpr T sqrt_int(T x, T lo, T hi) noexcept
   {
-    template<class T> constexpr T sqrt_int(T x, T lo, T hi) noexcept
-    {
-      auto mid = (lo + hi + 1) / 2;
-      if (lo == hi)
-        return lo;
-      else
-        return (x / mid < mid)? sqrt_int(x, lo, mid - 1) : sqrt_int(x, mid, hi);
-    }
-
-    template<class T> constexpr T sqrt_real(T x, T lo, T hi) noexcept
-    {
-      return (lo == hi) ? lo : sqrt_real(x, T{0.5} * (lo + x / lo), lo);
-    }
+    auto mid = (lo + hi + 1) / 2;
+    if (lo == hi)
+      return lo;
+    else
+      return (x / mid < mid)? sqrt_int(x, lo, mid - 1) : sqrt_int(x, mid, hi);
+  }
+  template<std::floating_point T> constexpr T sqrt_real(T x, T lo, T hi) noexcept
+  {
+    return (lo == hi) ? lo : sqrt_real(x, T{0.5} * (lo + x / lo), lo);
   }
 }
 
-template<class T>
-  constexpr std::enable_if_t<std::is_floating_point_v<T>, T> Utils::sqrt(T x) noexcept
+constexpr auto Utils::sqrt(std::floating_point auto x) noexcept
 {
-  return (x < T{0})? T{-1} : Utils::details::sqrt_real(x, x, T{0});
+  using type = std::decay_t<decltype(x)>;
+  return (x < type{0})? type{-1} : Utils::details::sqrt_real(x, x, type{0});
 }
 
-template<class T>
-  constexpr std::enable_if_t<std::is_integral_v<T>, T> Utils::sqrt(T x) noexcept
+constexpr auto Utils::sqrt(std::integral auto x) noexcept
 {
-  return (x < T{0})? T{-1} : Utils::details::sqrt_int(x, T{0}, x / 2 + T{1});
+  using type = std::decay_t<decltype(x)>;
+  return (x < type{0})? type{-1} : Utils::details::sqrt_int(x, type{0}, x / 2 + type{1});
 }
 
 /*---------------------------------------------------------------------------------------*/
 
-template<class T>
-  constexpr std::enable_if_t<std::is_floating_point_v<T>, bool>
-    Utils::fp_equal(T x, T y, size_t ulp) noexcept
+template<std::floating_point T>
+  constexpr T Utils::fp_equal(T x, T y, size_t ulp) noexcept
 {
   // the machine epsilon has to be scaled to the magnitude of the values used
   // and multiplied by the desired precision in ULPs (units of least precision)

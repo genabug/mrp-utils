@@ -7,34 +7,34 @@
   \brief Quantity traits class definition and documentation.
 */
 
+#include <type_traits>
+
 namespace Quantities
 {
+  template<class Type, int Dim, char... Name> struct QTraits;
 
   namespace details
   {
-    // helper structure to get number of components of quantity Q
-    // if Q has field ncomps then get its value else return 1
-    template<class Q, class = int> struct ncomps_s {
-      static constexpr int value = 1; };
-    template<class Q> struct ncomps_s<Q, decltype((void) Q::ncomps, 0)> {
-      static constexpr int value = Q::ncomps; };
+    template<class>
+      struct is_traits : std::false_type {};
 
-    template<class Q> constexpr int ncomps_v = ncomps_s<Q>::value;
+    template<class Type, int Dim, char... Name>
+      struct is_traits<QTraits<Type, Dim, Name...>> : std::true_type {};
   }
+
+  template<class T> concept Traits = details::is_traits<std::decay_t<T>>::value;
 
   template<class Type, int Dim, char... Name> struct QTraits
   {
     using type = Type;
     static constexpr int dim = Dim;
     static constexpr char id[] = {Name..., '\0'}; // + terminal '\0' (c-string)
-    static constexpr int ncomps = details::ncomps_v<Type>;
+    static constexpr int ncomps = details::is_traits<Type>::value? Type::ncomps : 1;
     static constexpr int size = sizeof(Type)/sizeof(double);
   };
 
-  // a static member must be defined outside of the struct
   template<class Type, int Dim, char... Name>
     constexpr char QTraits<Type, Dim, Name...>::id[];
-
 } // namespace Quantities
 
 /*---------------------------------------------------------------------------------------*/

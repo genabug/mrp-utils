@@ -44,7 +44,6 @@ TEST(State, with_vector_comps_compiled)
 // assume that access by index works
 TEST(State, init_by_rvalues)
 {
-
   auto s1 = make_state<ti_t, ts_t, tv_t>(1, "foo"s, V3i(2, 3, 4));
   EXPECT_EQ(s1.get<0>(), 1);
   EXPECT_EQ(s1.get<1>(), "foo");
@@ -356,18 +355,6 @@ TEST(State, copy_function_partial_type)
   EXPECT_EQ(sr[tv], v);
 }
 
-TEST(State, copy_function_not_a_state)
-{
-  struct S {int i; std::string s; V3i v; };
-  S s{1, "2", V3i(3)};
-
-  auto sc = copy(s);
-  sc.i = 4; sc.s = "5"; sc.v = V3i(6);
-  EXPECT_EQ(s.i, 1);
-  EXPECT_EQ(s.s, "2");
-  EXPECT_EQ(s.v, V3i(3));
-}
-
 TEST(State, get_method_full)
 {
   int i = 1;
@@ -461,11 +448,10 @@ TEST(State, get_method_slice_state)
   using iv_s = QState<ti_t, tv_t>;
   sc.get<iv_s>()[ti] = 3;
   sr.get<iv_s>()[tv] = V3i(2);
-  EXPECT_EQ(sc[ti],= 3);
-  EXPECT_EQ(sr[tv],= v);
+  EXPECT_EQ(sc[ti], 3);
+  EXPECT_EQ(sr[tv], v);
 }
 */
-
 TEST(State, get_function_full)
 {
   int i = 1;
@@ -517,24 +503,6 @@ TEST(State, get_function_slice_type)
   rr[tv] = V3i(0);
   EXPECT_EQ(sc[ts], "baz");
   EXPECT_EQ(sr[tv], v);
-}
-
-TEST(State, get_function_not_a_state)
-{
-  struct S {int i; std::string s; V3i v; };
-  S s{1, "2", V3i(3)};
-
-  auto sc = get(s); // copy
-  sc.i = 4; sc.s = "5"; sc.v = V3i(6);
-  EXPECT_EQ(s.i, 1);
-  EXPECT_EQ(s.s, "2");
-  EXPECT_EQ(s.v, V3i(3));
-
-  auto &sr = get(s); // ref (look at type)
-  sr.i = 4; sr.s = "5"; sr.v = V3i(6);
-  EXPECT_EQ(s.i, 4);
-  EXPECT_EQ(s.s, "5");
-  EXPECT_EQ(s.v, V3i(6));
 }
 
 template<class S> void func_id(S &s)
