@@ -4,33 +4,20 @@
 /*!
   \file QTraits.h
   \author gennadiy
-  \brief Quantity traits class definition and documentation.
+  \brief Quantity's traits, definition and documentation.
 */
 
-#include <type_traits>
+#include "QFwds.h"
 
 namespace Quantities
 {
-  template<class Type, int Dim, char... Name> struct QTraits;
-
-  namespace details
-  {
-    template<class>
-      struct is_traits : std::false_type {};
-
-    template<class Type, int Dim, char... Name>
-      struct is_traits<QTraits<Type, Dim, Name...>> : std::true_type {};
-  }
-
-  template<class T> concept Traits = details::is_traits<std::decay_t<T>>::value;
-
   template<class Type, int Dim, char... Name> struct QTraits
   {
     using type = Type;
     static constexpr int dim = Dim;
     static constexpr char id[] = {Name..., '\0'}; // + terminal '\0' (c-string)
-    static constexpr int ncomps = details::is_traits<Type>::value? Type::ncomps : 1;
     static constexpr int size = sizeof(Type)/sizeof(double);
+    static constexpr int ncomps = (is_traits_v<Type> || is_state_v<Type>)? Type::ncomps : 1;
   };
 
   template<class Type, int Dim, char... Name>
@@ -67,9 +54,9 @@ namespace Quantities
   (i.e. Type::ncomps is valid code), then number of quantity's components is set equal
   to its value. Otherwise it is set to 1. The assumption is debatable though.
 
-  size trait defines quantity's size in size of doubles (see definition). It's used for
-  (de)serialization of a quantity i.e. read/write from/to a stream. Also debatable
-  assumption to use double as a base value.
+  size trait defines quantity's size in size of doubles.
+  It's used for (de)serialization of a quantity i.e. read/write from/to a stream.
+  Another debatable assumption to use double as a base type.
 
   Quantity's traits defines as follows:
   \code
@@ -83,7 +70,7 @@ namespace Quantities
   and density (rho) scalar (double) is defined in cells (3). w_t and rho_t are now
   so-called type-names of the corresponding quantities. It's also recommended to define
   variable-names of the quantities as shown above. Due to template argument deduction
-  mechanism they allow to use much shorter methods (if presented) in the utility classes.
+  mechanism they are allowed to be used in the much shorter methods in the utility classes.
   Indeed, compare access to a quantity from a state:
   \code
   QState<rho_t, w_t> s;

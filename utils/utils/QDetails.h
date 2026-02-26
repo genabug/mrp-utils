@@ -7,190 +7,167 @@
   \brief A bunch of helpers to implement Quantities::QState.
 */
 
-#include "Utils.h"
+#include "QFwds.h"
 
 #include <tuple>
 #include <ostream>
 #include <istream>
-#include <type_traits>
 
 namespace Quantities::details
 {
-  // implementation of a helper indexers
-  template<size_t N, class T, class... Ts>
-  struct index_by_type_impl {
-    static constexpr size_t value = N; }; // stop
+  template<size_t N, class Q, class... Qs>
+    struct index_of_impl
+    {
+      static constexpr size_t value = N;
+    };
 
-  template<size_t I, class T, class Ti, class... Ts>
-    struct index_by_type_impl<I, T, Ti, Ts...> {
+  template<size_t I, class Q, class Qi, class... Qs>
+    struct index_of_impl<I, Q, Qi, Qs...>
+    {
       static constexpr size_t value =
-        std::is_same_v<T, Ti>? I : index_by_type_impl<I + 1, T, Ts...>::value; };
+        std::is_same_v<Q, Qi>? I : index_of_impl<I + 1, Q, Qs...>::value;
+    };
 
-  // helper structure to enumerate quantities in a state (Ts...)
-  // and get the index of a given one (T)
-  template<class T, class... Ts>
-    struct index_by_type {
-      static constexpr size_t value = index_by_type_impl<0, T, Ts...>::value; };
-  template<class T, class... Ts>
-    static constexpr size_t index_by_type_v = index_by_type<T, Ts...>::value;
+  template<class Q, class... Qs>
+    constexpr size_t index_of = index_of_impl<0, Q, Qs...>::value;
 
-  // just a useful shortcut for symmetry -- get i-th type in a pack
-  template<size_t I, class... Ts>
-    using type_by_index = std::tuple_element_t<I, std::tuple<Ts...>>;
+  template<size_t I, class... Qs>
+    using type_of = std::tuple_element_t<I, std::tuple<Qs...>>;
 
-/*---------------------------------------------------------------------------------------*/
+  template<class Q, class... Qs>
+    constexpr bool has = sizeof...(Qs) > index_of<Q, Qs...>;
 
-  template<size_t N> constexpr size_t index_by_id_impl(const char *) { return N; }
-
-  template<size_t I, class Q, class... Qs>
-    constexpr size_t index_by_id_impl(const char *s)
-  {
-    return Utils::cstr_equal(s, Q::id)? I : index_by_id_impl<I+1, Qs...>(s);
-  }
-
-  // This function may be used to implement access by name (not type-name)
-  // though it's not practical/useful I think. Indeed, the name should be constexpr
-  // (e.g. you can't use name read from a file) and thus there is no big difference
-  // with the type-name. But who knows, may be someone find such access convenient.
-  template<class... Qs> constexpr size_t index_by_id(const char *s)
-  {
-    return index_by_id_impl<0, Qs...>(s);
-    }
-
-  // helper variable to obtain list of state components
   template<class... Qs>
-    static constexpr std::initializer_list<const char *> quantity_names = {Qs::id...};
+    constexpr std::initializer_list<const char *> qnames = {Qs::id...};
 
 /*---------------------------------------------------------------------------------------*/
 
   // pretty printer
-  template<size_t I = 0, class S>
-    void print_state(std::ostream &out, const S &s)
+  template<size_t I = 0, State S>
+    void print_state(std::ostream &out, const S &state)
   {
-    if constexpr (I == s.ncomps)
+    if constexpr (I == S::ncomps)
     {
       out << '}';
       return;
     }
 
-    using Q = typename S::template type_of<I>;
-    out << (I? ", " : "{") << Q::id << ": " << s.template get<I>();
-    print_state<I + 1>(out, s);
+    using Q = S::template type_of<I>;
+    out << (I? ", " : "{") << Q::id << ": " << state.template get<I>();
+    print_state<I + 1>(out, state);
   }
 
 /*---------------------------------------------------------------------------------------*/
 
-  template<size_t I = 0, class S>
-    void write_state(std::ostream &out, const S &s)
+  template<size_t I = 0, State S>
+    void write_state(std::ostream &out, const S &state)
   {
     if constexpr (I != S::ncomps)
     {
-      out << (I? " " : "") << s.template get<I>();
-      write_state<I + 1>(out, s);
+      out << (I? " " : "") << state.template get<I>();
+      write_state<I + 1>(out, state);
     }
   }
 
 /*---------------------------------------------------------------------------------------*/
 
-  template<size_t I = 0, class S>
-    void read_state(std::istream &in, S &s)
+  template<size_t I = 0, State S>
+    void read_state(std::istream &in, S &state)
   {
     if constexpr (I != S::ncomps)
     {
-      in >> s.template get<I>();
-      read_state<I + 1>(in, s);
+      in >> state.template get<I>();
+      read_state<I + 1>(in, state);
     }
   }
 
 /*---------------------------------------------------------------------------------------*/
 
-  template<size_t I = 0, class L, class R>
-    void add_to(L &l, const R &r)
+  template<size_t I = 0, State L, State R>
+    void add_to(L &lstate, const R &rstate) noexcept
   {
     if constexpr (I != L::ncomps)
     {
-      using T = typename L::template type_of<I>;
-      static_assert(R::template has<T>(), "right-hand state doesn't have a quantity");
-      l.template get<T>() += r.template get<T>();
-      add_to<I + 1>(l, r);
+      using T = L::template type_of<I>;
+      static_assert(R::template has<T>, "right-hand state doesn't have a quantity");
+      lstate.template get<T>() += rstate.template get<T>();
+      add_to<I + 1>(lstate, rstate);
     }
   }
 
 /*---------------------------------------------------------------------------------------*/
 
-  template<size_t I = 0, class L, class R>
-    void sub_from(L &l, const R &r)
+  template<size_t I = 0, State L, State R>
+    void sub_from(L &lstate, const R &rstate) noexcept
   {
     if constexpr (I != L::ncomps)
     {
-      using T = typename L::template type_of<I>;
-      static_assert(R::template has<T>(), "right-hand state doesn't have a quantity");
-      l.template get<T>() -= r.template get<T>();
-      sub_from<I + 1>(l, r);
+      using T = L::template type_of<I>;
+      static_assert(R::template has<T>, "right-hand state doesn't have a quantity");
+      lstate.template get<T>() -= rstate.template get<T>();
+      sub_from<I + 1>(lstate, rstate);
     }
   }
 
 /*---------------------------------------------------------------------------------------*/
 
-  template<size_t I = 0, class L, class R>
-    void copy_to(L &l, const R &r)
+  template<size_t I = 0, State S, class T> requires(!is_state_v<T>)
+    void mult_by(S &state, T value) noexcept
+  {
+    if constexpr (I != S::ncomps)
+    {
+      state.template get<I>() *= value;
+      mult_by<I + 1>(state, value);
+    }
+  }
+
+/*---------------------------------------------------------------------------------------*/
+
+  template<size_t I = 0, State S, class T> requires(!is_state_v<T>)
+    void div_by(S &state, T value) noexcept
+  {
+    if constexpr (I != S::ncomps)
+    {
+      state.template get<I>() /= value;
+      div_by<I + 1>(state, value);
+    }
+  }
+
+/*---------------------------------------------------------------------------------------*/
+
+  template<size_t I = 0, State S, class T> requires(!is_state_v<T>)
+    void set_to(S &state, T value) noexcept
+  {
+    if constexpr (I != S::ncomps)
+    {
+      using Q_t = S::template type_of<I>::type;
+      state.template get<I>() = static_cast<Q_t>(value);
+      set_to<I + 1>(state, value);
+    }
+  }
+
+  template<size_t I = 0, State L, State R>
+    void set_to(L &lstate, const R &rstate) noexcept
   {
     if constexpr (I != L::ncomps)
     {
-      using T = typename L::template type_of<I>;
-      static_assert(R::template has<T>(), "right-hand state doesn't have a quantity");
-      l.template get<T>() = r.template get<T>();
-      copy_to<I + 1>(l, r);
+      using T = L::template type_of<I>;
+      static_assert(R::template has<T>, "right-hand state doesn't have a quantity");
+      lstate.template get<T>() = rstate.template get<T>();
+      set_to<I + 1>(lstate, rstate);
     }
   }
 
 /*---------------------------------------------------------------------------------------*/
 
-  template<size_t I = 0, class S, class T>
-    void mult_by(S &s, T coeff)
-  {
-    if constexpr (I != S::ncomps)
-    {
-      s.template get<I>() *= coeff;
-      mult_by<I + 1>(s, coeff);
-    }
-  }
-
-/*---------------------------------------------------------------------------------------*/
-
-  template<size_t I = 0, class S, class T>
-    void div_by(S &s, T coeff)
-  {
-    if constexpr (I != S::ncomps)
-    {
-      s.template get<I>() /= coeff;
-      div_by<I + 1>(s, coeff);
-    }
-  }
-
-/*---------------------------------------------------------------------------------------*/
-
-  template<size_t I = 0, class S, class T>
-    void set_to(S &s, T value)
-  {
-    if constexpr (I != S::ncomps)
-    {
-      using Q = typename S::template type_of<I>::type;
-      s.template get<I>() = static_cast<Q>(value);
-      set_to<I + 1>(s, value);
-    }
-  }
-
-/*---------------------------------------------------------------------------------------*/
-
-  template<size_t I = 0, class L, class R>
-    bool equal(const L &l, const R &r)
+  template<size_t I = 0, State L, State R>
+    bool equal(const L &lstate, const R &rstate) noexcept
   {
     if constexpr (I != L::ncomps)
     {
-      using T = typename L::template type_of<I>;
-      static_assert(R::template has<T>(), "right-hand state doesn't have a quantity");
-      return (l.template get<T>() == r.template get<T>()) && equal<I + 1>(l, r);
+      using T = L::template type_of<I>;
+      static_assert(R::template has<T>, "right-hand state doesn't have a quantity");
+      return (lstate.template get<T>() == rstate.template get<T>()) && equal<I + 1>(lstate, rstate);
     }
     else
       return true;
