@@ -14,9 +14,19 @@ namespace Quantities
 {
   template<Traits... Qs> class QState
   {
-    static_assert(sizeof...(Qs) > 0, "QState can not be empty");
+    static_assert(sizeof...(Qs) > 0, "empty state is useless"); // really?
     // TODO: static_assert on traits uniqueness
     std::tuple<typename Qs::type...> data = {};
+
+  public:
+    // QTraits
+    static constexpr int size = (Qs::size + ...);
+    static constexpr int ncomps = sizeof...(Qs);
+
+    // helpers
+    template<size_t I> using type_of = details::type_of<I, Qs...>;
+    template<Traits Q> static constexpr auto index_of = details::index_of<Q, Qs...>;
+    template<Traits Q> static constexpr bool has = index_of<Q> < ncomps;
 
   public:
     constexpr QState() noexcept = default;
@@ -36,27 +46,18 @@ namespace Quantities
     constexpr QState operator+() const noexcept { return *this; }
 
     // access by index (mainly to implement basic ops, see details)
-    template<size_t I> constexpr auto& get() & noexcept { return std::get<I>(data); }
-    template<size_t I> constexpr auto& get() const & noexcept { return std::get<I>(data); }
+    template<size_t I> requires(I < ncomps) constexpr auto& get() & noexcept { return std::get<I>(data); }
+    template<size_t I> requires(I < ncomps) constexpr auto& get() const & noexcept { return std::get<I>(data); }
 
     // access by type-name (for generic code)
-    template<Traits Q> constexpr auto& get() & noexcept;
-    template<Traits Q> constexpr auto& get() const & noexcept;
+    template<Traits Q> requires(has<Q>) constexpr auto& get() & noexcept { return get<index_of<Q>>(); };
+    template<Traits Q> requires(has<Q>) constexpr auto& get() const & noexcept { return get<index_of<Q>>(); };
 
     // index access by variable (for end-user code)
     template<Traits Q> constexpr auto& operator[](Q) & noexcept { return get<Q>(); }
     template<Traits Q> constexpr auto& operator[](Q) const & noexcept { return get<Q>(); }
 
     // TODO: member access, see https://stackoverflow.com/q/54617101/8802124
-
-    // helpers for QTraits
-    static constexpr int size = (Qs::size + ...);
-    static constexpr int ncomps = sizeof...(Qs);
-
-    // some traits
-    template<size_t I> using type_of = details::type_of<I, Qs...>;
-    template<Traits Q> static constexpr auto index_of = details::index_of<Q, Qs...>;
-    template<Traits Q> static constexpr bool has = details::has<Q, Qs...>;
   }; // class QState<Qs...>
 
   // Helper to get value(s) from a state using type-name(s).
@@ -111,24 +112,6 @@ namespace Quantities
 
 namespace Quantities
 {
-  template<Traits... Qs> template<Traits Q>
-    constexpr auto& QState<Qs...>::get() & noexcept
-  {
-    static_assert(has<Q>, "state doesn't have quantity");
-    constexpr auto idx = index_of<Q>;
-    return std::get<idx>(data);
-  }
-
-  template<Traits... Qs> template<Traits Q>
-    constexpr auto& QState<Qs...>::get() const & noexcept
-  {
-    static_assert(has<Q>, "state doesn't have quantity");
-    constexpr auto idx = index_of<Q>;
-    return std::get<idx>(data);
-  }
-
-/*---------------------------------------------------------------------------------------*/
-
   template<Traits... Qs>
     constexpr QState<Qs...>& QState<Qs...>::operator=(auto v) noexcept
   {

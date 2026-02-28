@@ -34,9 +34,6 @@ namespace Quantities::details
   template<size_t I, class... Qs>
     using type_of = std::tuple_element_t<I, std::tuple<Qs...>>;
 
-  template<class Q, class... Qs>
-    constexpr bool has = sizeof...(Qs) > index_of<Q, Qs...>;
-
   template<class... Qs>
     constexpr std::initializer_list<const char *> qnames = {Qs::id...};
 
