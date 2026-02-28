@@ -44,7 +44,7 @@ namespace Quantities::details
 
   // pretty printer
   template<size_t I = 0, State S>
-    void print_state(std::ostream &out, const S &state)
+    constexpr void print_state(std::ostream &out, const S &state)
   {
     if constexpr (I == S::ncomps)
     {
@@ -60,7 +60,7 @@ namespace Quantities::details
 /*---------------------------------------------------------------------------------------*/
 
   template<size_t I = 0, State S>
-    void write_state(std::ostream &out, const S &state)
+    constexpr void write_state(std::ostream &out, const S &state)
   {
     if constexpr (I != S::ncomps)
     {
@@ -72,7 +72,7 @@ namespace Quantities::details
 /*---------------------------------------------------------------------------------------*/
 
   template<size_t I = 0, State S>
-    void read_state(std::istream &in, S &state)
+    constexpr void read_state(std::istream &in, S &state)
   {
     if constexpr (I != S::ncomps)
     {
@@ -84,35 +84,35 @@ namespace Quantities::details
 /*---------------------------------------------------------------------------------------*/
 
   template<size_t I = 0, State L, State R>
-    void add_to(L &lstate, const R &rstate) noexcept
+    constexpr void add_to(L &ls, const R &rs) noexcept
   {
     if constexpr (I != L::ncomps)
     {
       using T = L::template type_of<I>;
       static_assert(R::template has<T>, "right-hand state doesn't have a quantity");
-      lstate.template get<T>() += rstate.template get<T>();
-      add_to<I + 1>(lstate, rstate);
+      ls.template get<T>() += rs.template get<T>();
+      add_to<I + 1>(ls, rs);
     }
   }
 
 /*---------------------------------------------------------------------------------------*/
 
   template<size_t I = 0, State L, State R>
-    void sub_from(L &lstate, const R &rstate) noexcept
+    constexpr void sub_from(L &ls, const R &rs) noexcept
   {
     if constexpr (I != L::ncomps)
     {
       using T = L::template type_of<I>;
       static_assert(R::template has<T>, "right-hand state doesn't have a quantity");
-      lstate.template get<T>() -= rstate.template get<T>();
-      sub_from<I + 1>(lstate, rstate);
+      ls.template get<T>() -= rs.template get<T>();
+      sub_from<I + 1>(ls, rs);
     }
   }
 
 /*---------------------------------------------------------------------------------------*/
 
   template<size_t I = 0, State S, class T> requires(!is_state_v<T>)
-    void mult_by(S &state, T value) noexcept
+    constexpr void mult_by(S &state, T value) noexcept
   {
     if constexpr (I != S::ncomps)
     {
@@ -124,7 +124,7 @@ namespace Quantities::details
 /*---------------------------------------------------------------------------------------*/
 
   template<size_t I = 0, State S, class T> requires(!is_state_v<T>)
-    void div_by(S &state, T value) noexcept
+    constexpr void div_by(S &state, T value) noexcept
   {
     if constexpr (I != S::ncomps)
     {
@@ -136,7 +136,7 @@ namespace Quantities::details
 /*---------------------------------------------------------------------------------------*/
 
   template<size_t I = 0, State S, class T> requires(!is_state_v<T>)
-    void set_to(S &state, T value) noexcept
+    constexpr void set_to(S &state, T value) noexcept
   {
     if constexpr (I != S::ncomps)
     {
@@ -147,27 +147,27 @@ namespace Quantities::details
   }
 
   template<size_t I = 0, State L, State R>
-    void set_to(L &lstate, const R &rstate) noexcept
+    constexpr void set_to(L &ls, const R &rs) noexcept
   {
     if constexpr (I != L::ncomps)
     {
       using T = L::template type_of<I>;
       static_assert(R::template has<T>, "right-hand state doesn't have a quantity");
-      lstate.template get<T>() = rstate.template get<T>();
-      set_to<I + 1>(lstate, rstate);
+      ls.template get<T>() = rs.template get<T>();
+      set_to<I + 1>(ls, rs);
     }
   }
 
 /*---------------------------------------------------------------------------------------*/
 
   template<size_t I = 0, State L, State R>
-    bool equal(const L &lstate, const R &rstate) noexcept
+   constexpr bool equal(const L &ls, const R &rs) noexcept
   {
     if constexpr (I != L::ncomps)
     {
       using T = L::template type_of<I>;
       static_assert(R::template has<T>, "right-hand state doesn't have a quantity");
-      return (lstate.template get<T>() == rstate.template get<T>()) && equal<I + 1>(lstate, rstate);
+      return (ls.template get<T>() == rs.template get<T>()) && equal<I + 1>(ls, rs);
     }
     else
       return true;

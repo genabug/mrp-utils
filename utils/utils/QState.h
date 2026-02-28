@@ -40,8 +40,8 @@ namespace Quantities
     template<size_t I> constexpr auto& get() const & noexcept { return std::get<I>(data); }
 
     // access by type-name (for generic code)
-    template<Traits Q> requires(details::has<Q, Qs...>) constexpr auto& get() & noexcept;
-    template<Traits Q> requires(details::has<Q, Qs...>) constexpr auto& get() const & noexcept;
+    template<Traits Q> constexpr auto& get() & noexcept;
+    template<Traits Q> constexpr auto& get() const & noexcept;
 
     // index access by variable (for end-user code)
     template<Traits Q> constexpr auto& operator[](Q) & noexcept { return get<Q>(); }
@@ -78,33 +78,32 @@ namespace Quantities
       return QState<Qs...>(s);
   }
 
+  // IO operations
+  std::istream& operator>>(std::istream &, State auto &);
+  std::ostream& operator<<(std::ostream &, const State auto &);
+
+  // binary arithmetic operations
+  // WARNING: operations + and - are not symmetric, it's assumed that right-side operand
+  // has all the components of the left-side operand, otherwise the operation is not compilable.
+  // This is done in order to do arithmetic on states with different set of elements,
+  // when one of a set is a subset of the other, or when the order of elements is different.
+  // For example:
+  // auto s1 = QState<rho, Te, w>(...);
+  // auto s2 = QState<rho, Te, w, Pi, B>(...);
+  // auto s3 = s1 + s2; // s3 type is QState<rho, Te, w>
+  // auto s4 = s2 + s1; // COMPILE ERROR!!! s1 doesn't have Pi nor B
+  constexpr auto operator+(const State auto &, const State auto &) noexcept;
+  constexpr auto operator-(const State auto &, const State auto &) noexcept;
+
+  template<class T> constexpr auto operator*(const State auto &, T) noexcept;
+  template<class T> constexpr auto operator*(T, const State auto &) noexcept;
+  template<class T> constexpr auto operator/(const State auto &, T) noexcept;
+
+  // boolean operations
+  // WARNING: operations are not symmetric too.
+  constexpr bool operator==(const State auto &, const State auto &) noexcept;
+  constexpr bool operator!=(const State auto &, const State auto &) noexcept;
 } // namespace Quantities
-
-// IO operations
-std::istream& operator>>(std::istream &, Quantities::State auto &);
-std::ostream& operator<<(std::ostream &, const Quantities::State auto &);
-
-// binary arithmetic operations
-// WARNING: operations + and - are not symmetric, it's assumed that right-side operand
-// has all the components of the left-side operand, otherwise the operation is not compilable.
-// This is done in order to do arithmetic on states with different set of elements,
-// when one of a set is a subset of the other, or when the order of elements is different.
-// For example:
-// auto s1 = QState<rho, Te, w>(...);
-// auto s2 = QState<rho, Te, w, Pi, B>(...);
-// auto s3 = s1 + s2; // s3 type is QState<rho, Te, w>
-// auto s4 = s2 + s1; // COMPILE ERROR!!! s1 doesn't have Pi nor B
-constexpr auto operator+(const Quantities::State auto &, const Quantities::State auto &);
-constexpr auto operator-(const Quantities::State auto &, const Quantities::State auto &);
-
-template<class T> constexpr auto operator*(const Quantities::State auto &, T);
-template<class T> constexpr auto operator*(T v, const Quantities::State auto &s);
-template<class T> constexpr auto operator/(const Quantities::State auto &, T);
-
-// boolean operations
-// WARNING: operations are not symmetric too.
-constexpr bool operator==(const Quantities::State auto &, const Quantities::State auto &);
-constexpr bool operator!=(const Quantities::State auto &l, const Quantities::State auto &r);
 
 /*---------------------------------------------------------------------------------------*/
 /*------------------------------------ definitions --------------------------------------*/
@@ -112,17 +111,19 @@ constexpr bool operator!=(const Quantities::State auto &l, const Quantities::Sta
 
 namespace Quantities
 {
-  template<Traits... Qs> template<Traits Q> requires(details::has<Q, Qs...>)
+  template<Traits... Qs> template<Traits Q>
     constexpr auto& QState<Qs...>::get() & noexcept
   {
-    constexpr auto idx = details::index_of<Q, Qs...>;
+    static_assert(has<Q>, "state doesn't have quantity");
+    constexpr auto idx = index_of<Q>;
     return std::get<idx>(data);
   }
 
-  template<Traits... Qs> template<Traits Q> requires(details::has<Q, Qs...>)
+  template<Traits... Qs> template<Traits Q>
     constexpr auto& QState<Qs...>::get() const & noexcept
   {
-    constexpr auto idx = details::index_of<Q, Qs...>;
+    static_assert(has<Q>, "state doesn't have quantity");
+    constexpr auto idx = index_of<Q>;
     return std::get<idx>(data);
   }
 
@@ -181,78 +182,77 @@ namespace Quantities
     return s;
   }
 
+/*---------------------------------------------------------------------------------------*/
+/*---------------------------------------------------------------------------------------*/
+/*---------------------------------------------------------------------------------------*/
+
+  std::ostream& operator<<(std::ostream &ostr, const State auto &s)
+  {
+    details::write_state(ostr, s);
+    return ostr;
+  }
+
+/*---------------------------------------------------------------------------------------*/
+
+  std::istream& operator>>(std::istream &istr, State auto &s)
+  {
+    details::read_state(istr, s);
+    return istr;
+  }
+
+/*---------------------------------------------------------------------------------------*/
+
+  constexpr auto operator+(const State auto &l, const State auto &r) noexcept
+  {
+    auto s = l;
+    details::add_to(s, r);
+    return s;
+  }
+
+/*---------------------------------------------------------------------------------------*/
+
+  constexpr auto operator-(const State auto &l, const State auto &r) noexcept
+  {
+    auto s = l;
+    details::sub_from(s, r);
+    return s;
+  }
+
+/*---------------------------------------------------------------------------------------*/
+
+  template<class T> constexpr auto operator*(const State auto &s, T v) noexcept
+  {
+    auto r = s;
+    details::mult_by(r, v);
+    return r;
+  }
+
+  template<class T> constexpr auto operator*(T v, const State auto &s) noexcept
+  {
+    return s * v;
+  }
+
+/*---------------------------------------------------------------------------------------*/
+
+  template<class T> constexpr auto operator/(const State auto &s, T v) noexcept
+  {
+    auto r = s;
+    details::div_by(r, v);
+    return r;
+  }
+
+/*---------------------------------------------------------------------------------------*/
+
+  constexpr bool operator==(const State auto &l, const State auto &r) noexcept
+  {
+    return details::equal(l, r);
+  }
+
+  constexpr bool operator!=(const State auto &l, const State auto &r) noexcept
+  {
+    return !(l == r);
+  }
 } // namespace Quantities
-
-/*---------------------------------------------------------------------------------------*/
-/*---------------------------------------------------------------------------------------*/
-/*---------------------------------------------------------------------------------------*/
-
-std::ostream& operator<<(std::ostream &ostr, const Quantities::State auto &s)
-{
-  Quantities::details::write_state(ostr, s);
-  return ostr;
-}
-
-/*---------------------------------------------------------------------------------------*/
-
-std::istream& operator>>(std::istream &istr, Quantities::State auto &s)
-{
-  Quantities::details::read_state(istr, s);
-  return istr;
-}
-
-/*---------------------------------------------------------------------------------------*/
-
-constexpr auto operator+(const Quantities::State auto &l, const Quantities::State auto &r)
-{
-  auto s = l;
-  Quantities::details::add_to(s, r);
-  return s;
-}
-
-/*---------------------------------------------------------------------------------------*/
-
-constexpr auto operator-(const Quantities::State auto &l, const Quantities::State auto &r)
-{
-  auto s = l;
-  Quantities::details::sub_from(s, r);
-  return s;
-}
-
-/*---------------------------------------------------------------------------------------*/
-
-template<class T> constexpr auto operator*(const Quantities::State auto &s, T v)
-{
-  auto r = s;
-  Quantities::details::mult_by(r, v);
-  return r;
-}
-
-template<class T> constexpr auto operator*(T v, const Quantities::State auto &s)
-{
-  return s * v;
-}
-
-/*---------------------------------------------------------------------------------------*/
-
-template<class T> constexpr auto operator/(const Quantities::State auto &s, T v)
-{
-  auto r = s;
-  Quantities::details::div_by(r, v);
-  return r;
-}
-
-/*---------------------------------------------------------------------------------------*/
-
-constexpr bool operator==(const Quantities::State auto &l, const Quantities::State auto &r)
-{
-  return Quantities::details::equal(l, r);
-}
-
-constexpr bool operator!=(const Quantities::State auto &l, const Quantities::State auto &r)
-{
-  return !(l == r);
-}
 
 /*---------------------------------------------------------------------------------------*/
 /*----------------------------------- documentation -------------------------------------*/
