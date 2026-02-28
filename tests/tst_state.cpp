@@ -7,9 +7,9 @@
 using std::string;
 using namespace Quantities;
 
-using ti_t = QTraits<int, 3, 1, 't','i'>;
-using td_t = QTraits<double, 3, 1, 't','d'>;
-using ts_t = QTraits<string, 0, 0, 't','s'>;
+using ti_t = QTraits<int, 3, 't','i'>;
+using td_t = QTraits<double, 3, 't','d'>;
+using ts_t = QTraits<string, 0, 't','s'>;
 
 constexpr ti_t ti;
 constexpr td_t td;
@@ -41,7 +41,7 @@ static_assert(QState<ti_t, td_t>(3, 4) - QState<td_t, ti_t>(2, 1) == QState<ti_t
 static_assert(QState<ti_t>(2) - QState<ti_t, td_t>(1, 3) == QState<ti_t>(1), "sub with subset of comps");
 
 // assumed index access works
-TEST(State, init)
+TEST(State, init_with_rvalues)
 {
   QState<ti_t, td_t, ts_t> s(1, 2, "bar");
   EXPECT_EQ(s[ti], 1);
@@ -49,7 +49,7 @@ TEST(State, init)
   EXPECT_EQ(s[ts], "bar");
 }
 
-TEST(State, init_by_lvalue_refs)
+TEST(State, init_with_lvalues)
 {
   int i = 1;
   double d = 2;
@@ -104,7 +104,7 @@ TEST(State, assign_by_components)
 
 TEST(State, assign_all_components)
 {
-  QState<ti_t, td_t> s(1, 2), expected(0, 0);
+  QState<ti_t, td_t> s, expected(0, 0);
   s = 0;
   EXPECT_EQ(s, expected);
 }

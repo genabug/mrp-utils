@@ -88,11 +88,6 @@ namespace Quantities
   // has all the components of the left-side operand, otherwise the operation is not compilable.
   // This is done in order to do arithmetic on states with different set of elements,
   // when one of a set is a subset of the other, or when the order of elements is different.
-  // For example:
-  // auto s1 = QState<rho, Te, w>(...);
-  // auto s2 = QState<rho, Te, w, Pi, B>(...);
-  // auto s3 = s1 + s2; // s3 type is QState<rho, Te, w>
-  // auto s4 = s2 + s1; // COMPILE ERROR!!! s1 doesn't have Pi nor B
   constexpr auto operator+(const State auto &, const State auto &) noexcept;
   constexpr auto operator-(const State auto &, const State auto &) noexcept;
 
@@ -243,7 +238,7 @@ namespace Quantities
 
 /*!
   \class Quantities::QState
-  \tparam Qs Type-names (tags) of the data.
+  \tparam Qs Type-names (traits) of the data.
   \brief Vector of quantities with arbitrary types.
 
   Class is aimed for aggregation and processing an arbitrary set of heterogeneous
@@ -268,30 +263,29 @@ namespace Quantities
   but requires the global variables (see the unit tests file for examples).
   \code
   s1[rho] = 4;
-  s1[rho] = 4;
   //s1.rho = 4; // this would be perfect: no globals, simple structure syntax.
   \endcode
   It's possible to get subset of components at once by specifying their names
   or simply assigning a state to another state with a subset of quantities.
   The result is a new state with copies of the original values, for example
-  all of them are equivalent to each other:
+  all of following expressions are equivalent to each other:
   \code
-  auto hd4 = hd1.get(rho, Ti, w);
+  auto hd4 = hd1.get(rho, w, Te); // hd6 : QState<rho_t, w_t, Te_t>
   QState<rho_t, Ti_t, w_t> hd5 = hd1;
-  auto hd6 = hd1.get<rho_t, Ti_t, w_t>(); // hd3 : QState<rho_t, Ti_t, w_t>
+  auto hd6 = hd1.get<rho_t, Ti_t, w_t>(); // hd6 : QState<rho_t, Ti_t, w_t>
   \endcode
 
-  Class is accompanying by a set of arithmetic, logical and IO operations. Note that
-  both arithmetic and logical operations are not symmetric! This is done in order to allow
-  these operations on states with different sets of components, when one set is a subset
-  of the other, or when the order of components is differ.
+  Class is accompanying by a set of arithmetic, logical and IO operations.
+  Note that both arithmetic and logical operations are not symmetric!
+  This is done in order to allow these operations on states with different sets of components,
+  when one set is a subset of the other, or when the order of components is differ.
   \code
   hd3 = (hd1 + hd2) / 2; // hd{1,2,3} are the same type, HD2T_s
   hd4 = (hd1 + hd2) / 2; // it's also OK, both hd{1,2} have all needed components
   //hd1 = hd4; // COMPILE ERROR: Te_t is not presented in the hd4 state
   \endcode
 
-  Note that all operations with states are constexpr and can be done in compile-time,
+  Also note that all operations with states are constexpr and can be done in compile-time,
   thus most of the time misusage of working with states leads to a compilation error.
   For example, access to a component which is not presented in a state,
   mixing states with unmatched list of quantities, etc...
