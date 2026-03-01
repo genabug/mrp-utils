@@ -4,14 +4,25 @@
 /*!
   \file QState.h
   \author gennadiy
-  \brief Vector of quantities with arbitrary types, definition and documentation.
+  \brief Vector of quantities with arbitrary types, definition, documentation and basic tests.
 */
 
-#include "QFwds.h"
+#include "QTraits.h"
 #include "QDetails.h"
 
 namespace Quantities
 {
+  template<Traits... Qs> class QState;
+
+  namespace details
+  {
+    template<class> struct is_state : std::false_type {};
+    template<class... Qs> struct is_state<QState<Qs...>> : std::true_type {};
+  }
+
+  template<class S> constexpr bool is_state_v = details::is_state<S>::value;
+  template<class S> concept State = is_state_v<S>;
+
   template<Traits... Qs> class QState
   {
     static_assert(sizeof...(Qs) > 0, "empty state is useless"); // really?
@@ -61,13 +72,21 @@ namespace Quantities
   }; // class QState<Qs...>
 
   // Helper to get value(s) from a state using type-name(s).
-  // Use in generic code when dealing with a state and would like to work
-  // only with specific subset of its component(s), e.g.:
-  //   QState<A,B,C,D> c;
-  //   auto a = get<A>(c);    // a : A::type
-  //   auto a = get<A,B>(c);  // a : QState<A,B>
+  // Use in generic code when dealing with a state or not-a-state
+  // and would like to work only with specific subset of its component(s), e.g.:
+  //   QState<A,B,C> s;
+  //   auto a = get(s);      // a: QState<A,B,C>
+  //   auto b = get<A>(s);   // b : A::type
+  //   auto c = get<A,B>(s); // c : QState<A,B>
+  // NB! it's most probably an error to try getting any component from not-a-state
+  template<Traits... Qs, class T> requires(!is_state_v<T>)
+    constexpr decltype(auto) get(T t) noexcept
+  {
+    static_assert(sizeof...(Qs) == 0, "access a state' component(s) of not-a-state object is suspicious");
+    return t;
+  }
 
-  template<Traits... Qs, State S>
+  template<Traits... Qs, class S> requires(is_state_v<S>)
     constexpr decltype(auto) get(S s) noexcept
   {
     constexpr size_t slice_sz = sizeof...(Qs);
@@ -83,20 +102,18 @@ namespace Quantities
   std::istream& operator>>(std::istream &, State auto &);
   std::ostream& operator<<(std::ostream &, const State auto &);
 
-  // binary arithmetic operations
-  // WARNING: operations + and - are not symmetric, it's assumed that right-side operand
-  // has all the components of the left-side operand, otherwise the operation is not compilable.
-  // This is done in order to do arithmetic on states with different set of elements,
-  // when one of a set is a subset of the other, or when the order of elements is different.
+  // arithmetic operations
+  // NB! operations are asymmetric, right-hand operand must has all the components
+  // of the left-hand operand, otherwise an operation is not compilable.
   constexpr auto operator+(const State auto &, const State auto &) noexcept;
   constexpr auto operator-(const State auto &, const State auto &) noexcept;
 
-  template<class T> constexpr auto operator*(const State auto &, T) noexcept;
-  template<class T> constexpr auto operator*(T, const State auto &) noexcept;
-  template<class T> constexpr auto operator/(const State auto &, T) noexcept;
+  constexpr auto operator*(const State auto &, auto) noexcept;
+  constexpr auto operator*(auto, const State auto &) noexcept;
+  constexpr auto operator/(const State auto &, auto) noexcept;
 
   // boolean operations
-  // WARNING: operations are not symmetric too.
+  // NB! operations are asymmetric.
   constexpr bool operator==(const State auto &, const State auto &) noexcept;
   constexpr bool operator!=(const State auto &, const State auto &) noexcept;
 } // namespace Quantities
@@ -110,7 +127,10 @@ namespace Quantities
   template<Traits... Qs>
     constexpr QState<Qs...>& QState<Qs...>::operator=(auto v) noexcept
   {
-    details::set_to(*this, v);
+    if constexpr (is_state_v<decltype(v)>)
+      details::set_to_state(*this, v);
+    else
+      details::set_to_value(*this, v);
     return *this;
   }
 
@@ -198,21 +218,21 @@ namespace Quantities
 
 /*---------------------------------------------------------------------------------------*/
 
-  template<class T> constexpr auto operator*(const State auto &s, T v) noexcept
+  constexpr auto operator*(const State auto &s, auto v) noexcept
   {
     auto r = s;
     details::mult_by(r, v);
     return r;
   }
 
-  template<class T> constexpr auto operator*(T v, const State auto &s) noexcept
+  constexpr auto operator*(auto v, const State auto &s) noexcept
   {
     return s * v;
   }
 
 /*---------------------------------------------------------------------------------------*/
 
-  template<class T> constexpr auto operator/(const State auto &s, T v) noexcept
+  constexpr auto operator/(const State auto &s, auto v) noexcept
   {
     auto r = s;
     details::div_by(r, v);
@@ -231,6 +251,44 @@ namespace Quantities
     return !(l == r);
   }
 } // namespace Quantities
+
+/*---------------------------------------------------------------------------------------*/
+/*--------------------------------------- tests -----------------------------------------*/
+/*---------------------------------------------------------------------------------------*/
+
+namespace Quantities::tests
+{
+  using t1 = QTraits<int, 3, "ti">;
+  using t2 = QTraits<double, 3, "td">;
+
+  constexpr t1 ti;
+  constexpr t2 td;
+
+  constexpr QState<t1, t2> s(1, 2);
+  static_assert(s.get<0>() == 1 && s.get<1>() == 2);
+  static_assert(s.get<t1>() == 1 && s.get<t2>() == 2);
+  static_assert(s[ti] == 1 && s[td] == 2);
+
+  static_assert(+QState<t1, t2>(1, 2) == QState<t1, t2>(+1, +2));
+  static_assert(-QState<t1, t2>(1, 2) == QState<t1, t2>(-1, -2));
+
+  static_assert(QState<t1, t2>(1, 2) * 2 == QState<t1, t2>(2, 4));
+  static_assert(2 * QState<t1, t2>(3, 4) == QState<t1, t2>(6, 8));
+  static_assert(QState<t1, t2>(2, 4) / 2 == QState<t1, t2>(1, 2));
+
+  static_assert(QState<t1, t2>(1, 2) == QState<t1, t2>(1, 2));
+  static_assert(QState<t1, t2>(1, 2) == QState<t2, t1>(2, 1));
+  static_assert(QState<t1>(1) == QState<t2, t1>(2, 1));
+  static_assert(QState<t1>(2) != QState<t2, t1>(2, 1));
+
+  static_assert(QState<t1, t2>(1, 2) + QState<t1, t2>(3, 4) == QState<t1, t2>(4, 6));
+  static_assert(QState<t1, t2>(1, 2) + QState<t2, t1>(3, 4) == QState<t1, t2>(5, 5));
+  static_assert(QState<t1>(1) + QState<t1, t2>(3, 4) == QState<t1>(4));
+
+  static_assert(QState<t1, t2>(3, 4) - QState<t1, t2>(2, 1) == QState<t1, t2>(1, 3));
+  static_assert(QState<t1, t2>(3, 4) - QState<t2, t1>(2, 1) == QState<t1, t2>(2, 2));
+  static_assert(QState<t1>(2) - QState<t1, t2>(1, 3) == QState<t1>(1));
+} // namespace Quantities::tests
 
 /*---------------------------------------------------------------------------------------*/
 /*----------------------------------- documentation -------------------------------------*/

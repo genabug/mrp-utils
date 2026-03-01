@@ -19,3 +19,6 @@ make
 ## known issues
 
 * no examples :(
+* remove Q prefix, do not pretend Qt;)
+* get rid of mrp prefix
+* ...

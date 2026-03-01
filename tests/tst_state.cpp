@@ -1,5 +1,4 @@
 #include "utils/QState.h"
-#include "utils/QTraits.h"
 
 #include <gtest/gtest.h>
 #include <string>
@@ -7,40 +6,18 @@
 using std::string;
 using namespace Quantities;
 
-using ti_t = QTraits<int, 3, 't','i'>;
-using td_t = QTraits<double, 3, 't','d'>;
-using ts_t = QTraits<string, 0, 't','s'>;
+using ti_t = QTraits<int, 3, "ti">;
+using td_t = QTraits<double, 3, "td">;
+using ts_t = QTraits<string, 0, "ts">;
 
 constexpr ti_t ti;
 constexpr td_t td;
 constexpr ts_t ts;
 
-constexpr QState<ti_t, td_t> s(1, 2);
-static_assert(s.get<0>() == 1 && s.get<1>() == 2, "access by index");
-static_assert(s.get<ti_t>() == 1 && s.get<td_t>() == 2, "access by typename");
-static_assert(s[ti] == 1 && s[td] == 2, "access by variable");
-
-static_assert(+QState<ti_t, td_t>(1, 2) == QState<ti_t, td_t>(+1, +2), "unary plus");
-static_assert(-QState<ti_t, td_t>(1, 2) == QState<ti_t, td_t>(-1, -2), "unary minus");
-
-static_assert(QState<ti_t, td_t>(1, 2) * 2 == QState<ti_t, td_t>(2, 4), "mult by coeff on the right");
-static_assert(2 * QState<ti_t, td_t>(3, 4) == QState<ti_t, td_t>(6, 8), "mult by coeff on the left");
-static_assert(QState<ti_t, td_t>(2, 4) / 2 == QState<ti_t, td_t>(1, 2), "div by coeff");
-
-static_assert(QState<ti_t, td_t>(1, 2) == QState<ti_t, td_t>(1, 2), "equal with the same order of comps");
-static_assert(QState<ti_t, td_t>(1, 2) == QState<td_t, ti_t>(2, 1), "equal with different order of comps");
-static_assert(QState<ti_t>(1) == QState<td_t, ti_t>(2, 1), "equal with subset of comps");
-static_assert(QState<ti_t>(2) != QState<td_t, ti_t>(2, 1), "not equal with subset of comps");
-
-static_assert(QState<ti_t, td_t>(1, 2) + QState<ti_t, td_t>(3, 4) == QState<ti_t, td_t>(4, 6), "sum with the same order of comps");
-static_assert(QState<ti_t, td_t>(1, 2) + QState<td_t, ti_t>(3, 4) == QState<ti_t, td_t>(5, 5), "sum with different order of comps");
-static_assert(QState<ti_t>(1) + QState<ti_t, td_t>(3, 4) == QState<ti_t>(4), "sum with subset of comps");
-
-static_assert(QState<ti_t, td_t>(3, 4) - QState<ti_t, td_t>(2, 1) == QState<ti_t, td_t>(1, 3), "sub with the same order of comps");
-static_assert(QState<ti_t, td_t>(3, 4) - QState<td_t, ti_t>(2, 1) == QState<ti_t, td_t>(2, 2), "sub with different order of comps");
-static_assert(QState<ti_t>(2) - QState<ti_t, td_t>(1, 3) == QState<ti_t>(1), "sub with subset of comps");
-
 // assumed index access works
+// most of the operations are tested on compile-time
+// but I'd like to have a good old one runtime tests
+// for both debugging and as examples
 TEST(State, init_with_rvalues)
 {
   QState<ti_t, td_t, ts_t> s(1, 2, "bar");
@@ -104,8 +81,8 @@ TEST(State, assign_by_components)
 
 TEST(State, assign_all_components)
 {
-  QState<ti_t, td_t> s, expected(0, 0);
-  s = 0;
+  QState<ti_t, td_t> s, expected(1, 1);
+  s = 1;
   EXPECT_EQ(s, expected);
 }
 
@@ -257,6 +234,21 @@ TEST(State, deserialize)
   QState<ti_t, td_t, ts_t> s, expected(3, 4, "baz");
   sstr >> s;
   EXPECT_EQ(s, expected);
+}
+
+TEST(State, pretty_print)
+{
+  QState<ti_t, td_t, ts_t> s(1, 2, "foo");
+  std::stringstream sstr;
+  details::print_state(sstr, s);
+  EXPECT_EQ(sstr.str(), "{ti: 1, td: 2, ts: foo}");
+}
+
+TEST(State, get_function_not_a_state)
+{
+  int i = 1;
+  auto s = get(i);
+  EXPECT_EQ(s, i);
 }
 
 TEST(State, get_function_full_state)

@@ -1,6 +1,5 @@
 add_library(utils INTERFACE
   utils/IOMode.h
-  utils/QFwds.h
   utils/QDetails.h
   utils/QState.h
   utils/QTraits.h
