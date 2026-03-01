@@ -19,6 +19,10 @@ template<size_t N, class T = double> class Tensor
       "Components must be default constructible");
 
 public:
+  // QTraits
+  static constexpr int size = N*N;
+
+public:
   constexpr Tensor() noexcept = default;
   template<class U> constexpr explicit Tensor(const U &a) noexcept;
   template<class... Ts> constexpr explicit Tensor(const Ts&... as) noexcept;

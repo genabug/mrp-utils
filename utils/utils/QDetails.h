@@ -41,7 +41,7 @@ namespace Quantities::details
   template<size_t I = 0, class S>
     constexpr void print_state(std::ostream &out, const S &state)
   {
-    if constexpr (I != S::ncomps)
+    if constexpr (I != S::size)
     {
       using Q = S::template type_of<I>;
       out << (I? ", " : "{") << Q::id << ": " << state.template get<I>();
@@ -59,7 +59,7 @@ namespace Quantities::details
   template<size_t I = 0, class S>
     constexpr void write_state(std::ostream &out, const S &state)
   {
-    if constexpr (I != S::ncomps)
+    if constexpr (I != S::size)
     {
       out << (I? " " : "") << state.template get<I>();
       write_state<I + 1>(out, state);
@@ -71,7 +71,7 @@ namespace Quantities::details
   template<size_t I = 0, class S>
     constexpr void read_state(std::istream &in, S &state)
   {
-    if constexpr (I != S::ncomps)
+    if constexpr (I != S::size)
     {
       in >> state.template get<I>();
       read_state<I + 1>(in, state);
@@ -83,7 +83,7 @@ namespace Quantities::details
   template<size_t I = 0, class L, class R>
     constexpr void add_to(L &l, const R &r) noexcept
   {
-    if constexpr (I != L::ncomps)
+    if constexpr (I != L::size)
     {
       using T = L::template type_of<I>;
       static_assert(R::template has<T>, "right-hand state doesn't have a quantity");
@@ -97,7 +97,7 @@ namespace Quantities::details
   template<size_t I = 0, class L, class R>
     constexpr void sub_from(L &l, const R &r) noexcept
   {
-    if constexpr (I != L::ncomps)
+    if constexpr (I != L::size)
     {
       using T = L::template type_of<I>;
       static_assert(R::template has<T>, "right-hand state doesn't have a quantity");
@@ -111,7 +111,7 @@ namespace Quantities::details
   template<size_t I = 0, class S, class T>
     constexpr void mult_by(S &state, T value) noexcept
   {
-    if constexpr (I != S::ncomps)
+    if constexpr (I != S::size)
     {
       state.template get<I>() *= value;
       mult_by<I + 1>(state, value);
@@ -123,7 +123,7 @@ namespace Quantities::details
   template<size_t I = 0, class S, class T>
     constexpr void div_by(S &state, T value) noexcept
   {
-    if constexpr (I != S::ncomps)
+    if constexpr (I != S::size)
     {
       state.template get<I>() /= value;
       div_by<I + 1>(state, value);
@@ -135,7 +135,7 @@ namespace Quantities::details
   template<size_t I = 0, class S, class T>
     constexpr void set_to_value(S &state, T value) noexcept
   {
-    if constexpr (I != S::ncomps)
+    if constexpr (I != S::size)
     {
       using Q_t = S::template type_of<I>::type;
       state.template get<I>() = static_cast<Q_t>(value);
@@ -146,7 +146,7 @@ namespace Quantities::details
   template<size_t I = 0, class L, class R>
     constexpr void set_to_state(L &l, const R &r) noexcept
   {
-    if constexpr (I != L::ncomps)
+    if constexpr (I != L::size)
     {
       using T = L::template type_of<I>;
       static_assert(R::template has<T>, "right-hand state doesn't have a quantity");
@@ -160,7 +160,7 @@ namespace Quantities::details
   template<size_t I = 0, class L, class R>
    constexpr bool equal(const L &l, const R &r) noexcept
   {
-    if constexpr (I != L::ncomps)
+    if constexpr (I != L::size)
     {
       using T = L::template type_of<I>;
       static_assert(R::template has<T>, "right-hand state doesn't have a quantity");

@@ -31,13 +31,12 @@ namespace Quantities
 
   public:
     // QTraits
-    static constexpr int size = (Qs::size + ...);
-    static constexpr int ncomps = sizeof...(Qs);
+    static constexpr int size = sizeof...(Qs);
 
     // helpers
     template<size_t I> using type_of = details::type_of<I, Qs...>;
     template<Traits Q> static constexpr auto index_of = details::index_of<Q, Qs...>;
-    template<Traits Q> static constexpr bool has = index_of<Q> < ncomps;
+    template<Traits Q> static constexpr bool has = index_of<Q> < size;
 
   public:
     constexpr QState() noexcept = default;
@@ -57,8 +56,8 @@ namespace Quantities
     constexpr QState operator+() const noexcept { return *this; }
 
     // access by index (mainly to implement basic ops, see details)
-    template<size_t I> requires(I < ncomps) constexpr auto& get() & noexcept { return std::get<I>(data); }
-    template<size_t I> requires(I < ncomps) constexpr auto& get() const & noexcept { return std::get<I>(data); }
+    template<size_t I> requires(I < size) constexpr auto& get() & noexcept { return std::get<I>(data); }
+    template<size_t I> requires(I < size) constexpr auto& get() const & noexcept { return std::get<I>(data); }
 
     // access by type-name (for generic code)
     template<Traits Q> requires(has<Q>) constexpr auto& get() & noexcept { return get<index_of<Q>>(); };

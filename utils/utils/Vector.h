@@ -25,6 +25,10 @@ template<size_t N, class T = double, bool is_euclidian = true> class Vector
     "Components must be default constructible");
 
 public:
+  // QTraits
+  static constexpr int size = N;
+
+public:
   // ctors
   constexpr Vector() noexcept = default;
   template<class U> constexpr explicit Vector(const U &a) noexcept;
