@@ -13,7 +13,6 @@
 #include <cstddef> // size_t
 #include <ostream>
 #include <istream>
-#include <type_traits> // enable_if_t
 
 template<size_t N, class T = double, bool is_euclidian = true> class Vector
 {
@@ -32,7 +31,7 @@ public:
   // ctors
   constexpr Vector() noexcept = default;
   template<class U> constexpr explicit Vector(const U &a) noexcept;
-  template<class... Ts, class = std::enable_if_t<sizeof...(Ts) == N>>
+  template<class... Ts> requires(sizeof...(Ts) == N)
     constexpr explicit Vector(Ts... as) noexcept : data{static_cast<T>(as)...} {}
 
   // converters
@@ -43,8 +42,8 @@ public:
 
   // access
   static constexpr size_t X = 0;
-  static constexpr size_t Y = (N > 0)? 1 : X;
-  static constexpr size_t Z = (N > 1)? 2 : Y;
+  static constexpr size_t Y = (N > 1)? 1 : X;
+  static constexpr size_t Z = (N > 2)? 2 : Y;
   static constexpr size_t dim = N;
 
   constexpr T operator[](size_t i) && noexcept { return data[i]; }
@@ -60,6 +59,9 @@ public:
   constexpr Vector& operator*=(const T &a) noexcept;
   constexpr Vector& operator+=(const Vector &v) noexcept;
   constexpr Vector& operator-=(const Vector &v) noexcept;
+
+  // comparison ops
+  constexpr bool operator==(const Vector &) const noexcept = default;
 }; // class Vector<N, T, is_euclidian>
 
 using Vector2D = Vector<2>; //! Shortcut for 2D vector in euclidian space.
@@ -89,23 +91,15 @@ template<size_t N, class T, bool B>
 template<size_t N, class T, bool B>
   constexpr auto operator/(Vector<N, T, B> v, const T &a) noexcept { v /= a; return v; }
 
-// equality ops
-template<size_t N, class T, bool B>
-  constexpr bool operator==(const Vector<N, T, B> &v1, const Vector<N, T, B> &v2) noexcept;
-
-template<size_t N, class T, bool B>
-  constexpr bool operator!=(
-    const Vector<N, T, B> &v1, const Vector<N, T, B> &v2) noexcept { return !(v1 == v2); }
-
 // IO ops
 // TODO: should throw an exception in case of unexpected format, symbols, ...
 class Vectors : public Manipulators<Vectors> {};
 
 template<size_t N, class T, bool B>
-  std::istream& operator>>(std::istream &in, Vector<N, T, B> &v) noexcept;
+  std::istream& operator>>(std::istream &in, Vector<N, T, B> &v);
 
 template<size_t N, class T, bool B>
-  std::ostream& operator<<(std::ostream &out, const Vector<N, T, B> &v) noexcept;
+  std::ostream& operator<<(std::ostream &out, const Vector<N, T, B> &v);
 
 // useful functions for euclidian vector only! note the lack of third tparam
 template<size_t N, class T>
@@ -161,6 +155,7 @@ template<size_t N, class T, bool B>
 {
   for (size_t i = 0; i < N; ++i)
     data[i] = v[i];
+  return *this;
 }
 
 /*---------------------------------------------------------------------------------------*/
@@ -206,23 +201,12 @@ template<size_t N, class T, bool B>
 /*---------------------------------------------------------------------------------------*/
 
 template<size_t N, class T, bool B>
-  constexpr bool operator==(const Vector<N, T, B> &v1, const Vector<N, T, B> &v2) noexcept
-{
-  for (size_t i = 0; i < N; ++i)
-    if (v1[i] != v2[i])
-      return false;
-  return true;
-}
-
-/*---------------------------------------------------------------------------------------*/
-
-template<size_t N, class T, bool B>
-  std::istream& operator>>(std::istream &in, Vector<N, T, B> &v) noexcept
+  std::istream& operator>>(std::istream &in, Vector<N, T, B> &v)
 {
   char c;
   bool in_brackets = true;
   while (in.get(c) && c != '(')
-    if (std::isdigit(c))
+    if (std::isdigit(c) || c == '-' || c == '+')
     {
       in.putback(c);
       in_brackets = false;
@@ -232,7 +216,7 @@ template<size_t N, class T, bool B>
   for (size_t i = 0; i < N; ++i)
   {
     while (in.get(c) && c != ',')
-      if (std::isdigit(c))
+      if (std::isdigit(c) || c == '-' || c == '+')
       {
         in.putback(c);
         break;
@@ -253,7 +237,7 @@ template<size_t N, class T, bool B>
 /*---------------------------------------------------------------------------------------*/
 
 template<size_t N, class T, bool B>
-  std::ostream& operator<<(std::ostream &out, const Vector<N, T, B> &v) noexcept
+  std::ostream& operator<<(std::ostream &out, const Vector<N, T, B> &v)
 {
   const std::locale &loc = out.getloc();
   bool use_brackets =
@@ -539,7 +523,7 @@ template<class T> constexpr auto operator~(const Vector<2, T> &v) noexcept
 */
 
 /*!
-  \fn std::istream& operator>>(std::istream &in, Vector &v) noexcept
+  \fn std::istream& operator>>(std::istream &in, Vector &v)
   \brief Read a vector from input stream.
   \param in Input stream from which tensor is read.
   \param v Vector where read object will be stored.
@@ -553,7 +537,7 @@ template<class T> constexpr auto operator~(const Vector<2, T> &v) noexcept
 */
 
 /*!
-  \fn std::ostream& operator<<(std::ostream &out, const Vector &v) noexcept
+  \fn std::ostream& operator<<(std::ostream &out, const Vector &v)
   \brief Write a vector to output stream.
   \param out Output stream where tensor is written.
   \param v Vector which will be written to the output stream.

@@ -14,9 +14,7 @@ template<size_t N, class T = double> class Tensor
 {
   T data[N][N] = {};
   static_assert(N != 0, "Tensor of zero size is meaningless.");
-  static_assert(
-      std::is_default_constructible_v<T>,
-      "Components must be default constructible");
+  static_assert(std::is_default_constructible_v<T>, "Components must be default constructible");
 
 public:
   // QTraits
@@ -49,6 +47,9 @@ public:
   constexpr Tensor& operator-=(const Tensor &A) noexcept;
   constexpr Tensor& operator*=(const Tensor &A) noexcept;
   constexpr Tensor& operator/=(const Tensor &A) noexcept { return *this *= A.invert(); }
+
+  // comparison ops
+  constexpr bool operator==(const Tensor &) const noexcept = default;
 
   // other useful ops
   constexpr T det() const noexcept;
@@ -97,23 +98,15 @@ template<size_t N, class T>
   constexpr auto
     operator/(Tensor<N, T> A, const Tensor<N, T> &B) noexcept { A /= B; return A; }
 
-// equality ops
-template<size_t N, class T>
-  constexpr bool operator==(const Tensor<N, T> &A, const Tensor<N, T> &B) noexcept;
-
-template<size_t N, class T>
-  constexpr bool
-    operator!=(const Tensor<N, T> &A, const Tensor<N, T> &B) noexcept { return !(A == B); }
-
 // io ops
 // TODO: error-handling: throw an exception in case of unexpected symbols, ...
 class Tensors : public Manipulators<Tensors> {};
 
 template<size_t N, class T>
-  std::istream& operator>>(std::istream &in, Tensor<N, T> &A) noexcept;
+  std::istream& operator>>(std::istream &in, Tensor<N, T> &A);
 
 template<size_t N, class T>
-  std::ostream& operator<<(std::ostream &out, const Tensor<N, T> &A) noexcept;
+  std::ostream& operator<<(std::ostream &out, const Tensor<N, T> &A);
 
 // ops with vectors
 template<size_t N, class T>
@@ -196,6 +189,7 @@ template<size_t N, class T>
   for (size_t i = 0; i < N; ++i)
     for (size_t j = 0; j < N; ++j)
       data[i][j] = static_cast<T>(t[i][j]);
+  return *this;
 }
 
 /*---------------------------------------------------------------------------------------*/
@@ -284,6 +278,11 @@ template<size_t N, class T> constexpr T Tensor<N, T>::trace() const noexcept
 
 template<size_t N, class T> constexpr Tensor<N, T> Tensor<N, T>::invert() const noexcept
 {
+  // TODO: possible issues:
+  // 1. exact equality check (d == 0) is unreliable for floating-point types;
+  //    consider using a tolerance-based comparison or std::abs(d) < epsilon
+  // 2. silently returns zero tensor on singular matrix, which may cause subtle bugs;
+  //    consider throwing an exception or returning std::optional<Tensor>
   T d = det();
   if (d == static_cast<T>(0))
     return Tensor<N, T>(0); // inverse matrix doesn't exist, return 0
@@ -341,20 +340,8 @@ template<size_t N, class T>
 
 /*---------------------------------------------------------------------------------------*/
 
-template<size_t N, class T>
-  constexpr bool operator==(const Tensor<N, T> &A, const Tensor<N, T> &B) noexcept
-{
-  for (size_t i = 0; i < N; ++i)
-    for (size_t j = 0; j < N; ++j)
-      if (A[i][j] != B[i][j])
-        return false;
-  return true;
-}
-
-/*---------------------------------------------------------------------------------------*/
-
 template<size_t N, class U>
-  std::istream& operator>>(std::istream &in, Tensor<N, U> &A) noexcept
+  std::istream& operator>>(std::istream &in, Tensor<N, U> &A)
 {
   char c;
   bool in_brackets = true;
@@ -370,7 +357,7 @@ template<size_t N, class U>
     for (size_t j = 0; j < N; ++j)
     {
       while (in.get(c) && c != ',')
-        if (std::isdigit(c))
+        if (std::isdigit(c) || c == '-' || c == '+')
         {
           in.putback(c);
           break;
@@ -379,7 +366,7 @@ template<size_t N, class U>
     }
 
   while (in_brackets && in.get(c) && c != ']')
-    if (std::isdigit(c))
+    if (std::isdigit(c) || c == '-' || c == '+')
     {
       in.putback(c);
       break;
@@ -391,7 +378,7 @@ template<size_t N, class U>
 /*---------------------------------------------------------------------------------------*/
 
 template<size_t N, class U>
-  std::ostream& operator<<(std::ostream &out, const Tensor<N, U> &A) noexcept
+  std::ostream& operator<<(std::ostream &out, const Tensor<N, U> &A)
 {
   const std::locale &loc = out.getloc();
   bool use_brackets =
@@ -789,7 +776,7 @@ template<size_t N, class T> template<size_t I, class, class>
 */
 
 /*!
-  \fn std::istream& operator>>(std::istream &in, Tensor &A) noexcept
+  \fn std::istream& operator>>(std::istream &in, Tensor &A)
   \brief Read a tensor from input stream.
   \param in Input stream from which tensor is read.
   \param A Tensor where read object will be stored.
@@ -803,7 +790,7 @@ template<size_t N, class T> template<size_t I, class, class>
 */
 
 /*!
-  \fn std::ostream& operator<<(std::ostream &out, const Tensor &A) noexcept
+  \fn std::ostream& operator<<(std::ostream &out, const Tensor &A)
   \brief Write a tensor to output stream.
   \param out Output stream where tensor is written.
   \param A Tensor which will be written to the output stream.

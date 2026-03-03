@@ -312,6 +312,17 @@ TEST(Tensor, io_with_bare_comps_two_tensors_non_digit_delim_ok)
   EXPECT_EQ(t2, t2r);
 }
 
+TEST(Tensor, io_with_brackets_signed_components_ok)
+{
+  std::stringstream ss;
+  T2i t1(-1, +2, -3, +4), t2;
+
+  ss << Tensors::inBrackets << t1;
+  EXPECT_EQ(ss.str(), "[-1, 2, -3, 4]");
+  ss >> t2;
+  EXPECT_EQ(t1, t2);
+}
+
 TEST(Tensor, boolean_ops)
 {
   T3i t11(1), t12{1}, t13{1};

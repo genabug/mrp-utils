@@ -35,6 +35,12 @@ namespace Quantities::details
   template<class... Qs>
     constexpr std::initializer_list<const char *> qnames = {Qs::id...};
 
+  template<class... Qs>
+    constexpr bool are_unique = true;
+
+  template<class Q, class... Qs>
+    constexpr bool are_unique<Q, Qs...> = ((!std::is_same_v<Q, Qs>) && ...) && are_unique<Qs...>;
+
 /*---------------------------------------------------------------------------------------*/
 
   // pretty printer

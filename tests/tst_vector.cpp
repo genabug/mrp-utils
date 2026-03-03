@@ -245,3 +245,14 @@ TEST(Vector, io_with_bare_components_two_vectors_non_digit_delim_ok)
   EXPECT_EQ(v1, v1r);
   EXPECT_EQ(v2, v2r);
 }
+
+TEST(Vector, io_with_brackets_signed_components_ok)
+{
+  std::stringstream ss;
+  V3i v1(-1, +2, -3), v2;
+
+  ss << Vectors::inBrackets << v1;
+  EXPECT_EQ(ss.str(), "(-1, 2, -3)");
+  ss >> v2;
+  EXPECT_EQ(v1, v2);
+}
