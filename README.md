@@ -74,10 +74,11 @@ make
 cd build && ctest
 ```
 
-## Known Issues
+## Known Issues / TODOs
 
 - No examples :(
 - Remove Q prefix, do not pretend Qt ;)
 - Get rid of mrp prefix
 - Materials with deducing this 8) (c++23)
+- review Vector and Tensor tests, it's a mess
 - ...
