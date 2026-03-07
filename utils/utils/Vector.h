@@ -4,16 +4,16 @@
 /*!
   \file Vector.h
   \author gennadiy
-  \brief Euclidian (or not) vector of arbitrary dimension, definition and documentation.
+  \brief Euclidian (or not) vector of arbitrary dimension, definition, documentation and tests.
 */
 
 #include "Utils.h"
 #include "IOMode.h"
-#include <cctype> // isspace
-#include <cstddef> // size_t
+
+#include <cctype>
+#include <cstddef>
 #include <ostream>
 #include <istream>
-#include <type_traits> // enable_if_t
 
 template<size_t N, class T = double, bool is_euclidian = true> class Vector
 {
@@ -32,7 +32,7 @@ public:
   // ctors
   constexpr Vector() noexcept = default;
   template<class U> constexpr explicit Vector(const U &a) noexcept;
-  template<class... Ts, class = std::enable_if_t<sizeof...(Ts) == N>>
+  template<class... Ts> requires(sizeof...(Ts) == N)
     constexpr explicit Vector(Ts... as) noexcept : data{static_cast<T>(as)...} {}
 
   // converters
@@ -43,8 +43,8 @@ public:
 
   // access
   static constexpr size_t X = 0;
-  static constexpr size_t Y = (N > 0)? 1 : X;
-  static constexpr size_t Z = (N > 1)? 2 : Y;
+  static constexpr size_t Y = (N > 1)? 1 : X;
+  static constexpr size_t Z = (N > 2)? 2 : Y;
   static constexpr size_t dim = N;
 
   constexpr T operator[](size_t i) && noexcept { return data[i]; }
@@ -60,6 +60,9 @@ public:
   constexpr Vector& operator*=(const T &a) noexcept;
   constexpr Vector& operator+=(const Vector &v) noexcept;
   constexpr Vector& operator-=(const Vector &v) noexcept;
+
+  // comparison ops
+  constexpr bool operator==(const Vector &) const noexcept = default;
 }; // class Vector<N, T, is_euclidian>
 
 using Vector2D = Vector<2>; //! Shortcut for 2D vector in euclidian space.
@@ -89,23 +92,15 @@ template<size_t N, class T, bool B>
 template<size_t N, class T, bool B>
   constexpr auto operator/(Vector<N, T, B> v, const T &a) noexcept { v /= a; return v; }
 
-// equality ops
-template<size_t N, class T, bool B>
-  constexpr bool operator==(const Vector<N, T, B> &v1, const Vector<N, T, B> &v2) noexcept;
-
-template<size_t N, class T, bool B>
-  constexpr bool operator!=(
-    const Vector<N, T, B> &v1, const Vector<N, T, B> &v2) noexcept { return !(v1 == v2); }
-
 // IO ops
 // TODO: should throw an exception in case of unexpected format, symbols, ...
-class Vectors : public Manipulators<Vectors> {};
+class VectorManip : public Manipulators<VectorManip> {};
 
 template<size_t N, class T, bool B>
-  std::istream& operator>>(std::istream &in, Vector<N, T, B> &v) noexcept;
+  std::istream& operator>>(std::istream &in, Vector<N, T, B> &v);
 
 template<size_t N, class T, bool B>
-  std::ostream& operator<<(std::ostream &out, const Vector<N, T, B> &v) noexcept;
+  std::ostream& operator<<(std::ostream &out, const Vector<N, T, B> &v);
 
 // useful functions for euclidian vector only! note the lack of third tparam
 template<size_t N, class T>
@@ -161,6 +156,7 @@ template<size_t N, class T, bool B>
 {
   for (size_t i = 0; i < N; ++i)
     data[i] = v[i];
+  return *this;
 }
 
 /*---------------------------------------------------------------------------------------*/
@@ -206,23 +202,12 @@ template<size_t N, class T, bool B>
 /*---------------------------------------------------------------------------------------*/
 
 template<size_t N, class T, bool B>
-  constexpr bool operator==(const Vector<N, T, B> &v1, const Vector<N, T, B> &v2) noexcept
-{
-  for (size_t i = 0; i < N; ++i)
-    if (v1[i] != v2[i])
-      return false;
-  return true;
-}
-
-/*---------------------------------------------------------------------------------------*/
-
-template<size_t N, class T, bool B>
-  std::istream& operator>>(std::istream &in, Vector<N, T, B> &v) noexcept
+  std::istream& operator>>(std::istream &in, Vector<N, T, B> &v)
 {
   char c;
   bool in_brackets = true;
   while (in.get(c) && c != '(')
-    if (std::isdigit(c))
+    if (std::isdigit(c) || c == '-' || c == '+')
     {
       in.putback(c);
       in_brackets = false;
@@ -232,7 +217,7 @@ template<size_t N, class T, bool B>
   for (size_t i = 0; i < N; ++i)
   {
     while (in.get(c) && c != ',')
-      if (std::isdigit(c))
+      if (std::isdigit(c) || c == '-' || c == '+')
       {
         in.putback(c);
         break;
@@ -253,12 +238,12 @@ template<size_t N, class T, bool B>
 /*---------------------------------------------------------------------------------------*/
 
 template<size_t N, class T, bool B>
-  std::ostream& operator<<(std::ostream &out, const Vector<N, T, B> &v) noexcept
+  std::ostream& operator<<(std::ostream &out, const Vector<N, T, B> &v)
 {
   const std::locale &loc = out.getloc();
   bool use_brackets =
-    std::has_facet<IOMode<Vectors>>(loc)?
-      std::use_facet<IOMode<Vectors>>(loc).use_brackets() : true;
+    std::has_facet<IOMode<VectorManip>>(loc)?
+      std::use_facet<IOMode<VectorManip>>(loc).use_brackets() : true;
 
   out << (use_brackets? "(" : "") << v[0];
 
@@ -322,6 +307,106 @@ template<class T>
 template<class T> constexpr auto operator~(const Vector<2, T> &v) noexcept
 {
   return Vector<2, T>(-v[1], v[0]);
+}
+
+/*---------------------------------------------------------------------------------------*/
+/*--------------------------------------- tests -----------------------------------------*/
+/*---------------------------------------------------------------------------------------*/
+
+namespace Vectors::tests
+{
+  using V2d = Vector<2>;
+  using V3d = Vector<3>;
+  using V2i = Vector<2, int>;
+  using V3i = Vector<3, int>;
+
+  // init
+  constexpr V2i x(4, -3), y(3, 4);
+  constexpr V3i v, v1(1), v2(2, 3, 4), v3(v2);
+
+  // access
+  static_assert((v1[0] == 1) && (v1[1] == 1) && (v1[2] == 1), "single init failed");
+  static_assert((v2[0] == 2) && (v2[1] == 3) && (v2[2] == 4), "full init failed");
+  static_assert((v3[0] == 2) && (v3[1] == 3) && (v3[2] == 4), "full init failed");
+
+  // indexes
+  static_assert(x[V2i::X] == 4, "X index failed");
+  static_assert(x[V2i::Y] == -3, "Y index failed");
+  static_assert(x[V2i::Z] == -3, "Z index failed"); // meh!
+
+  static_assert(v3[V3i::X] == 2, "X index failed");
+  static_assert(v3[V3i::Y] == 3, "Y index failed");
+  static_assert(v3[V3i::Z] == 4, "Z index failed");
+
+  // conversion
+  constexpr V2d xd = V2d(x);
+  static_assert(Utils::fp_equal(xd[0], 4.) && Utils::fp_equal(xd[1], -3.), "explicit conversion i->d failed");
+
+  constexpr V2i xi = V2i(xd);
+  static_assert((xi[0] == 4) && (xi[1] == -3), "explicit conversion d->i failed");
+
+  // ops
+  constexpr V3i v4(2);
+  static_assert(v == v, "v == v failed");
+  static_assert(v != v1, "v != v failed");
+  static_assert(v1*2 == V3i(2), "v * a failed");
+  static_assert(3*v1 == V3i(3), "a * v failed");
+  static_assert(v4/2 == V3i(1), "v / a failed");
+  static_assert(v1 + v3 == V3i(3, 4, 5), "v + v failed");
+  static_assert(v3 - v1 == V3i(1, 2, 3), "v - v failed");
+  static_assert(v1 * v3 == 9, "v * v failed");
+  static_assert(x % y == 25, "v % v failed in 2D");
+  static_assert(v1 % v2 == V3i(1, -2, 1), "v % v failed in 3D");
+  static_assert(~x == y, "~v failed in 2D");
+
+  // methods
+  static_assert(sqs(-y) == 25, "sqs failed");
+  static_assert(sqs(y) == sqs(-y), "sqs failed");
+  static_assert(fabs(-y) == 5, "abs failed");
+  static_assert(fabs(x) == fabs(-x), "abs failed");
+
+  constexpr V2d vd(3, 4);
+  static_assert(Utils::fp_equal(sqs(vd), 25.), "sqs failed");
+  static_assert(Utils::fp_equal(fabs(vd), 5.), "abs failed");
+
+  constexpr V2d ex(1, 0), ey(0, 1);
+  static_assert(Utils::fp_equal(cos(ex, ex), 1.), "cos failed");
+  static_assert(Utils::fp_equal(cos(ex, ey), 0.), "cos failed");
+  static_assert(Utils::fp_equal(sin(ey, ey), 0.), "sin failed");
+  static_assert(Utils::fp_equal(sin(ey, ex), 1.), "sin failed");
+
+  static_assert(Utils::fp_equal(cos(vd, ey), .8), "cos failed");
+  static_assert(Utils::fp_equal(sin(vd, ey), .6), "sin failed");
+  static_assert(Utils::fp_equal(cos(vd, ex), .6), "cos failed");
+  static_assert(Utils::fp_equal(sin(vd, ex), .8), "sin failed");
+
+  constexpr Vector<2, float> vf(3, 4);
+  static_assert(Utils::fp_equal(sqs(vf), 25.f), "sqs failed");
+  static_assert(Utils::fp_equal(fabs(vf), 5.f), "abs failed");
+
+  constexpr Vector<2, long> vl(3, 4);
+  static_assert(sqs(vl) == 25, "sqs failed");
+  static_assert(fabs(vl) == 5, "abs failed");
+
+  // vector's properties
+  constexpr V3i z(0), a(1, 2, 3), b(4, 5, 6), c(7, 8, 9);
+  static_assert(a + z == a, "v + 0 failed");
+  static_assert(a + b == b + a, "v + v commutative failed");
+  static_assert((a + b) + c == a + (b + c), "v + v associative failed");
+
+  static_assert(a * b == b * a, "v * v commutative failed");
+  static_assert((2*a) * b == 2*(a * b), "v * v distributive failed");
+  static_assert((a + b) * c == a * c + b * c, "v * v associative failed");
+
+  static_assert(x % x == 0, "v % v failed");
+  static_assert(a % a == z, "v % v failed");
+  static_assert(a % b == -(b % a), "v % v anticommutative failed");
+  static_assert(x % y == -(y % x), "v % v anticommutative failed");
+  static_assert(a % (b + c) == a % b + a % c, "v % v distributive failed");
+  static_assert((2*a) % b == 2*(a % b), "v % v associative failed");
+  static_assert((a % b) * c ==  a * (b % c), "Jacobi's identity failed");
+  static_assert(a % (b % c) + b % (c % a) + c % (a % b) == z, "triple product failed");
+  static_assert(a % (b % c) == b * (a * c) - c * (a * b), "Lagrange's identity failed");
 }
 
 /*---------------------------------------------------------------------------------------*/
@@ -539,7 +624,7 @@ template<class T> constexpr auto operator~(const Vector<2, T> &v) noexcept
 */
 
 /*!
-  \fn std::istream& operator>>(std::istream &in, Vector &v) noexcept
+  \fn std::istream& operator>>(std::istream &in, Vector &v)
   \brief Read a vector from input stream.
   \param in Input stream from which tensor is read.
   \param v Vector where read object will be stored.
@@ -553,7 +638,7 @@ template<class T> constexpr auto operator~(const Vector<2, T> &v) noexcept
 */
 
 /*!
-  \fn std::ostream& operator<<(std::ostream &out, const Vector &v) noexcept
+  \fn std::ostream& operator<<(std::ostream &out, const Vector &v)
   \brief Write a vector to output stream.
   \param out Output stream where tensor is written.
   \param v Vector which will be written to the output stream.

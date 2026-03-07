@@ -4,7 +4,7 @@
 /*!
   \file Tensor.h
   \author gennadiy
-  \brief Tensor of rank 2 with arbitrary type definition and documentation.
+  \brief Tensor of rank 2 with arbitrary type, definition, documentation and tests.
 */
 
 #include "Vector.h"
@@ -14,9 +14,7 @@ template<size_t N, class T = double> class Tensor
 {
   T data[N][N] = {};
   static_assert(N != 0, "Tensor of zero size is meaningless.");
-  static_assert(
-      std::is_default_constructible_v<T>,
-      "Components must be default constructible");
+  static_assert(std::is_default_constructible_v<T>, "Components must be default constructible");
 
 public:
   // QTraits
@@ -49,6 +47,9 @@ public:
   constexpr Tensor& operator-=(const Tensor &A) noexcept;
   constexpr Tensor& operator*=(const Tensor &A) noexcept;
   constexpr Tensor& operator/=(const Tensor &A) noexcept { return *this *= A.invert(); }
+
+  // comparison ops
+  constexpr bool operator==(const Tensor &) const noexcept = default;
 
   // other useful ops
   constexpr T det() const noexcept;
@@ -97,23 +98,15 @@ template<size_t N, class T>
   constexpr auto
     operator/(Tensor<N, T> A, const Tensor<N, T> &B) noexcept { A /= B; return A; }
 
-// equality ops
-template<size_t N, class T>
-  constexpr bool operator==(const Tensor<N, T> &A, const Tensor<N, T> &B) noexcept;
-
-template<size_t N, class T>
-  constexpr bool
-    operator!=(const Tensor<N, T> &A, const Tensor<N, T> &B) noexcept { return !(A == B); }
-
 // io ops
 // TODO: error-handling: throw an exception in case of unexpected symbols, ...
-class Tensors : public Manipulators<Tensors> {};
+class TensorManip : public Manipulators<TensorManip> {};
 
 template<size_t N, class T>
-  std::istream& operator>>(std::istream &in, Tensor<N, T> &A) noexcept;
+  std::istream& operator>>(std::istream &in, Tensor<N, T> &A);
 
 template<size_t N, class T>
-  std::ostream& operator<<(std::ostream &out, const Tensor<N, T> &A) noexcept;
+  std::ostream& operator<<(std::ostream &out, const Tensor<N, T> &A);
 
 // ops with vectors
 template<size_t N, class T>
@@ -196,6 +189,7 @@ template<size_t N, class T>
   for (size_t i = 0; i < N; ++i)
     for (size_t j = 0; j < N; ++j)
       data[i][j] = static_cast<T>(t[i][j]);
+  return *this;
 }
 
 /*---------------------------------------------------------------------------------------*/
@@ -284,6 +278,11 @@ template<size_t N, class T> constexpr T Tensor<N, T>::trace() const noexcept
 
 template<size_t N, class T> constexpr Tensor<N, T> Tensor<N, T>::invert() const noexcept
 {
+  // TODO: possible issues:
+  // 1. exact equality check (d == 0) is unreliable for floating-point types;
+  //    consider using a tolerance-based comparison or std::abs(d) < epsilon
+  // 2. silently returns zero tensor on singular matrix, which may cause subtle bugs;
+  //    consider throwing an exception or returning std::optional<Tensor>
   T d = det();
   if (d == static_cast<T>(0))
     return Tensor<N, T>(0); // inverse matrix doesn't exist, return 0
@@ -341,20 +340,8 @@ template<size_t N, class T>
 
 /*---------------------------------------------------------------------------------------*/
 
-template<size_t N, class T>
-  constexpr bool operator==(const Tensor<N, T> &A, const Tensor<N, T> &B) noexcept
-{
-  for (size_t i = 0; i < N; ++i)
-    for (size_t j = 0; j < N; ++j)
-      if (A[i][j] != B[i][j])
-        return false;
-  return true;
-}
-
-/*---------------------------------------------------------------------------------------*/
-
 template<size_t N, class U>
-  std::istream& operator>>(std::istream &in, Tensor<N, U> &A) noexcept
+  std::istream& operator>>(std::istream &in, Tensor<N, U> &A)
 {
   char c;
   bool in_brackets = true;
@@ -370,7 +357,7 @@ template<size_t N, class U>
     for (size_t j = 0; j < N; ++j)
     {
       while (in.get(c) && c != ',')
-        if (std::isdigit(c))
+        if (std::isdigit(c) || c == '-' || c == '+')
         {
           in.putback(c);
           break;
@@ -379,7 +366,7 @@ template<size_t N, class U>
     }
 
   while (in_brackets && in.get(c) && c != ']')
-    if (std::isdigit(c))
+    if (std::isdigit(c) || c == '-' || c == '+')
     {
       in.putback(c);
       break;
@@ -391,12 +378,12 @@ template<size_t N, class U>
 /*---------------------------------------------------------------------------------------*/
 
 template<size_t N, class U>
-  std::ostream& operator<<(std::ostream &out, const Tensor<N, U> &A) noexcept
+  std::ostream& operator<<(std::ostream &out, const Tensor<N, U> &A)
 {
   const std::locale &loc = out.getloc();
   bool use_brackets =
-    std::has_facet<IOMode<Tensors>>(loc)?
-      std::use_facet<IOMode<Tensors>>(loc).use_brackets() : true;
+    std::has_facet<IOMode<TensorManip>>(loc)?
+      std::use_facet<IOMode<TensorManip>>(loc).use_brackets() : true;
 
   out << (use_brackets? "[" : "") << A[0][0];
   for (size_t j = 1; j < N; ++j)
@@ -533,6 +520,95 @@ template<size_t N, class T> template<size_t I, class, class>
   for (size_t i = 0; i < N; ++i)
     for (size_t j = 0; j < N; ++j)
       data[i][j] = arr[i*N + j];
+}
+
+namespace Tensors::tests
+{
+  using T2d = Tensor<2>;
+  using T2i = Tensor<2, int>;
+  using T3i = Tensor<3, int>;
+
+  using V2i = Vector<2, int>;
+  using V3i = Vector<3, int>;
+
+  // init & access
+  constexpr T2i Z(0), E(1), t1(1, 2), t2(3, 4, 5, 6);
+  static_assert((Z[0][0] == 0) && (Z[0][1] == 0) && (Z[1][0] == 0) && (Z[1][1] == 0), "default init failed");
+  static_assert((E[0][0] == 1) && (E[0][1] == 0) && (E[1][0] == 0) && (E[1][1] == 1), "single init failed");
+  static_assert((t1[0][0] == 1) && (t1[0][1] == 0) && (t1[1][0] == 0) && (t1[1][1] == 2), "diagonal init failed");
+  static_assert((t2[0][0] == 3) && (t2[0][1] == 4) && (t2[1][0] == 5) && (t2[1][1] == 6), "full init failed");
+
+  // conversion
+  constexpr T2d d(1., 2., 3., 4.);
+  constexpr T2i m = T2i(d);
+  static_assert((m[0][0] == 1) && (m[0][1] == 2) && (m[1][0] == 3) && (m[1][1] == 4), "conversion d -> i failed");
+
+  // ops
+  static_assert(Z == Z, "t == t failed");
+  static_assert(Z != E, "t != t failed");
+
+  static_assert(Z + Z == Z, "Z + Z failed");
+  static_assert(Z + t1 == t1, "Z + t failed");
+  static_assert(t1 + Z == t1, "t + Z failed");
+  static_assert(t1 + t1 == T2i(2, 4), "t + t failed");
+  static_assert(t1 + t2 == T2i(4, 4, 5, 8), "t1 + t2 failed");
+
+  static_assert(t2 - t2 == Z, "t - t failed");
+  static_assert(t2 - Z == t2, "t - Z failed");
+  static_assert(Z - t2 == -t2, "Z - t failed");
+  static_assert(t2 - t1 == T2i(2, 4, 5, 4), "t2 - t1 failed");
+
+  static_assert(Z * t2 == Z, "Z * t failed");
+  static_assert(t2 * Z == Z, "t * Z failed");
+
+  static_assert(E * t2 == t2, "E * t failed");
+  static_assert(t2 * E == t2, "t * E failed");
+
+  static_assert(t1 * t2 == T2i(3, 4, 10, 12), "t * t failed");
+  static_assert(t2 * t1 == T2i(3, 8, 5, 12), "t * t failed");
+
+  constexpr T2i t3(2);
+  static_assert(E * 2 == T2i(2), "t * a failed");
+  static_assert(t3 / 2 == T2i(1), "t / a failed");
+
+  // vector ops
+  constexpr V2i z(0), v(2, 3);
+  static_assert(t2 * z == z, "t * z failed");
+  static_assert(z * t2 == z, "z * t failed");
+  static_assert(E * v == v, "E * v failed");
+  static_assert(v * E == v, "v * E failed");
+  static_assert(v * t2 == V2i(21, 26), "v * t failed");
+  static_assert(t2 * v == V2i(18, 28), "t * v failed");
+  static_assert((v ^ v) == T2i(4, 6, 6, 9), "v ^ v failed");
+
+  // 2D vector ops
+  static_assert(Z % v == V2i(0), "Z % v failed in 2D");
+  static_assert(t2 % V2i(0) == V2i(0), "T % z failed in 2D");
+  static_assert(t2 % v == V2i(1, 3), "t % v failed in 2D");
+  static_assert(v % t3 == ~t3 % (-v), "v % t failed in 2D");
+
+  // 3D vector ops
+  constexpr T3i T(1, 2, 3, 4, 5, 6, 7, 8, 9);
+  constexpr V3i zz(0), v1(1, 2, 3), v2(4, 5, 6);
+  static_assert(~v1 * v2 == v1 % v2, "~v failed in 3D");
+  static_assert(T3i(0) % v1 == T3i(0), "Z % v failed in 3D");
+  static_assert(T % zz == T3i(0), "t % z failed in 3D");
+  static_assert(T % v1 == T3i(0, 0, 0, 3, -6, 3, 6, -12, 6), "t % v failed in 3D");
+  static_assert(v1 % T == ~(~T % (-v1)), "v % t failed in 3D");
+
+  // other methods
+  static_assert(E.det() == 1, "|E| failed");
+  static_assert(Z.det() == 0, "|Z| failed ");
+  static_assert(t1.det() == 2, "|t| failed");
+  static_assert(t1.trace() == 3, "tr(t) failed");
+  static_assert(E.invert() == E, "E^-1 failed");
+  static_assert(E == ~E, "E^T failed");
+
+  constexpr T2i t(2, 1, 3, 2);
+  static_assert(~t == T2i(2, 3, 1, 2), "t^T failed");
+  static_assert(t.invert() == T2i(2, -1, -3, 2), "t^-1 failed");
+  static_assert(t.invert() * t == E, "t^-1 * t failed");
+  static_assert(t * t.invert() == E, "t * t^-1 failed");
 }
 
 /*---------------------------------------------------------------------------------------*/
@@ -789,7 +865,7 @@ template<size_t N, class T> template<size_t I, class, class>
 */
 
 /*!
-  \fn std::istream& operator>>(std::istream &in, Tensor &A) noexcept
+  \fn std::istream& operator>>(std::istream &in, Tensor &A)
   \brief Read a tensor from input stream.
   \param in Input stream from which tensor is read.
   \param A Tensor where read object will be stored.
@@ -803,7 +879,7 @@ template<size_t N, class T> template<size_t I, class, class>
 */
 
 /*!
-  \fn std::ostream& operator<<(std::ostream &out, const Tensor &A) noexcept
+  \fn std::ostream& operator<<(std::ostream &out, const Tensor &A)
   \brief Write a tensor to output stream.
   \param out Output stream where tensor is written.
   \param A Tensor which will be written to the output stream.

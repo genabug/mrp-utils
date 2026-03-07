@@ -25,8 +25,8 @@ namespace Quantities
 
   template<Traits... Qs> class QState
   {
-    static_assert(sizeof...(Qs) > 0, "empty state is useless"); // really?
-    // TODO: static_assert on traits uniqueness
+    static_assert(sizeof...(Qs) > 0, "state with zero traits is not allowed"); // why?
+    static_assert(details::are_unique<Qs...>, "traits must be unique in a state");
     std::tuple<typename Qs::type...> data = {};
 
   public:
@@ -58,14 +58,20 @@ namespace Quantities
     // access by index (mainly to implement basic ops, see details)
     template<size_t I> requires(I < size) constexpr auto& get() & noexcept { return std::get<I>(data); }
     template<size_t I> requires(I < size) constexpr auto& get() const & noexcept { return std::get<I>(data); }
+    template<size_t I> requires(I < size) constexpr auto&& get() && noexcept { return std::get<I>(std::move(data)); }
+    template<size_t I> requires(I < size) constexpr auto&& get() const && noexcept { return std::get<I>(std::move(data)); }
 
     // access by type-name (for generic code)
     template<Traits Q> requires(has<Q>) constexpr auto& get() & noexcept { return get<index_of<Q>>(); };
     template<Traits Q> requires(has<Q>) constexpr auto& get() const & noexcept { return get<index_of<Q>>(); };
+    template<Traits Q> requires(has<Q>) constexpr auto&& get() && noexcept { return std::move(*this).template get<index_of<Q>>(); };
+    template<Traits Q> requires(has<Q>) constexpr auto&& get() const && noexcept { return std::move(*this).template get<index_of<Q>>(); };
 
     // index access by variable (for end-user code)
     template<Traits Q> constexpr auto& operator[](Q) & noexcept { return get<Q>(); }
     template<Traits Q> constexpr auto& operator[](Q) const & noexcept { return get<Q>(); }
+    template<Traits Q> constexpr auto&& operator[](Q) && noexcept { return std::move(*this).template get<Q>(); }
+    template<Traits Q> constexpr auto&& operator[](Q) const && noexcept { return std::move(*this).template get<Q>(); }
 
     // TODO: member access, see https://stackoverflow.com/q/54617101/8802124
   }; // class QState<Qs...>
@@ -92,7 +98,7 @@ namespace Quantities
     if constexpr (slice_sz == 0)
       return s;
     else if constexpr (slice_sz == 1)
-      return s.template get<0>();
+      return s.template get<Qs...>();
     else
       return QState<Qs...>(s);
   }
@@ -263,6 +269,17 @@ namespace Quantities::tests
   constexpr t1 ti;
   constexpr t2 td;
 
+  using S = QState<t1, t2>;
+  using t3 = QTraits<float, 3, "tf">;
+  static_assert(S::has<t1>);
+  static_assert(S::has<t2>);
+  static_assert(!S::has<t3>);
+  static_assert(S::index_of<t1> == 0);
+  static_assert(S::index_of<t2> == 1);
+  static_assert(S::index_of<t3> == 2);
+  static_assert(std::is_same_v<t1, S::type_of<0>>);
+  static_assert(std::is_same_v<t2, S::type_of<1>>);
+  
   constexpr QState<t1, t2> s(1, 2);
   static_assert(s.get<0>() == 1 && s.get<1>() == 2);
   static_assert(s.get<t1>() == 1 && s.get<t2>() == 2);

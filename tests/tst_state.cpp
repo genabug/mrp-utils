@@ -114,6 +114,74 @@ TEST(State, assign_state_with_subset_of_comps)
   EXPECT_EQ(s1[td], s2[td]);
 }
 
+TEST(State, assign_sum_with_same_order_of_comps)
+{
+  QState<ti_t, td_t> s1(1, 2), s2(3, 4);
+  s1 += s2;
+  EXPECT_EQ(s1[ti], 4);
+  EXPECT_EQ(s1[td], 6);
+}
+
+TEST(State, assign_sum_with_different_order_of_comps)
+{
+  QState<ti_t, td_t> s1(1, 2);
+  QState<td_t, ti_t> s2(3, 4);
+  s1 += s2;
+  EXPECT_EQ(s1[ti], 5);
+  EXPECT_EQ(s1[td], 5);
+}
+
+TEST(State, assign_sum_with_subset_of_comps)
+{
+  QState<ti_t, td_t> s1(1, 2);
+  QState<ts_t, td_t, ti_t> s2("str", 3, 4);
+  s1 += s2;
+  EXPECT_EQ(s1[ti], 5);
+  EXPECT_EQ(s1[td], 5);
+}
+
+TEST(State, assign_sub_with_same_order_of_comps)
+{
+  QState<ti_t, td_t> s1(3, 4), s2(1, 2);
+  s1 -= s2;
+  EXPECT_EQ(s1[ti], 2);
+  EXPECT_EQ(s1[td], 2);
+}
+
+TEST(State, assign_sub_with_different_order_of_comps)
+{
+  QState<ti_t, td_t> s1(3, 4);
+  QState<td_t, ti_t> s2(1, 2);
+  s1 -= s2;
+  EXPECT_EQ(s1[ti], 1);
+  EXPECT_EQ(s1[td], 3);
+}
+
+TEST(State, assign_sub_with_subset_of_comps)
+{
+  QState<ti_t, td_t> s1(3, 4);
+  QState<ts_t, td_t, ti_t> s2("str", 1, 2);
+  s1 -= s2;
+  EXPECT_EQ(s1[ti], 1);
+  EXPECT_EQ(s1[td], 3);
+}
+
+TEST(State, assign_mult_state_by_coeff)
+{
+  QState<ti_t, td_t> s(1, 2);
+  s *= 2;
+  EXPECT_EQ(s[ti], 2);
+  EXPECT_EQ(s[td], 4);
+}
+
+TEST(State, assign_div_state_by_coeff)
+{
+  QState<ti_t, td_t> s(4, 6);
+  s /= 2;
+  EXPECT_EQ(s[ti], 2);
+  EXPECT_EQ(s[td], 3);
+}
+
 TEST(State, compare_states_with_same_order_of_comps)
 {
   QState<ti_t, td_t, ts_t> s(1, 2, "foo");
@@ -261,9 +329,12 @@ TEST(State, get_function_full_state)
 TEST(State, get_function_one_comp)
 {
   int i = 1;
-  QState<ti_t, td_t, ts_t> s(i, 2, "foo");
-  auto ic = get<ti_t>(s);
-  EXPECT_EQ(ic, i);
+  double d = 2;
+  string str = "foo";
+  QState<ti_t, td_t, ts_t> s(i, d, str);
+  EXPECT_EQ(get<ti_t>(s), i);
+  EXPECT_EQ(get<td_t>(s), d);
+  EXPECT_EQ(get<ts_t>(s), str);
 }
 
 TEST(State, get_function_slice)
@@ -271,6 +342,7 @@ TEST(State, get_function_slice)
   int i = 1;
   double d = 2;
   QState<ti_t, td_t, ts_t> s(i, d, "foo");
-  auto ss = get<ti_t, td_t>(s);
-  EXPECT_EQ(ss, s);
+  EXPECT_EQ((get<ti_t, td_t>(s)), s);
+  EXPECT_EQ((get<ti_t, ts_t>(s)), s);
+  EXPECT_EQ((get<ts_t, td_t>(s)), s);
 }

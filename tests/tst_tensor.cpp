@@ -188,7 +188,7 @@ TEST(Tensor, io_with_brackets_explicit_mode_ok)
   std::stringstream ss;
   T2i t1(1, 2, 3, 4), t2;
 
-  ss << Tensors::inBrackets << t1;
+  ss << TensorManip::inBrackets << t1;
   EXPECT_EQ(ss.str(), "[1, 2, 3, 4]");
   ss >> t2;
   EXPECT_EQ(t1, t2);
@@ -199,7 +199,7 @@ TEST(Tensor, io_with_brackets_non_digit_chars_in_front_ok)
   std::stringstream ss;
   T2i t1(1, 2, 3, 4), t2;
 
-  ss << Tensors::inBrackets << " ,!([ " << t1;
+  ss << TensorManip::inBrackets << " ,!([ " << t1;
   EXPECT_EQ(ss.str(), " ,!([ [1, 2, 3, 4]");
   ss >> t2;
   EXPECT_EQ(t1, t2);
@@ -210,7 +210,7 @@ TEST(Tensor, io_with_brackets_digit_chars_in_front_error) // but currently OK
   std::stringstream ss;
   T2i t1(1, 2, 3, 4), t2;
 
-  ss << Tensors::inBrackets << " 1,!([ " << t1;
+  ss << TensorManip::inBrackets << " 1,!([ " << t1;
   EXPECT_EQ(ss.str(), " 1,!([ [1, 2, 3, 4]");
   ss >> t2;
   EXPECT_NE(t1, t2);
@@ -223,7 +223,7 @@ TEST(Tensor, io_with_brackets_two_tensors_no_delimeter_ok)
   std::stringstream ss;
   T2i t1(1, 2, 3, 4), t2(5, 6, 7, 8);
 
-  ss << Tensors::inBrackets << t1 << t2;
+  ss << TensorManip::inBrackets << t1 << t2;
   EXPECT_EQ(ss.str(), "[1, 2, 3, 4][5, 6, 7, 8]");
 
   T2i t1r, t2r;
@@ -237,7 +237,7 @@ TEST(Tensor, io_with_brackets_two_tensors_non_digit_delim_ok)
   std::stringstream ss;
   T2i t1(1, 2, 3, 4), t2(5, 6, 7, 8);
 
-  ss << Tensors::inBrackets << t1 << "  ,;!ss " << t2;
+  ss << TensorManip::inBrackets << t1 << "  ,;!ss " << t2;
   EXPECT_EQ(ss.str(), "[1, 2, 3, 4]  ,;!ss [5, 6, 7, 8]");
 
   T2i t1r, t2r;
@@ -251,7 +251,7 @@ TEST(Tensor, io_with_bare_comps_explicit_mode_ok)
   std::stringstream ss;
   T2i t1(1, 2, 3, 4), t2;
 
-  ss << Tensors::bareComponents << t1;
+  ss << TensorManip::bareComponents << t1;
   EXPECT_EQ(ss.str(), "1 2 3 4");
   ss >> t2;
   EXPECT_EQ(t1, t2);
@@ -262,7 +262,7 @@ TEST(Tensor, io_with_bare_comps_non_digit_chars_in_front_ok)
   std::stringstream ss;
   T2i t1(1, 2, 3, 4), t2;
 
-  ss << Tensors::bareComponents << " ,!([ " << t1;
+  ss << TensorManip::bareComponents << " ,!([ " << t1;
   EXPECT_EQ(ss.str(), " ,!([ 1 2 3 4");
   ss >> t2;
   EXPECT_EQ(t1, t2);
@@ -273,7 +273,7 @@ TEST(Tensor, io_with_bare_comps_digit_chars_in_front_error) // but currently OK
   std::stringstream ss;
   T2i t1(1, 2, 3, 4), t2;
 
-  ss << Tensors::bareComponents << " 1,!([ " << t1;
+  ss << TensorManip::bareComponents << " 1,!([ " << t1;
   EXPECT_EQ(ss.str(), " 1,!([ 1 2 3 4");
   ss >> t2;
   EXPECT_NE(t1, t2);
@@ -286,7 +286,7 @@ TEST(Tensor, io_with_bare_comps_two_tensors_no_delimeter_error) // but currently
   std::stringstream ss;
   T2i t1(1, 2, 3, 4), t2(5, 6, 7, 8);
 
-  ss << Tensors::bareComponents << t1 << t2;
+  ss << TensorManip::bareComponents << t1 << t2;
   EXPECT_EQ(ss.str(), "1 2 3 45 6 7 8");
 
   T2i t1r, t2r;
@@ -303,13 +303,24 @@ TEST(Tensor, io_with_bare_comps_two_tensors_non_digit_delim_ok)
   std::stringstream ss;
   T2i t1(1, 2, 3, 4), t2(5, 6, 7, 8);
 
-  ss << Tensors::bareComponents << t1 << "  ,;!ss " << t2;
+  ss << TensorManip::bareComponents << t1 << "  ,;!ss " << t2;
   EXPECT_EQ(ss.str(), "1 2 3 4  ,;!ss 5 6 7 8");
 
   T2i t1r, t2r;
   ss >> t1r >> t2r;
   EXPECT_EQ(t1, t1r);
   EXPECT_EQ(t2, t2r);
+}
+
+TEST(Tensor, io_with_brackets_signed_components_ok)
+{
+  std::stringstream ss;
+  T2i t1(-1, +2, -3, +4), t2;
+
+  ss << TensorManip::inBrackets << t1;
+  EXPECT_EQ(ss.str(), "[-1, 2, -3, 4]");
+  ss >> t2;
+  EXPECT_EQ(t1, t2);
 }
 
 TEST(Tensor, boolean_ops)
