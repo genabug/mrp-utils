@@ -81,4 +81,6 @@ cd build && ctest
 - Get rid of mrp prefix
 - Materials with deducing this 8) (c++23)
 - review Vector and Tensor tests, it's a mess
+- IOMode for both Vector and Tensor is questionable
+- GHA to run the tests on PRs
 - ...

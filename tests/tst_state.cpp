@@ -182,7 +182,6 @@ TEST(State, assign_div_state_by_coeff)
   EXPECT_EQ(s[td], 3);
 }
 
-
 TEST(State, compare_states_with_same_order_of_comps)
 {
   QState<ti_t, td_t, ts_t> s(1, 2, "foo");
@@ -343,6 +342,7 @@ TEST(State, get_function_slice)
   int i = 1;
   double d = 2;
   QState<ti_t, td_t, ts_t> s(i, d, "foo");
-  auto ss = get<ti_t, td_t>(s);
-  EXPECT_EQ(ss, s);
+  EXPECT_EQ((get<ti_t, td_t>(s)), s);
+  EXPECT_EQ((get<ti_t, ts_t>(s)), s);
+  EXPECT_EQ((get<ts_t, td_t>(s)), s);
 }
