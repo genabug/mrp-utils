@@ -94,8 +94,6 @@ template<size_t N, class T, bool B>
 
 // IO ops
 // TODO: should throw an exception in case of unexpected format, symbols, ...
-class VectorManip : public Manipulators<VectorManip> {};
-
 template<size_t N, class T, bool B>
   std::istream& operator>>(std::istream &in, Vector<N, T, B> &v);
 
@@ -240,17 +238,14 @@ template<size_t N, class T, bool B>
 template<size_t N, class T, bool B>
   std::ostream& operator<<(std::ostream &out, const Vector<N, T, B> &v)
 {
-  const std::locale &loc = out.getloc();
-  bool use_brackets =
-    std::has_facet<IOMode<VectorManip>>(loc)?
-      std::use_facet<IOMode<VectorManip>>(loc).use_brackets() : true;
+  bool brackets = IO::use_brackets(out);
 
-  out << (use_brackets? "(" : "") << v[0];
+  out << (brackets? "(" : "") << v[0];
 
   for (size_t i = 1; i < N; ++i)
-    out << (use_brackets? ", " : " ") << v[i];
+    out << (brackets? ", " : " ") << v[i];
 
-  return out << (use_brackets? ")" : "");
+  return out << (brackets? ")" : "");
 }
 
 /*---------------------------------------------------------------------------------------*/
@@ -358,6 +353,7 @@ namespace Vectors::tests
   static_assert(x % y == 25, "v % v failed in 2D");
   static_assert(v1 % v2 == V3i(1, -2, 1), "v % v failed in 3D");
   static_assert(~x == y, "~v failed in 2D");
+  static_assert(~~~~x == x, "full rotation failed in 2D");
 
   // methods
   static_assert(sqs(-y) == 25, "sqs failed");
@@ -647,7 +643,7 @@ namespace Vectors::tests
 
   Vector may be represented in two formats -- w/ and w/o brackets, e.g.
   "(1, 2, 3)" and "1 2 3" both represent the same vector.
-  You can choose the format using special manipulators inBrackets() and bareComponents(),
+  You can choose the format using special manipulators inBrackets() and bareComps(),
   the default is inBrackets. The second one may be useful for e.g. backup purposes.
 */
 
