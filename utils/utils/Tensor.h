@@ -100,8 +100,6 @@ template<size_t N, class T>
 
 // io ops
 // TODO: error-handling: throw an exception in case of unexpected symbols, ...
-class TensorManip : public Manipulators<TensorManip> {};
-
 template<size_t N, class T>
   std::istream& operator>>(std::istream &in, Tensor<N, T> &A);
 
@@ -380,20 +378,17 @@ template<size_t N, class U>
 template<size_t N, class U>
   std::ostream& operator<<(std::ostream &out, const Tensor<N, U> &A)
 {
-  const std::locale &loc = out.getloc();
-  bool use_brackets =
-    std::has_facet<IOMode<TensorManip>>(loc)?
-      std::use_facet<IOMode<TensorManip>>(loc).use_brackets() : true;
+  bool brackets = IO::use_brackets(out);
 
-  out << (use_brackets? "[" : "") << A[0][0];
+  out << (brackets? "[" : "") << A[0][0];
   for (size_t j = 1; j < N; ++j)
-    out << (use_brackets? ", " : " ") << A[0][j];
+    out << (brackets? ", " : " ") << A[0][j];
 
   for (size_t i = 1; i < N; ++i)
     for (size_t j = 0; j < N; ++j)
-      out << (use_brackets? ", " : " ") << A[i][j];
+      out << (brackets? ", " : " ") << A[i][j];
 
-  return out << (use_brackets? "]" : "");
+  return out << (brackets? "]" : "");
 }
 
 /*---------------------------------------------------------------------------------------*/
@@ -888,7 +883,7 @@ namespace Tensors::tests
 
   Tensor may be represented in two formats -- w/ and w/o brackets, e.g.
   "[1, 2, 3, 4]" and "1 2 3 4" both represent the same tensor.
-  You can choose the format using special manipulators inBrackets() and bareComponents(),
+  You can choose the format using special manipulators inBrackets() and bareComps(),
   the default is inBrackets. The second one may be useful for e.g. backup purposes.
 */
 
