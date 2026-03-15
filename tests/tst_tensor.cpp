@@ -1,6 +1,8 @@
-#include "utils/Tensor.h"
+#include "math/Tensor.h"
 #include <gtest/gtest.h>
 #include <sstream>
+
+using namespace Math;
 
 using T2d = Tensor<2>;
 using T3d = Tensor<3>;

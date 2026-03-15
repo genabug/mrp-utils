@@ -8,7 +8,7 @@
 */
 
 #include "Traits.h"
-#include "details.h"
+#include "Details.h"
 
 namespace Quantities
 {
