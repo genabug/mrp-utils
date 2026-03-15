@@ -4,311 +4,308 @@
 /*!
   \file Vector.h
   \author gennadiy
-  \brief Euclidian (or not) vector of arbitrary dimension, definition, documentation and tests.
+  \brief Euclidian vector and componentwise array of arbitrary dimension, definition, documentation and tests.
 */
 
-#include "Utils.h"
 #include "IOMode.h"
+#include "details.h"
 
 #include <cctype>
 #include <cstddef>
 #include <ostream>
 #include <istream>
 
-template<size_t N, class T = double, bool is_euclidian = true> class Vector
+namespace Math
 {
-  T data[N] = {};
-  static_assert(N != 0, "Vector of zero size is meaningless.");
+  template<size_t N, class T = double, bool is_euclidian = true> class Vector
+  {
+    T data[N] = {};
+    static_assert(N != 0, "Vector of zero size is meaningless.");
+    static_assert(std::is_default_constructible_v<T>, "Components must be default constructible");
 
-  static_assert(
-    std::is_default_constructible_v<T>,
-    "Components must be default constructible");
+  public:
+    // Quantities::Traits
+    static constexpr int size = N;
 
-public:
-  // QTraits
-  static constexpr int size = N;
+  public:
+    // ctors
+    constexpr Vector() noexcept = default;
+    template<class U> constexpr explicit Vector(const U &a) noexcept;
+    template<class... Ts> requires(sizeof...(Ts) == N)
+      constexpr explicit Vector(Ts... as) noexcept : data{static_cast<T>(as)...} {}
 
-public:
-  // ctors
-  constexpr Vector() noexcept = default;
-  template<class U> constexpr explicit Vector(const U &a) noexcept;
-  template<class... Ts> requires(sizeof...(Ts) == N)
-    constexpr explicit Vector(Ts... as) noexcept : data{static_cast<T>(as)...} {}
+    // converters
+    template<class U>
+      constexpr explicit Vector(const Vector<N, U, is_euclidian> &v) noexcept;
+    template<class U>
+      constexpr Vector& operator=(const Vector<N, U, is_euclidian> &v) noexcept;
 
-  // converters
-  template<class U>
-    constexpr explicit Vector(const Vector<N, U, is_euclidian> &v) noexcept;
-  template<class U>
-    constexpr Vector& operator=(const Vector<N, U, is_euclidian> &v) noexcept;
+    // access
+    static constexpr size_t X = 0;
+    static constexpr size_t Y = (N > 1)? 1 : X;
+    static constexpr size_t Z = (N > 2)? 2 : Y;
+    static constexpr size_t dim = N;
 
-  // access
-  static constexpr size_t X = 0;
-  static constexpr size_t Y = (N > 1)? 1 : X;
-  static constexpr size_t Z = (N > 2)? 2 : Y;
-  static constexpr size_t dim = N;
+    constexpr auto operator[](size_t i) && noexcept { return data[i]; }
+    constexpr auto& operator[](size_t i) & noexcept { return data[i]; }
+    constexpr auto& operator[](size_t i) const & noexcept { return data[i]; }
 
-  constexpr T operator[](size_t i) && noexcept { return data[i]; }
-  constexpr T& operator[](size_t i) & noexcept { return data[i]; }
-  constexpr const T& operator[](size_t i) const & noexcept { return data[i]; }
+    // unary ops (NB! returns a copy!)
+    constexpr Vector operator+() const noexcept { return *this; }
+    constexpr Vector operator-() const noexcept { return static_cast<T>(-1) * (*this); }
 
-  // unary ops (NB! returns a copy!)
-  constexpr Vector operator+() const noexcept { return *this; }
-  constexpr Vector operator-() const noexcept { return static_cast<T>(-1) * (*this); }
+    // assign-ops
+    constexpr Vector& operator/=(const T &a) noexcept;
+    constexpr Vector& operator*=(const T &a) noexcept;
+    constexpr Vector& operator+=(const Vector &v) noexcept;
+    constexpr Vector& operator-=(const Vector &v) noexcept;
 
-  // assign-ops
-  constexpr Vector& operator/=(const T &a) noexcept;
-  constexpr Vector& operator*=(const T &a) noexcept;
-  constexpr Vector& operator+=(const Vector &v) noexcept;
-  constexpr Vector& operator-=(const Vector &v) noexcept;
+    // comparison ops
+    constexpr bool operator==(const Vector &) const noexcept = default;
+  }; // class Vector<N, T, is_euclidian>
 
-  // comparison ops
-  constexpr bool operator==(const Vector &) const noexcept = default;
-}; // class Vector<N, T, is_euclidian>
+  using Vector2D = Vector<2>; //! Shortcut for 2D vector in euclidian space.
+  using Vector3D = Vector<3>; //! Shortcut for 3D vector in euclidian space.
 
-using Vector2D = Vector<2>; //! Shortcut for 2D vector in euclidian space.
-using Vector3D = Vector<3>; //! Shortcut for 3D vector in euclidian space.
-
-//! Shortcut for non-euclidian vector
-//! i.e. array with componentwise arithmetic, equality and IO operations.
-template<size_t N, class T = double> using Array = Vector<N, T, false>;
+  //! Shortcut for non-euclidian vector
+  //! i.e. array with componentwise arithmetic, equality and IO operations.
+  template<size_t N, class T = double> using Array = Vector<N, T, false>;
 
 /*---------------------------------------------------------------------------------------*/
 
-// arithmetic ops
-template<size_t N, class T, bool B>
-  constexpr auto operator+(
-    Vector<N, T, B> v1, const Vector<N, T, B> &v2) noexcept { v1 += v2; return v1; }
+  // arithmetic ops
+  template<size_t N, class T, bool B>
+    constexpr auto operator+(
+      Vector<N, T, B> v1, const Vector<N, T, B> &v2) noexcept { v1 += v2; return v1; }
 
-template<size_t N, class T, bool B>
-  constexpr auto operator-(
-    Vector<N, T, B> v1, const Vector<N, T, B> &v2) noexcept { v1 -= v2; return v1; }
+  template<size_t N, class T, bool B>
+    constexpr auto operator-(
+      Vector<N, T, B> v1, const Vector<N, T, B> &v2) noexcept { v1 -= v2; return v1; }
 
-template<size_t N, class T, bool B>
-  constexpr auto operator*(const T &a, Vector<N, T, B> v) noexcept { v *= a; return v; }
+  template<size_t N, class T, bool B>
+    constexpr auto operator*(const T &a, Vector<N, T, B> v) noexcept { v *= a; return v; }
 
-template<size_t N, class T, bool B>
-  constexpr auto operator*(Vector<N, T, B> v, const T &a) noexcept { v *= a; return v; }
+  template<size_t N, class T, bool B>
+    constexpr auto operator*(Vector<N, T, B> v, const T &a) noexcept { v *= a; return v; }
 
-template<size_t N, class T, bool B>
-  constexpr auto operator/(Vector<N, T, B> v, const T &a) noexcept { v /= a; return v; }
+  template<size_t N, class T, bool B>
+    constexpr auto operator/(Vector<N, T, B> v, const T &a) noexcept { v /= a; return v; }
 
-// IO ops
-// TODO: should throw an exception in case of unexpected format, symbols, ...
-template<size_t N, class T, bool B>
-  std::istream& operator>>(std::istream &in, Vector<N, T, B> &v);
+  // IO ops
+  // TODO: should throw an exception in case of unexpected format, symbols, ...
+  template<size_t N, class T, bool B>
+    std::istream& operator>>(std::istream &in, Vector<N, T, B> &v);
 
-template<size_t N, class T, bool B>
-  std::ostream& operator<<(std::ostream &out, const Vector<N, T, B> &v);
+  template<size_t N, class T, bool B>
+    std::ostream& operator<<(std::ostream &out, const Vector<N, T, B> &v);
 
-// useful functions for euclidian vector only! note the lack of third tparam
-template<size_t N, class T>
-  constexpr auto operator*(const Vector<N, T> &v1, const Vector<N, T> &v2) noexcept;
+  // useful functions for euclidian vector only! note the lack of third tparam
+  template<size_t N, class T>
+    constexpr auto operator*(const Vector<N, T> &v1, const Vector<N, T> &v2) noexcept;
 
-template<size_t N, class T>
-  constexpr auto sqs(const Vector<N, T> &v) noexcept { return v*v; }
+  template<size_t N, class T>
+    constexpr auto sqs(const Vector<N, T> &v) noexcept { return v*v; }
 
-template<size_t N, class T>
-  constexpr auto fabs(const Vector<N, T> &v) noexcept { return Utils::sqrt(v*v); }
+  template<size_t N, class T>
+    constexpr auto fabs(const Vector<N, T> &v) noexcept { return details::sqrt(v*v); }
 
-template<size_t N, class T>
-  constexpr auto cos(const Vector<N, T> &v1, const Vector<N, T> &v2) noexcept;
+  template<size_t N, class T>
+    constexpr auto cos(const Vector<N, T> &v1, const Vector<N, T> &v2) noexcept;
 
-template<size_t N, class T>
-  constexpr auto sin(const Vector<N, T> &v1, const Vector<N, T> &v2) noexcept;
+  template<size_t N, class T>
+    constexpr auto sin(const Vector<N, T> &v1, const Vector<N, T> &v2) noexcept;
 
-template<class T>
-  constexpr auto operator%(const Vector<2, T> &v1, const Vector<2, T> &v2) noexcept;
+  template<class T>
+    constexpr auto operator%(const Vector<2, T> &v1, const Vector<2, T> &v2) noexcept;
 
-template<class T>
-  constexpr auto operator%(const Vector<3, T> &v1, const Vector<3, T> &v2) noexcept;
+  template<class T>
+    constexpr auto operator%(const Vector<3, T> &v1, const Vector<3, T> &v2) noexcept;
 
-template<class T> constexpr auto operator~(const Vector<2, T> &v) noexcept;
+  template<class T> constexpr auto operator~(const Vector<2, T> &v) noexcept;
 
 /*---------------------------------------------------------------------------------------*/
 /*------------------------------------ definition ---------------------------------------*/
 /*---------------------------------------------------------------------------------------*/
 
-template<size_t N, class T, bool B>
-  template<class U> constexpr Vector<N, T, B>::Vector(const U &a) noexcept
-{
-  for (auto &d : data)
-    d = static_cast<T>(a);
-}
+  template<size_t N, class T, bool B>
+    template<class U> constexpr Vector<N, T, B>::Vector(const U &a) noexcept
+  {
+    for (auto &d : data)
+      d = static_cast<T>(a);
+  }
 
 /*---------------------------------------------------------------------------------------*/
 
-template<size_t N, class T, bool B>
-  template<class U>
-    constexpr Vector<N, T, B>::Vector(const Vector<N, U, B> &v) noexcept
-{
-  for (size_t i = 0; i < N; ++i)
-    data[i] = static_cast<T>(v[i]);
-}
+  template<size_t N, class T, bool B>
+    template<class U>
+      constexpr Vector<N, T, B>::Vector(const Vector<N, U, B> &v) noexcept
+  {
+    for (size_t i = 0; i < N; ++i)
+      data[i] = static_cast<T>(v[i]);
+  }
 
 /*---------------------------------------------------------------------------------------*/
 
-template<size_t N, class T, bool B>
-  template<class U>
-    constexpr Vector<N, T, B>&
-      Vector<N, T, B>::operator=(const Vector<N, U, B> &v) noexcept
-{
-  for (size_t i = 0; i < N; ++i)
-    data[i] = v[i];
-  return *this;
-}
+  template<size_t N, class T, bool B>
+    template<class U>
+      constexpr Vector<N, T, B>&
+        Vector<N, T, B>::operator=(const Vector<N, U, B> &v) noexcept
+  {
+    for (size_t i = 0; i < N; ++i)
+      data[i] = v[i];
+    return *this;
+  }
 
 /*---------------------------------------------------------------------------------------*/
 
-template<size_t N, class T, bool B>
-  constexpr Vector<N, T, B>& Vector<N, T, B>::operator/=(const T &a) noexcept
-{
-  for (auto &d : data)
-    d /= a;
-  return *this;
-}
+  template<size_t N, class T, bool B>
+    constexpr Vector<N, T, B>& Vector<N, T, B>::operator/=(const T &a) noexcept
+  {
+    for (auto &d : data)
+      d /= a;
+    return *this;
+  }
 
 /*---------------------------------------------------------------------------------------*/
 
-template<size_t N, class T, bool B>
-  constexpr Vector<N, T, B>& Vector<N, T, B>::operator*=(const T &a) noexcept
-{
-  for (auto &d : data)
-    d *= a;
-  return *this;
-}
+  template<size_t N, class T, bool B>
+    constexpr Vector<N, T, B>& Vector<N, T, B>::operator*=(const T &a) noexcept
+  {
+    for (auto &d : data)
+      d *= a;
+    return *this;
+  }
 
 /*---------------------------------------------------------------------------------------*/
 
-template<size_t N, class T, bool B>
-  constexpr Vector<N, T, B>& Vector<N, T, B>::operator+=(const Vector<N, T, B> &v) noexcept
-{
-  for (size_t i = 0; i < N; ++i)
-    data[i] += v[i];
-  return *this;
-}
+  template<size_t N, class T, bool B>
+    constexpr Vector<N, T, B>& Vector<N, T, B>::operator+=(const Vector<N, T, B> &v) noexcept
+  {
+    for (size_t i = 0; i < N; ++i)
+      data[i] += v[i];
+    return *this;
+  }
 
 /*---------------------------------------------------------------------------------------*/
 
-template<size_t N, class T, bool B>
-  constexpr Vector<N, T, B>& Vector<N, T, B>::operator-=(const Vector<N, T, B> &v) noexcept
-{
-  for (size_t i = 0; i < N; ++i)
-    data[i] -= v[i];
-  return *this;
-}
+  template<size_t N, class T, bool B>
+    constexpr Vector<N, T, B>& Vector<N, T, B>::operator-=(const Vector<N, T, B> &v) noexcept
+  {
+    for (size_t i = 0; i < N; ++i)
+      data[i] -= v[i];
+    return *this;
+  }
 
 /*---------------------------------------------------------------------------------------*/
 
-template<size_t N, class T, bool B>
-  std::istream& operator>>(std::istream &in, Vector<N, T, B> &v)
-{
-  char c;
-  bool in_brackets = true;
-  while (in.get(c) && c != '(')
-    if (std::isdigit(c) || c == '-' || c == '+')
+  template<size_t N, class T, bool B>
+    std::istream& operator>>(std::istream &in, Vector<N, T, B> &v)
+  {
+    char c;
+    bool in_brackets = true;
+    while (in.get(c) && c != '(')
+      if (std::isdigit(c) || c == '-' || c == '+')
+      {
+        in.putback(c);
+        in_brackets = false;
+        break;
+      }
+
+    for (size_t i = 0; i < N; ++i)
     {
-      in.putback(c);
-      in_brackets = false;
-      break;
+      while (in.get(c) && c != ',')
+        if (std::isdigit(c) || c == '-' || c == '+')
+        {
+          in.putback(c);
+          break;
+        }
+      in >> v[i];
     }
 
-  for (size_t i = 0; i < N; ++i)
-  {
-    while (in.get(c) && c != ',')
-      if (std::isdigit(c) || c == '-' || c == '+')
+    while (in_brackets && in.get(c) && c != ')')
+      if (std::isdigit(c))
       {
         in.putback(c);
         break;
       }
-    in >> v[i];
+
+    return in;
   }
 
-  while (in_brackets && in.get(c) && c != ')')
-    if (std::isdigit(c))
-    {
-      in.putback(c);
-      break;
-    }
+/*---------------------------------------------------------------------------------------*/
 
-  return in;
-}
+  template<size_t N, class T, bool B>
+    std::ostream& operator<<(std::ostream &out, const Vector<N, T, B> &v)
+  {
+    bool brackets = IO::use_brackets(out);
+    out << (brackets? "(" : "") << v[0];
+    for (size_t i = 1; i < N; ++i)
+      out << (brackets? ", " : " ") << v[i];
+    return out << (brackets? ")" : "");
+  }
 
 /*---------------------------------------------------------------------------------------*/
 
-template<size_t N, class T, bool B>
-  std::ostream& operator<<(std::ostream &out, const Vector<N, T, B> &v)
-{
-  bool brackets = IO::use_brackets(out);
-
-  out << (brackets? "(" : "") << v[0];
-
-  for (size_t i = 1; i < N; ++i)
-    out << (brackets? ", " : " ") << v[i];
-
-  return out << (brackets? ")" : "");
-}
+  template<size_t N, class T>
+  constexpr auto operator*(const Vector<N, T> &v1, const Vector<N, T> &v2) noexcept
+  {
+    auto t = v1[0] * v2[0];
+    for (size_t i = 1; i < N; ++i)
+      t += v1[i]*v2[i];
+    return t;
+  }
 
 /*---------------------------------------------------------------------------------------*/
 
-template<size_t N, class T>
-constexpr auto operator*(const Vector<N, T> &v1, const Vector<N, T> &v2) noexcept
-{
-  auto t = v1[0] * v2[0];
-  for (size_t i = 1; i < N; ++i)
-    t += v1[i]*v2[i];
-  return t;
-}
+  template<size_t N, class T>
+    constexpr auto cos(const Vector<N, T> &v1, const Vector<N, T> &v2) noexcept
+  {
+    static_assert(std::is_arithmetic<T>::value, "Component must be of arithmetic type!");
+    return v1 * v2 / (fabs(v1) * fabs(v2));
+  }
 
 /*---------------------------------------------------------------------------------------*/
 
-template<size_t N, class T>
-  constexpr auto cos(const Vector<N, T> &v1, const Vector<N, T> &v2) noexcept
-{
-  static_assert(std::is_arithmetic<T>::value, "Component must be of arithmetic type!");
-  return v1 * v2 / (fabs(v1) * fabs(v2));
-}
+  template<size_t N, class T>
+    constexpr auto sin(const Vector<N, T> &v1, const Vector<N, T> &v2) noexcept
+  {
+    static_assert(std::is_arithmetic<T>::value, "Component must be of arithmetic type!");
+    auto x = cos(v1, v2);
+    return details::sqrt(static_cast<T>(1) - x*x);
+  }
 
 /*---------------------------------------------------------------------------------------*/
 
-template<size_t N, class T>
-  constexpr auto sin(const Vector<N, T> &v1, const Vector<N, T> &v2) noexcept
-{
-  static_assert(std::is_arithmetic<T>::value, "Component must be of arithmetic type!");
-  auto x = cos(v1, v2);
-  return Utils::sqrt(static_cast<T>(1) - x*x);
-}
+  template<class T>
+    constexpr auto operator%(const Vector<2, T> &v1, const Vector<2, T> &v2) noexcept
+  {
+    return v1[0]*v2[1] - v1[1]*v2[0];
+  }
 
 /*---------------------------------------------------------------------------------------*/
 
-template<class T>
-  constexpr auto operator%(const Vector<2, T> &v1, const Vector<2, T> &v2) noexcept
-{
-  return v1[0]*v2[1] - v1[1]*v2[0];
-}
+  template<class T>
+    constexpr auto operator%(const Vector<3, T> &v1, const Vector<3, T> &v2) noexcept
+  {
+    return Vector<3, T>(
+      v1[1]*v2[2] - v2[1]*v1[2],
+      v1[2]*v2[0] - v2[2]*v1[0],
+      v1[0]*v2[1] - v2[0]*v1[1]);
+  }
 
 /*---------------------------------------------------------------------------------------*/
 
-template<class T>
-  constexpr auto operator%(const Vector<3, T> &v1, const Vector<3, T> &v2) noexcept
-{
-  return Vector<3, T>(
-    v1[1]*v2[2] - v2[1]*v1[2],
-    v1[2]*v2[0] - v2[2]*v1[0],
-    v1[0]*v2[1] - v2[0]*v1[1]);
-}
-
-/*---------------------------------------------------------------------------------------*/
-
-template<class T> constexpr auto operator~(const Vector<2, T> &v) noexcept
-{
-  return Vector<2, T>(-v[1], v[0]);
-}
+  template<class T> constexpr auto operator~(const Vector<2, T> &v) noexcept
+  {
+    return Vector<2, T>(-v[1], v[0]);
+  }
+} // namespace Math
 
 /*---------------------------------------------------------------------------------------*/
 /*--------------------------------------- tests -----------------------------------------*/
 /*---------------------------------------------------------------------------------------*/
 
-namespace Vectors::tests
+namespace Math::Vectors::tests
 {
   using V2d = Vector<2>;
   using V3d = Vector<3>;
@@ -335,7 +332,7 @@ namespace Vectors::tests
 
   // conversion
   constexpr V2d xd = V2d(x);
-  static_assert(Utils::fp_equal(xd[0], 4.) && Utils::fp_equal(xd[1], -3.), "explicit conversion i->d failed");
+  static_assert(details::fp_equal(xd[0], 4.) && details::fp_equal(xd[1], -3.), "explicit conversion i->d failed");
 
   constexpr V2i xi = V2i(xd);
   static_assert((xi[0] == 4) && (xi[1] == -3), "explicit conversion d->i failed");
@@ -362,23 +359,23 @@ namespace Vectors::tests
   static_assert(fabs(x) == fabs(-x), "abs failed");
 
   constexpr V2d vd(3, 4);
-  static_assert(Utils::fp_equal(sqs(vd), 25.), "sqs failed");
-  static_assert(Utils::fp_equal(fabs(vd), 5.), "abs failed");
+  static_assert(details::fp_equal(sqs(vd), 25.), "sqs failed");
+  static_assert(details::fp_equal(fabs(vd), 5.), "abs failed");
 
   constexpr V2d ex(1, 0), ey(0, 1);
-  static_assert(Utils::fp_equal(cos(ex, ex), 1.), "cos failed");
-  static_assert(Utils::fp_equal(cos(ex, ey), 0.), "cos failed");
-  static_assert(Utils::fp_equal(sin(ey, ey), 0.), "sin failed");
-  static_assert(Utils::fp_equal(sin(ey, ex), 1.), "sin failed");
+  static_assert(details::fp_equal(cos(ex, ex), 1.), "cos failed");
+  static_assert(details::fp_equal(cos(ex, ey), 0.), "cos failed");
+  static_assert(details::fp_equal(sin(ey, ey), 0.), "sin failed");
+  static_assert(details::fp_equal(sin(ey, ex), 1.), "sin failed");
 
-  static_assert(Utils::fp_equal(cos(vd, ey), .8), "cos failed");
-  static_assert(Utils::fp_equal(sin(vd, ey), .6), "sin failed");
-  static_assert(Utils::fp_equal(cos(vd, ex), .6), "cos failed");
-  static_assert(Utils::fp_equal(sin(vd, ex), .8), "sin failed");
+  static_assert(details::fp_equal(cos(vd, ey), .8), "cos failed");
+  static_assert(details::fp_equal(sin(vd, ey), .6), "sin failed");
+  static_assert(details::fp_equal(cos(vd, ex), .6), "cos failed");
+  static_assert(details::fp_equal(sin(vd, ex), .8), "sin failed");
 
   constexpr Vector<2, float> vf(3, 4);
-  static_assert(Utils::fp_equal(sqs(vf), 25.f), "sqs failed");
-  static_assert(Utils::fp_equal(fabs(vf), 5.f), "abs failed");
+  static_assert(details::fp_equal(sqs(vf), 25.f), "sqs failed");
+  static_assert(details::fp_equal(fabs(vf), 5.f), "abs failed");
 
   constexpr Vector<2, long> vl(3, 4);
   static_assert(sqs(vl) == 25, "sqs failed");
@@ -403,20 +400,15 @@ namespace Vectors::tests
   static_assert((a % b) * c ==  a * (b % c), "Jacobi's identity failed");
   static_assert(a % (b % c) + b % (c % a) + c % (a % b) == z, "triple product failed");
   static_assert(a % (b % c) == b * (a * c) - c * (a * b), "Lagrange's identity failed");
-}
+} // namespace Math::Vectors::tests
 
 /*---------------------------------------------------------------------------------------*/
 /*----------------------------------- documentation -------------------------------------*/
 /*---------------------------------------------------------------------------------------*/
 
 /*!
-  \class Vectors
-  \brief Specialization of generic IO manipulators for the Vector objects.
-*/
-
-/*!
-  \class Vector
-  \brief Euclidian (or not) vector of arbitrary dimension and type.
+  \class Math::Vector
+  \brief Euclidian vector or componentwise array of arbitrary dimension and type.
   \tparam N Number of components.
   \tparam T Type of the components.
   \tparam is_euclidian Boolean flag, used to distinguish vector in euclidian space (true)
@@ -427,7 +419,7 @@ namespace Vectors::tests
   and substruction from another non-euclidian vector, as well as IO and equality ops.
   For an euclidian vector additional operations are defined, e.g. dot and curl product,
   magnitude, etc. Also several mixed operations with tensors/matricies are defined,
-  \see Tensor.
+  \see Math::Tensor
 
   NB! All operations are noexcept because I don't care about overflows! Just kidding!
   It's because there is no standard and cross-platform way to catch them in C++
@@ -453,8 +445,7 @@ namespace Vectors::tests
   V2i v2(1, 2); // (1, 2)
   \endcode
 
-  Note that all constructors are explicit thus you should be specific in any operation
-  with vectors!
+  Note that all constructors are explicit thus you should be specific in any operation with vectors!
 */
 
 /*!

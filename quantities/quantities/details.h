@@ -1,10 +1,10 @@
-#ifndef QDETAILS_H_INCLUDED
-#define QDETAILS_H_INCLUDED
+#ifndef DETAILS_H_INCLUDED
+#define DETAILS_H_INCLUDED
 
 /*!
-  \file QDetails.h
+  \file Details.h
   \author gennadiy
-  \brief A bunch of helpers to implement Quantities::QState.
+  \brief A bunch of helpers to implement Quantities::State.
 */
 
 #include <tuple>
@@ -178,4 +178,4 @@ namespace Quantities::details
 
 } // namespace Quantities::details
 
-#endif // QDETAILS_H_INCLUDED
+#endif // DETAILS_H_INCLUDED

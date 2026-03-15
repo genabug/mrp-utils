@@ -1,8 +1,8 @@
-#ifndef QTRAITS_H_INCLUDED
-#define QTRAITS_H_INCLUDED
+#ifndef TRAITS_H_INCLUDED
+#define TRAITS_H_INCLUDED
 
 /*!
-  \file QTraits.h
+  \file Traits.h
   \author gennadiy
   \brief Quantity's traits, definition, documentation and tests.
 */
@@ -22,7 +22,7 @@ namespace Quantities
       else
         return 1;
     }
-  
+
     template<int N> struct Name
     {
       char data[N] = {};
@@ -31,7 +31,7 @@ namespace Quantities
     };
   }
 
-  template<class Type, int Dim, details::Name name> struct QTraits
+  template<class Type, int Dim, details::Name name> struct Traits
   {
     using type = Type;
     static constexpr int dim = Dim;
@@ -42,11 +42,11 @@ namespace Quantities
   namespace details
   {
     template<class> struct is_traits : std::false_type {};
-    template<class Type, int Dim, Name name> struct is_traits<QTraits<Type, Dim, name>> : std::true_type {};
+    template<class Type, int Dim, Name name> struct is_traits<Traits<Type, Dim, name>> : std::true_type {};
   }
 
   template<class T> constexpr bool is_traits_v = details::is_traits<T>::value;
-  template<class T> concept Traits = is_traits_v<T>;
+  template<class T> concept IsTraits = is_traits_v<T>;
 } // namespace Quantities
 
 /*---------------------------------------------------------------------------------------*/
@@ -60,7 +60,7 @@ namespace Quantities::tests
     return std::equal(name1.data, name1.data + N, name2);
   }
 
-  using rho_t = QTraits<int, 111, "rho">;
+  using rho_t = Traits<int, 111, "rho">;
   static_assert(std::is_same_v<rho_t::type, int>);
   static_assert(rho_t::dim == 111);
   static_assert(rho_t::id == "rho");
@@ -72,7 +72,7 @@ namespace Quantities::tests
     static constexpr int size = 3 * sizeof(double);
   };
 
-  using state_t = QTraits<HD1D, 0, "HD1D">;
+  using state_t = Traits<HD1D, 0, "HD1D">;
   static_assert(std::is_same_v<state_t::type, HD1D>);
   static_assert(state_t::dim == 0);
   static_assert(state_t::id == "HD1D");
@@ -85,7 +85,7 @@ namespace Quantities::tests
 /*---------------------------------------------------------------------------------------*/
 
 /*!
-  \class Quantities::QTraits
+  \class Quantities::Traits
   \tparam Type Type of the quantity's data (double, vector3D, ...).
   \tparam Dim Dimension of the mesh elements where its data are defined.
   \tparam Name String ID of the quantity.
@@ -101,15 +101,15 @@ namespace Quantities::tests
   * id (user-defined): string ID of the quantity
   * size (auto): number of quantity's components
 
-  QTraits::size is number of components of the quantity. Size of a simple quantity is 1,
+  Traits::size is number of components of the quantity. Size of a simple quantity is 1,
   while for a compound one it's greater than 1. It's defined automatically
   based on whether the field of the same name is presented in Type (then it equals to it)
   or not (and then it equals to 1).
 
   Quantity's traits defines as follows:
   \code
-  using w_t = QTraits<Vector3D, 2, "w">; // ncomps == 1, size == 3
-  using rho_t = QTraits<double, 3, "rho">; // ncomps == 1, size == 1
+  using w_t = Traits<Vector3D, 2, "w">; // ncomps == 1, size == 3
+  using rho_t = Traits<double, 3, "rho">; // ncomps == 1, size == 1
 
   constexpr w_t w;
   constexpr rho_t rho;
@@ -120,7 +120,7 @@ namespace Quantities::tests
   variable-names of the quantities as shown above. Due to template argument deduction
   mechanism they are allowed to be used in the much shorter methods in the utility classes:
   \code
-  QState<rho_t, w_t> s;
+  State<rho_t, w_t> s;
   s.get<rho_t>() = 1;
   s[rho] = 2;
   \endcode
@@ -129,7 +129,7 @@ namespace Quantities::tests
   Defined quantity's type-names and variable-names must be visible to all their users
   in order to organize collaborative work between different computational objects.
 
-  \see Quantities::QState
+  \see Quantities::State
 */
 
-#endif // QTRAITS_H_INCLUDED
+#endif // TRAITS_H_INCLUDED

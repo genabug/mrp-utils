@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.23)
 
-project(mrp-utils LANGUAGES CXX)
+project(numkit LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -23,6 +23,7 @@ elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "AppleClang")
 endif()
 
 enable_testing()
-add_subdirectory(utils)
+add_subdirectory(math)
+add_subdirectory(quantities)
 add_subdirectory(factory)
 add_subdirectory(tests)

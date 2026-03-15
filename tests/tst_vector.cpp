@@ -1,7 +1,9 @@
-#include "utils/Vector.h"
+#include "math/Vector.h"
 
 #include <gtest/gtest.h>
 #include <sstream>
+
+using namespace Math;
 
 using V2d = Vector<2>;
 using V3d = Vector<3>;

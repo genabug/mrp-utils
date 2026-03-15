@@ -1,10 +1,10 @@
-# mrp-utils
+# numkit
 
-A C++ header-only library providing low-level mathematical data structures for scientific/numerical computations.
+A C++ header-only library providing low-level mathematical data structures for numerical computations.
 
 ## Core Components
 
-### Vector (`utils/utils/Vector.h`)
+### Vector (`math/Vector.h`)
 
 A templated Euclidean vector class for arbitrary dimensions and types:
 
@@ -14,7 +14,7 @@ A templated Euclidean vector class for arbitrary dimensions and types:
 - Includes IO support with customizable formatting (brackets vs bare components)
 - Type aliases: `Vector2D`, `Vector3D`, and `Array<N,T>` for simple componentwise arithmetic
 
-### Tensor (`utils/utils/Tensor.h`)
+### Tensor (`math/Tensor.h`)
 
 A rank-2 tensor (matrix) class for arbitrary dimensions:
 
@@ -23,16 +23,16 @@ A rank-2 tensor (matrix) class for arbitrary dimensions:
 - Vector-tensor operations for linear algebra
 - Type aliases: `Tensor2D`, `Tensor3D`
 
-### QState (`utils/utils/QState.h`)
+### State (`quantities/State.h`)
 
 A heterogeneous tuple of named quantities for scientific state vectors:
 
-- Uses `QTraits` for type metadata with compile-time string names
+- Uses `Traits` for type metadata with compile-time string names
 - Supports arithmetic and comparison operations on states
 - Allows access by index, type-name, or variable
 - Useful for representing physical states (e.g., density, temperature, velocity)
 
-### ObjectsFactory (`factory/factory/ObjectsFactory.h`)
+### ObjectsFactory (`factory/ObjectsFactory.h`)
 
 A generic factory pattern implementation:
 
@@ -43,10 +43,12 @@ A generic factory pattern implementation:
 ## Project Structure
 
 ```text
-mrp-utils/
+numkit/
 ├── CMakeLists.txt       # Main build config
-├── utils/               # Core utility headers
-│   └── utils/           # Vector, Tensor, QState, QTraits
+├── math/                # Math library
+│   └── math/            # Vector, Tensor
+├── quantities/          # Quantities library
+│   └── quantities/      # State, Traits
 ├── factory/             # Factory pattern implementation
 │   └── factory/         # ObjectsFactory
 ├── tests/               # Unit tests
@@ -77,11 +79,10 @@ cd build && ctest
 ## Known Issues / TODOs
 
 - No examples :(
-- Remove Q prefix, do not pretend Qt ;)
-- Get rid of mrp prefix
 - Materials with deducing this 8) (c++23)
 - GHA to run the tests on PRs
-- IO::Mode for QState
+- IO::Mode for State
 - thread safety
 - units of quantities
+- generate doxygen docs
 - ...
