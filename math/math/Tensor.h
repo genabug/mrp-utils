@@ -333,36 +333,7 @@ namespace Math
   template<size_t N, class U>
     std::istream& operator>>(std::istream &in, Tensor<N, U> &A)
   {
-    char c;
-    bool in_brackets = true;
-    while (in.get(c) && c != '[')
-      if (std::isdigit(c))
-      {
-        in.putback(c);
-        in_brackets = false;
-        break;
-      }
-
-    for (size_t i = 0; i < N; ++i)
-      for (size_t j = 0; j < N; ++j)
-      {
-        while (in.get(c) && c != ',')
-          if (std::isdigit(c) || c == '-' || c == '+')
-          {
-            in.putback(c);
-            break;
-          }
-        in >> A[i][j];
-      }
-
-    while (in_brackets && in.get(c) && c != ']')
-      if (std::isdigit(c) || c == '-' || c == '+')
-      {
-        in.putback(c);
-        break;
-      }
-
-    return in;
+    return IO::details::read_values(in, &A[0][0], N*N, '[', ']');
   }
 
 /*---------------------------------------------------------------------------------------*/

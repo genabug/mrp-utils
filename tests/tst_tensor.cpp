@@ -151,38 +151,39 @@ TEST(Tensor, input_with_brackets_signed_components)
   EXPECT_EQ(t, T2i(-1, 2, -3, 4));
 }
 
-TEST(Tensor, input_with_brackets_non_digit_chars_in_front)
+TEST(Tensor, input_with_brackets_non_digit_chars_in_front_fails)
 {
   std::stringstream ss(" ,!([ [1, 2, 3, 4]");
   T2i t;
   ss >> t;
-  EXPECT_EQ(t, T2i(1, 2, 3, 4));
+  EXPECT_TRUE(ss.fail());
 }
 
-TEST(Tensor, input_with_brackets_digit_chars_in_front_misparsed)
+TEST(Tensor, input_with_brackets_junk_after_digit_fails)
 {
   std::stringstream ss(" 1,!([ [1, 2, 3, 4]");
   T2i t;
   ss >> t;
-  EXPECT_EQ(t, T2i(1, 0, 0, 0)); // TODO: fix it, same issue as with Vector
+  EXPECT_TRUE(ss.fail()); // ',' is not a valid int, fails on second component
 }
 
 TEST(Tensor, input_with_brackets_two_tensors_no_delimeter)
 {
-  std::stringstream ss("[1, 2, 3, 4][5, 6, 7, 8]");
+  std::stringstream ss("[-1, +2, -3, +4][+5, -6, +7, -8]");
   T2i t1, t2;
   ss >> t1 >> t2;
-  EXPECT_EQ(t1, T2i(1, 2, 3, 4));
-  EXPECT_EQ(t2, T2i(5, 6, 7, 8));
+  EXPECT_EQ(t1, T2i(-1, +2, -3, +4));
+  EXPECT_EQ(t2, T2i(+5, -6, +7, -8));
 }
 
-TEST(Tensor, input_with_brackets_two_tensors_non_digit_delim)
+TEST(Tensor, input_with_brackets_two_tensors_non_digit_delim_fails)
 {
   std::stringstream ss("[1, 2, 3, 4]  ,;!ss [5, 6, 7, 8]");
   T2i t1, t2;
   ss >> t1 >> t2;
   EXPECT_EQ(t1, T2i(1, 2, 3, 4));
-  EXPECT_EQ(t2, T2i(5, 6, 7, 8));
+  EXPECT_EQ(t2, T2i(0));
+  EXPECT_TRUE(ss.fail()); // ',;!ss' is junk before second tensor
 }
 
 TEST(Tensor, input_bare_components)
@@ -193,39 +194,40 @@ TEST(Tensor, input_bare_components)
   EXPECT_EQ(t, T2i(1, 2, 3, 4));
 }
 
-TEST(Tensor, input_bare_components_non_digit_chars_in_front)
+TEST(Tensor, input_bare_components_signed_components)
+{
+  std::stringstream ss("-1 2 -3 4");
+  T2i t;
+  ss >> t;
+  EXPECT_EQ(t, T2i(-1, 2, -3, 4));
+}
+
+TEST(Tensor, input_bare_components_junk_in_front_fails)
 {
   std::stringstream ss(" ,!([ 1 2 3 4");
   T2i t;
   ss >> t;
-  EXPECT_EQ(t, T2i(1, 2, 3, 4));
+  EXPECT_TRUE(ss.fail());
 }
 
-TEST(Tensor, input_bare_components_digit_chars_in_front_misparsed)
-{
-  std::stringstream ss(" 1,!([ 1 2 3 4");
-  T2i t;
-  ss >> t;
-  EXPECT_EQ(t, T2i(1, 0, 0, 0)); // TODO: fix it, same issue as with Vector
-}
-
-TEST(Tensor, input_bare_components_two_tensors_nospace_misparsed)
+TEST(Tensor, input_bare_components_two_tensors_not_enough_data_fails)
 {
   std::stringstream ss("1 2 3 45 6 7 8");
   T2i t1, t2;
   ss >> t1 >> t2;
   EXPECT_EQ(t1, T2i(1, 2, 3, 45));
   EXPECT_EQ(t2, T2i(6, 7, 8, 0));
-  // TODO: fix it, t2 must throw an exception
+  EXPECT_TRUE(ss.fail()); // only 3 values left, need 4
 }
 
-TEST(Tensor, input_bare_components_two_tensors_non_digit_delim)
+TEST(Tensor, input_bare_components_two_tensors_non_digit_delim_fails)
 {
-  std::stringstream ss("1 2 3 4  ,;!ss 5 6 7 8");
+  std::stringstream ss("-1 +2 -3 +4  ,;!ss +5 -6 +7 -8");
   T2i t1, t2;
   ss >> t1 >> t2;
-  EXPECT_EQ(t1, T2i(1, 2, 3, 4));
-  EXPECT_EQ(t2, T2i(5, 6, 7, 8));
+  EXPECT_EQ(t1, T2i(-1, +2, -3, +4));
+  EXPECT_EQ(t2, T2i(0));
+  EXPECT_TRUE(ss.fail()); // ',;!ss' is junk before second tensor
 }
 
 TEST(Tensor, equality)

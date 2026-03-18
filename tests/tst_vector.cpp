@@ -212,68 +212,76 @@ TEST(Vector, input_with_brackets_signed_components)
   EXPECT_EQ(v, V3i(-1, 2, -3));
 }
 
-TEST(Vector, input_with_brackets_missing_closing_bracket_accepted)
+TEST(Vector, input_with_brackets_missing_closing_bracket_fails)
 {
   std::stringstream ss("(2, 3, 4");
   V3i v;
   ss >> v;
   EXPECT_EQ(v, V3i(2, 3, 4));
+  EXPECT_TRUE(ss.fail());
 }
 
-TEST(Vector, input_with_brackets_non_digit_chars_in_front)
+TEST(Vector, input_with_brackets_non_digit_chars_in_front_fails)
 {
   std::stringstream ss(", (1, 2, 3)   ");
   V3i v;
   ss >> v;
-  EXPECT_EQ(v, V3i(1, 2, 3));
+  EXPECT_TRUE(ss.fail());
 }
 
-TEST(Vector, input_with_brackets_digit_chars_in_front_misparsed)
+TEST(Vector, input_with_junk_after_digit_fails)
 {
   std::stringstream ss(" 1 (,! (2, 3, 4)");
   V3i v;
   ss >> v;
-  EXPECT_EQ(v, V3i(1, 0, 0)); // TODO: fix it
-  // '1' is interpreted as beginning of a new vector in bareComponents mode
-  // (even though we explicitly set IO mode with brackets)
-  // and then the algorithm stucks on , (comma) and the rest components become 0.
+  EXPECT_TRUE(ss.fail()); // '(' is not a valid int, fails on second component
 }
 
 TEST(Vector, input_with_brackets_two_consequent_vectors)
 {
-  std::stringstream ss("(1, 2)(3, 4, 5)");
+  std::stringstream ss("(-1, +2)(+3, -4, +5)");
   V2i v1;
   V3i v2;
   ss >> v1 >> v2;
-  EXPECT_EQ(v1, V2i(1, 2));
-  EXPECT_EQ(v2, V3i(3, 4, 5));
+  EXPECT_EQ(v1, V2i(-1, 2));
+  EXPECT_EQ(v2, V3i(3, -4, 5));
 }
 
 TEST(Vector, input_bare_components)
 {
-  std::stringstream ss("1 2 3");
+  std::stringstream ss("  1 2 3 ");
   V3i v;
   ss >> v;
   EXPECT_EQ(v, V3i(1, 2, 3));
 }
 
-TEST(Vector, input_bare_components_non_digit_chars_in_front)
+TEST(Vector, input_bare_components_signed_components)
 {
-  std::stringstream ss(", 1 2 3 4  ");
+  std::stringstream ss("-1 2 -3");
   V3i v;
   ss >> v;
-  EXPECT_EQ(v, V3i(1, 2, 3));
+  EXPECT_EQ(v, V3i(-1, 2, -3));
 }
 
-TEST(Vector, input_bare_components_digit_chars_in_front_misparsed)
+TEST(Vector, input_bare_components_junk_in_front_fails)
 {
   std::stringstream ss(" ,1  2 3 4 5  ");
   V3i v;
   ss >> v;
-  EXPECT_EQ(v, V3i(1, 2, 3)); // TODO: fix it
+  EXPECT_TRUE(ss.fail());
 }
 
-TEST(Vector, input_bare_components_two_vectors_nospace_misparsed)
+TEST(Vector, input_bare_components_two_consequent_vectors)
+{
+  std::stringstream ss("-1 +2 -3 +4 -5");
+  V2i v1;
+  V3i v2;
+  ss >> v1 >> v2;
+  EXPECT_EQ(v1, V2i(-1, 2));
+  EXPECT_EQ(v2, V3i(-3, 4, -5));
+}
+
+TEST(Vector, input_bare_components_two_vectors_not_enough_data_fails)
 {
   std::stringstream ss("1 23 4 5");
   V2i v1;
@@ -281,15 +289,16 @@ TEST(Vector, input_bare_components_two_vectors_nospace_misparsed)
   ss >> v1 >> v2;
   EXPECT_EQ(v1, V2i(1, 23));
   EXPECT_EQ(v2, V3i(4, 5, 0));
-  // TODO: fix it, exception must be thrown for v2
+  EXPECT_TRUE(ss.fail()); // only 2 values left, need 3
 }
 
-TEST(Vector, input_bare_components_two_vectors_non_digit_delim)
+TEST(Vector, input_bare_components_two_vectors_non_digit_delim_fails)
 {
   std::stringstream ss("1 2 , [ d  3 4 5");
   V2i v1;
   V3i v2;
   ss >> v1 >> v2;
   EXPECT_EQ(v1, V2i(1, 2));
-  EXPECT_EQ(v2, V3i(3, 4, 5));
+  EXPECT_EQ(v2, V3i(0));
+  EXPECT_TRUE(ss.fail()); // ',' is not a valid start
 }

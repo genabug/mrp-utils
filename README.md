@@ -51,13 +51,12 @@ numkit/
 │   └── quantities/      # State, Traits
 ├── factory/             # Factory pattern implementation
 │   └── factory/         # ObjectsFactory
-├── tests/               # Unit tests
-│   ├── tst_vector.cpp
-│   ├── tst_tensor.cpp
-│   ├── tst_state.cpp
-│   ├── tst_factory.cpp
-│   └── ...
-└── build/               # Build output
+└── tests/               # Unit tests
+    ├── tst_vector.cpp
+    ├── tst_tensor.cpp
+    ├── tst_state.cpp
+    ├── tst_factory.cpp
+    └── ...
 ```
 
 ## Build
@@ -81,7 +80,7 @@ cd build && ctest
 - No examples :(
 - Materials with deducing this 8) (c++23)
 - GHA to run the tests on PRs
-- IO::Mode for State
+- State with arithmetic types only? then IO::Mode could be used
 - thread safety
 - units of quantities
 - generate doxygen docs
