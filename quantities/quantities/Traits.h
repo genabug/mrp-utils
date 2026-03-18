@@ -101,7 +101,7 @@ namespace Quantities::tests
   * id (user-defined): string ID of the quantity
   * size (auto): number of quantity's components
 
-  Traits::size is number of components of the quantity. Size of a simple quantity is 1,
+  Traits::size is a number of components of the quantity. Size of a simple quantity is 1,
   while for a compound one it's greater than 1. It's defined automatically
   based on whether the field of the same name is presented in Type (then it equals to it)
   or not (and then it equals to 1).

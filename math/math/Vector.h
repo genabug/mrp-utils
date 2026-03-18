@@ -10,10 +10,7 @@
 #include "IOMode.h"
 #include "details.h"
 
-#include <cctype>
 #include <cstddef>
-#include <ostream>
-#include <istream>
 
 namespace Math
 {
@@ -201,35 +198,7 @@ namespace Math
   template<size_t N, class T, bool B>
     std::istream& operator>>(std::istream &in, Vector<N, T, B> &v)
   {
-    char c;
-    bool in_brackets = true;
-    while (in.get(c) && c != '(')
-      if (std::isdigit(c) || c == '-' || c == '+')
-      {
-        in.putback(c);
-        in_brackets = false;
-        break;
-      }
-
-    for (size_t i = 0; i < N; ++i)
-    {
-      while (in.get(c) && c != ',')
-        if (std::isdigit(c) || c == '-' || c == '+')
-        {
-          in.putback(c);
-          break;
-        }
-      in >> v[i];
-    }
-
-    while (in_brackets && in.get(c) && c != ')')
-      if (std::isdigit(c))
-      {
-        in.putback(c);
-        break;
-      }
-
-    return in;
+    return IO::details::read_values(in, &v[0], N, '(', ')');
   }
 
 /*---------------------------------------------------------------------------------------*/

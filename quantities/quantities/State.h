@@ -312,7 +312,7 @@ namespace Quantities::tests
 
 /*!
   \class Quantities::State
-  \tparam Qs Type-names (traits) of the data.
+  \tparam Qs Type-names (traits) of quantities.
   \brief Vector of quantities with arbitrary types.
 
   Class is aimed for aggregation and processing an arbitrary set of heterogeneous
@@ -364,7 +364,8 @@ namespace Quantities::tests
   For example, access to a component which is not presented in a state,
   mixing states with unmatched list of quantities, etc...
 
-  \see QDetails.h for implementation details.
+  \see details.h for implementation details.
+  \see Traits.h for quantities traits implementation.
 */
 
 #endif // STATE_H_INCLUDED

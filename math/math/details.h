@@ -1,5 +1,5 @@
-#ifndef DETAILS_H_INCLUDED
-#define DETAILS_H_INCLUDED
+#ifndef MATH_DETAILS_H_INCLUDED
+#define MATH_DETAILS_H_INCLUDED
 
 /*!
   \file details.h
@@ -25,7 +25,7 @@ namespace Math::details
 
   // floating-point comparison with specific epsilon
   template<std::floating_point T>
-    constexpr T fp_equal(T x, T y, size_t ulp = 1) noexcept;
+    constexpr bool fp_equal(T x, T y, size_t ulp = 1) noexcept;
 } // namespace Math::details
 
 /*---------------------------------------------------------------------------------------*/
@@ -63,7 +63,7 @@ constexpr auto Math::details::sqrt(std::integral auto x) noexcept
 /*---------------------------------------------------------------------------------------*/
 
 template<std::floating_point T>
-  constexpr T Math::details::fp_equal(T x, T y, size_t ulp) noexcept
+  constexpr bool Math::details::fp_equal(T x, T y, size_t ulp) noexcept
 {
   // the machine epsilon has to be scaled to the magnitude of the values used
   // and multiplied by the desired precision in ULPs (units of least precision)
@@ -98,4 +98,4 @@ namespace Math::details::tests
   static_assert(!fp_equal(6.022140857e+23, 6.022140857e+23 + 3e8), "fp equal failed");
 }
 
-#endif // DETAILS_H_INCLUDED
+#endif // MATH_DETAILS_H_INCLUDED

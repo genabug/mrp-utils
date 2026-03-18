@@ -1,5 +1,5 @@
-#ifndef DETAILS_H_INCLUDED
-#define DETAILS_H_INCLUDED
+#ifndef QUANTITIES_DETAILS_H_INCLUDED
+#define QUANTITIES_DETAILS_H_INCLUDED
 
 /*!
   \file Details.h
@@ -178,4 +178,4 @@ namespace Quantities::details
 
 } // namespace Quantities::details
 
-#endif // DETAILS_H_INCLUDED
+#endif // QUANTITIES_DETAILS_H_INCLUDED
