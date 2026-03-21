@@ -45,6 +45,7 @@ jobs:
       run: |
         vcpkg install gtest
         echo "CMAKE_TOOLCHAIN_FILE=$VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake" >> "$GITHUB_ENV"
+        echo "$VCPKG_INSTALLATION_ROOT/installed/x64-windows/bin" >> "$GITHUB_PATH"
 
     - name: configure
       run: >
