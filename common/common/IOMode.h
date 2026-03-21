@@ -2,7 +2,7 @@
 #define IO_MODE_H_INCLUDED
 
 /*!
-  \file Mode.h
+  \file IOMode.h
   \authors boldar, gennadiy
   \brief IO manipulators for array-like types (Vector, Tensor, etc.)
 */

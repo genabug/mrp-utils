@@ -7,7 +7,7 @@
   \brief A bunch of helpers to implement Quantities::Traits and Quantities::State.
 */
 
-#include "math/Mode.h"
+#include "common/IOMode.h"
 
 #include <tuple>
 #include <string>
