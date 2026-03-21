@@ -9,51 +9,58 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     strategy:
-      # Set fail-fast to false to ensure that feedback is delivered for all matrix combinations. Consider changing this to true when your workflow is stable.
+      # Set fail-fast to false to ensure that feedback is delivered for all matrix combinations.
       fail-fast: false
 
       matrix:
         os: [ubuntu-latest, windows-latest]
         build_type: [RelWithDebInfo]
-        c_compiler: [gcc, clang, cl]
-        include:
-          - os: windows-latest
-            c_compiler: cl
-            cpp_compiler: cl
-          - os: ubuntu-latest
-            c_compiler: gcc
-            cpp_compiler: g++
-          - os: ubuntu-latest
-            c_compiler: clang
-            cpp_compiler: clang++
+        cpp_compiler: [g++, clang++, cl]
         exclude:
           - os: windows-latest
-            c_compiler: gcc
+            cpp_compiler: g++
           - os: windows-latest
-            c_compiler: clang
+            cpp_compiler: clang++
           - os: ubuntu-latest
-            c_compiler: cl
+            cpp_compiler: cl
 
     steps:
     - uses: actions/checkout@v4
 
-    - name: setup
-      id: strings
+    - name: set output dir
+      id: output
       shell: bash
       run: |
         echo "build-output-dir=${{ github.workspace }}/build" >> "$GITHUB_OUTPUT"
 
+    - name: install gtest on linux
+      if: runner.os == 'Linux'
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libgtest-dev libgmock-dev
+
+    - name: install gtest on windows
+      if: runner.os == 'Windows'
+      shell: bash
+      run: |
+        vcpkg install gtest
+        echo "CMAKE_TOOLCHAIN_FILE=$VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake" >> "$GITHUB_ENV"
+        echo "$VCPKG_INSTALLATION_ROOT/installed/x64-windows/bin" >> "$GITHUB_PATH"
+
     - name: configure
       run: >
-        cmake -B ${{ steps.strings.outputs.build-output-dir }}
+        cmake -B ${{ steps.output.outputs.build-output-dir }}
         -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }}
-        -DCMAKE_C_COMPILER=${{ matrix.c_compiler }}
         -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
+        -DCMAKE_TOOLCHAIN_FILE=${{ env.CMAKE_TOOLCHAIN_FILE }}
         -S ${{ github.workspace }}
 
-    - name: build
-      run: cmake --build ${{ steps.strings.outputs.build-output-dir }} --config ${{ matrix.build_type }}
+    - name: Build
+      run: >
+        cmake --build ${{ steps.output.outputs.build-output-dir }}
+        --config ${{ matrix.build_type }}
 
-    - name: test
-      working-directory: ${{ steps.strings.outputs.build-output-dir }}
-      run: ctest --build-config ${{ matrix.build_type }}
+    - name: Test
+      working-directory: ${{ steps.output.outputs.build-output-dir }}
+      run: >
+        ctest --build-config ${{ matrix.build_type }} --output-on-failure

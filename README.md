@@ -91,7 +91,6 @@ cd build && ctest
 
 - No examples :(
 - Materials with deducing this 8) (c++23)
-- GHA to run the tests on PRs
 - thread safety
 - units of quantities
 - generate doxygen docs
