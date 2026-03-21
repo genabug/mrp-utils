@@ -41,8 +41,8 @@ jobs:
       id: strings
       shell: bash
       run: |
-        apt update
-        apt install -y libgtest-dev libgmock-dev
+        sudo apt update
+        sudo apt install -y libgtest-dev libgmock-dev
         echo "build-output-dir=${{ github.workspace }}/build" >> "$GITHUB_OUTPUT"
 
     - name: configure
