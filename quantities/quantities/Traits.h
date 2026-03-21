@@ -1,5 +1,5 @@
-#ifndef TRAITS_H_INCLUDED
-#define TRAITS_H_INCLUDED
+#ifndef QUANTITIES_TRAITS_H_INCLUDED
+#define QUANTITIES_TRAITS_H_INCLUDED
 
 /*!
   \file Traits.h
@@ -7,46 +7,26 @@
   \brief Quantity's traits, definition, documentation and tests.
 */
 
-#include <algorithm>
-#include <type_traits>
+#include "details.h"
+#include "math/Type.h"
 
 namespace Quantities
 {
-  namespace details
+  template<Math::Type T, int Dim, details::Name name> struct Traits
   {
-    template<class T> concept has_size = requires { T::size; };
-    template<class T> constexpr int size_of() noexcept
-    {
-      if constexpr (has_size<T>)
-        return T::size;
-      else
-        return 1;
-    }
-
-    template<int N> struct Name
-    {
-      char data[N] = {};
-      consteval operator const char*() const { return data; }
-      consteval Name(const char (&name)[N]) { std::copy_n(name, N, data); }
-    };
-  }
-
-  template<class Type, int Dim, details::Name name> struct Traits
-  {
-    using type = Type;
+    using type = T;
     static constexpr int dim = Dim;
     static constexpr auto id = name;
-    static constexpr int size = details::size_of<Type>();
+    static constexpr int size = details::size_of<T>();
   };
 
   namespace details
   {
     template<class> struct is_traits : std::false_type {};
-    template<class Type, int Dim, Name name> struct is_traits<Traits<Type, Dim, name>> : std::true_type {};
+    template<Math::Type T, int Dim, Name name> struct is_traits<Traits<T, Dim, name>> : std::true_type {};
   }
 
-  template<class T> constexpr bool is_traits_v = details::is_traits<T>::value;
-  template<class T> concept IsTraits = is_traits_v<T>;
+  template<class T> concept IsTraits = details::is_traits<T>::value;
 } // namespace Quantities
 
 /*---------------------------------------------------------------------------------------*/
@@ -55,28 +35,29 @@ namespace Quantities
 
 namespace Quantities::tests
 {
-  template<int N> consteval bool operator==(const details::Name<N> &name1, const char *name2)
-  {
-    return std::equal(name1.data, name1.data + N, name2);
-  }
-
   using rho_t = Traits<int, 111, "rho">;
   static_assert(std::is_same_v<rho_t::type, int>);
   static_assert(rho_t::dim == 111);
-  static_assert(rho_t::id == "rho");
+  static_assert(std::string_view(rho_t::id) == "rho");
   static_assert(rho_t::size == 1);
 
-  struct HD1D
+  struct HD
   {
     double rho, P, w;
     static constexpr int size = 3 * sizeof(double);
+    constexpr bool operator==(const HD &) const = default;
+    constexpr HD& operator+=(const HD &o) { rho += o.rho; P += o.P; w += o.w; return *this; }
+    constexpr HD& operator-=(const HD &o) { rho -= o.rho; P -= o.P; w -= o.w; return *this; }
+    constexpr HD& operator*=(const HD &o) { rho *= o.rho; P *= o.P; w *= o.w; return *this; }
+    constexpr HD& operator/=(const HD &o) { rho /= o.rho; P /= o.P; w /= o.w; return *this; }
   };
+  static_assert(Math::Type<HD>);
 
-  using state_t = Traits<HD1D, 0, "HD1D">;
-  static_assert(std::is_same_v<state_t::type, HD1D>);
-  static_assert(state_t::dim == 0);
-  static_assert(state_t::id == "HD1D");
-  static_assert(state_t::size == HD1D::size);
+  using HD_t = Traits<HD, 0, "HD">;
+  static_assert(std::is_same_v<HD_t::type, HD>);
+  static_assert(HD_t::dim == 0);
+  static_assert(std::string_view(HD_t::id) == "HD");
+  static_assert(HD_t::size == HD::size);
 
 } // namespace Quantities::tests
 
@@ -85,8 +66,14 @@ namespace Quantities::tests
 /*---------------------------------------------------------------------------------------*/
 
 /*!
+  \interface Quantities::Type
+  \brief Alias for Math::Type, constrains types eligible for use in Quantities::Traits.
+  \see Math::Type
+*/
+
+/*!
   \class Quantities::Traits
-  \tparam Type Type of the quantity's data (double, vector3D, ...).
+  \tparam T Type of the quantity's data, see Math::Type.
   \tparam Dim Dimension of the mesh elements where its data are defined.
   \tparam Name String ID of the quantity.
   \brief Type traits of a quantity.
@@ -96,7 +83,7 @@ namespace Quantities::tests
   (transport, (de)serialization, vector of state) to make them user-friendly.
 
   Apart from user-defined traits the class contains two additional ones, five in all:
-  * type (user-defined): type of the quantitiy, usually double or vector3D
+  * type (user-defined): type of the quantitiy, usually double, Vector3D or even State
   * dim (user-defined): dimension of mesh elements where data are defined
   * id (user-defined): string ID of the quantity
   * size (auto): number of quantity's components
@@ -132,4 +119,4 @@ namespace Quantities::tests
   \see Quantities::State
 */
 
-#endif // TRAITS_H_INCLUDED
+#endif // QUANTITIES_TRAITS_H_INCLUDED

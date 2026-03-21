@@ -302,3 +302,21 @@ TEST(Vector, input_bare_components_two_vectors_non_digit_delim_fails)
   EXPECT_EQ(v2, V3i(0));
   EXPECT_TRUE(ss.fail()); // ',' is not a valid start
 }
+
+TEST(Vector, roundtrip_bracketed)
+{
+  V3i v1(3, -2, 1), v2;
+  std::stringstream ss;
+  ss << IO::inBrackets << v1;
+  ss >> v2;
+  EXPECT_EQ(v1, v2);
+}
+
+TEST(Vector, roundtrip_bare)
+{
+  V3i v1(7, 8, 9), v2;
+  std::stringstream ss;
+  ss << IO::bareComps << v1;
+  ss >> v2;
+  EXPECT_EQ(v1, v2);
+}

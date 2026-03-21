@@ -1,5 +1,5 @@
-#ifndef STATE_H_INCLUDED
-#define STATE_H_INCLUDED
+#ifndef QUANTITIES_STATE_H_INCLUDED
+#define QUANTITIES_STATE_H_INCLUDED
 
 /*!
   \file State.h
@@ -8,7 +8,6 @@
 */
 
 #include "Traits.h"
-#include "details.h"
 
 namespace Quantities
 {
@@ -20,8 +19,7 @@ namespace Quantities
     template<class... Qs> struct is_state<State<Qs...>> : std::true_type {};
   }
 
-  template<class S> constexpr bool is_state_v = details::is_state<S>::value;
-  template<class S> concept IsState = is_state_v<S>;
+  template<class S> concept IsState = details::is_state<S>::value;
 
   template<IsTraits... Qs> class State
   {
@@ -74,34 +72,8 @@ namespace Quantities
     template<IsTraits Q> constexpr auto&& operator[](Q) const && noexcept { return std::move(*this).template get<Q>(); }
 
     // TODO: member access, see https://stackoverflow.com/q/54617101/8802124
+    // Not possible in standard C++ today, needs static reflection.
   }; // class State<Qs...>
-
-  // Helper to get value(s) from a state using type-name(s).
-  // Use in generic code when dealing with a state or not-a-state
-  // and would like to work only with specific subset of its component(s), e.g.:
-  //   State<A,B,C> s;
-  //   auto a = get(s);      // a: State<A,B,C>
-  //   auto b = get<A>(s);   // b : A::type
-  //   auto c = get<A,B>(s); // c : State<A,B>
-  // NB! it's most probably an error to try getting any component from not-a-state
-  template<IsTraits... Qs, class T> requires(!is_state_v<T>)
-    constexpr decltype(auto) get(T t) noexcept
-  {
-    static_assert(sizeof...(Qs) == 0, "access a state' component(s) of not-a-state object is suspicious");
-    return t;
-  }
-
-  template<IsTraits... Qs, class S> requires(is_state_v<S>)
-    constexpr decltype(auto) get(S s) noexcept
-  {
-    constexpr size_t slice_sz = sizeof...(Qs);
-    if constexpr (slice_sz == 0)
-      return s;
-    else if constexpr (slice_sz == 1)
-      return s.template get<Qs...>();
-    else
-      return State<Qs...>(s);
-  }
 
   // IO operations
   std::istream& operator>>(std::istream &, IsState auto &);
@@ -132,7 +104,7 @@ namespace Quantities
   template<IsTraits... Qs>
     constexpr State<Qs...>& State<Qs...>::operator=(auto v) noexcept
   {
-    if constexpr (is_state_v<decltype(v)>)
+    if constexpr (IsState<decltype(v)>)
       details::set_to_state(*this, v);
     else
       details::set_to_value(*this, v);
@@ -368,4 +340,4 @@ namespace Quantities::tests
   \see Traits.h for quantities traits implementation.
 */
 
-#endif // STATE_H_INCLUDED
+#endif // QUANTITIES_STATE_H_INCLUDED

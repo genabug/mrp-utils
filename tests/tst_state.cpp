@@ -1,82 +1,69 @@
 #include "quantities/State.h"
 
 #include <gtest/gtest.h>
-#include <string>
 
-using std::string;
 using namespace Quantities;
 
 using ti_t = Traits<int, 3, "ti">;
 using td_t = Traits<double, 3, "td">;
-using ts_t = Traits<string, 0, "ts">;
 
 constexpr ti_t ti;
 constexpr td_t td;
-constexpr ts_t ts;
 
 // assumed index access works
 // most of the operations are tested on compile-time
-// but I'd like to have a good old one runtime tests
-// for both debugging and as examples
+// but I'd like to have a good old runtime testsfor both debugging and as examples
 TEST(State, init_with_rvalues)
 {
-  State<ti_t, td_t, ts_t> s(1, 2, "bar");
+  State<ti_t, td_t> s(1, 2);
   EXPECT_EQ(s[ti], 1);
   EXPECT_EQ(s[td], 2);
-  EXPECT_EQ(s[ts], "bar");
 }
 
 TEST(State, init_with_lvalues)
 {
   int i = 1;
   double d = 2;
-  string str = "bar";
-  State<ti_t, td_t, ts_t> s(i, d, str);
+  State<ti_t, td_t> s(i, d);
   EXPECT_EQ(s[ti], i);
   EXPECT_EQ(s[td], d);
-  EXPECT_EQ(s[ts], str);
 }
 
 TEST(State, copy_ctor)
 {
-  State<ti_t, td_t, ts_t> s(1, 2, "foo");
+  State<ti_t, td_t> s(1, 2);
   auto sc = s;
   EXPECT_EQ(sc, s);
 }
 
 TEST(State, access_by_index)
 {
-  State<ti_t, td_t, ts_t> s(1, 2, "foo");
+  State<ti_t, td_t> s(1, 2);
   EXPECT_EQ(s.get<0>(), 1);
   EXPECT_EQ(s.get<1>(), 2);
-  EXPECT_EQ(s.get<2>(), "foo");
 }
 
 TEST(State, access_by_type)
 {
-  State<ti_t, td_t, ts_t> s(1, 2, "foo");
+  State<ti_t, td_t> s(1, 2);
   EXPECT_EQ(s.get<ti_t>(), 1);
   EXPECT_EQ(s.get<td_t>(), 2);
-  EXPECT_EQ(s.get<ts_t>(), "foo");
 }
 
 TEST(State, access_by_variable)
 {
-  State<ti_t, td_t, ts_t> s(1, 2, "foo");
+  State<ti_t, td_t> s(1, 2);
   EXPECT_EQ(s[ti], 1);
   EXPECT_EQ(s[td], 2);
-  EXPECT_EQ(s[ts], "foo");
 }
 
 TEST(State, assign_by_components)
 {
-  State<ti_t, td_t, ts_t> s(1, 2, "foo");
+  State<ti_t, td_t> s(1, 2);
   s[ti] = 3;
   s[td] = 4;
-  s[ts] = "bar";
   EXPECT_EQ(s[ti], 3);
   EXPECT_EQ(s[td], 4);
-  EXPECT_EQ(s[ts], "bar");
 }
 
 TEST(State, assign_all_components)
@@ -88,30 +75,27 @@ TEST(State, assign_all_components)
 
 TEST(State, assign_state_with_same_order_of_comps)
 {
-  State<ti_t, td_t, ts_t> s1, s2(1, 2, "foo");
+  State<ti_t, td_t> s1, s2(1, 2);
   s1 = s2;
   EXPECT_EQ(s1[ti], s2[ti]);
   EXPECT_EQ(s1[td], s2[td]);
-  EXPECT_EQ(s1[ts], s2[ts]);
 }
 
 TEST(State, assign_state_with_different_order_of_comps)
 {
-  State<ti_t, td_t, ts_t> s1;
-  State<ts_t, td_t, ti_t> s2("bar", 3, 4);
+  State<ti_t, td_t> s1;
+  State<td_t, ti_t> s2(3, 4);
   s1 = s2;
   EXPECT_EQ(s1[ti], s2[ti]);
   EXPECT_EQ(s1[td], s2[td]);
-  EXPECT_EQ(s1[ts], s2[ts]);
 }
 
 TEST(State, assign_state_with_subset_of_comps)
 {
-  State<ti_t, td_t> s1;
-  State<ts_t, td_t, ti_t> s2("baz", 5, 6);
+  State<ti_t> s1;
+  State<td_t, ti_t> s2(5, 6);
   s1 = s2;
   EXPECT_EQ(s1[ti], s2[ti]);
-  EXPECT_EQ(s1[td], s2[td]);
 }
 
 TEST(State, assign_sum_with_same_order_of_comps)
@@ -134,7 +118,7 @@ TEST(State, assign_sum_with_different_order_of_comps)
 TEST(State, assign_sum_with_subset_of_comps)
 {
   State<ti_t, td_t> s1(1, 2);
-  State<ts_t, td_t, ti_t> s2("str", 3, 4);
+  State<td_t, ti_t> s2(3, 4);
   s1 += s2;
   EXPECT_EQ(s1[ti], 5);
   EXPECT_EQ(s1[td], 5);
@@ -160,7 +144,7 @@ TEST(State, assign_sub_with_different_order_of_comps)
 TEST(State, assign_sub_with_subset_of_comps)
 {
   State<ti_t, td_t> s1(3, 4);
-  State<ts_t, td_t, ti_t> s2("str", 1, 2);
+  State<td_t, ti_t> s2(1, 2);
   s1 -= s2;
   EXPECT_EQ(s1[ti], 1);
   EXPECT_EQ(s1[td], 3);
@@ -184,7 +168,7 @@ TEST(State, assign_div_state_by_coeff)
 
 TEST(State, compare_states_with_same_order_of_comps)
 {
-  State<ti_t, td_t, ts_t> s(1, 2, "foo");
+  State<ti_t, td_t> s(1, 2);
   EXPECT_EQ(s, s);
 }
 
@@ -192,9 +176,8 @@ TEST(State, compare_states_with_different_order_of_comps)
 {
   int i = 1;
   double d = 2;
-  string str = "foo";
-  State<ti_t, ts_t, td_t> s1(i, str, d);
-  State<td_t, ti_t, ts_t> s2(d, i, str);
+  State<ti_t, td_t> s1(i, d);
+  State<td_t, ti_t> s2(d, i);
   EXPECT_EQ(s1, s2);
 }
 
@@ -202,9 +185,8 @@ TEST(State, compare_states_with_subset_of_comps)
 {
   int i = 1;
   double d = 2;
-  string str = "foo";
-  State<ti_t, ts_t> s1(i, str);
-  State<td_t, ti_t, ts_t> s2(d, i, str);
+  State<ti_t> s1(i);
+  State<td_t, ti_t> s2(d, i);
   EXPECT_EQ(s1, s2);
 }
 
@@ -245,7 +227,7 @@ TEST(State, sum_states_with_different_order_of_comps)
 TEST(State, sum_states_with_subset_of_comps)
 {
   State<ti_t, td_t> s1(2, 1), expected(5, 5);
-  State<td_t, ti_t, ts_t> s2(4, 3, "foo");
+  State<td_t, ti_t> s2(4, 3);
   auto sum = s1 + s2;
   EXPECT_EQ(sum, expected);
 }
@@ -268,7 +250,7 @@ TEST(State, sub_states_with_different_order_of_comps)
 TEST(State, sub_states_with_subset_of_comps)
 {
   State<ti_t, td_t> s1(3, 4), expected(1, 3);
-  State<td_t, ti_t, ts_t> s2(1, 2, "foo");
+  State<td_t, ti_t> s2(1, 2);
   auto sum = s1 - s2;
   EXPECT_EQ(sum, expected);
 }
@@ -288,61 +270,60 @@ TEST(State, div_state_by_coeff)
   EXPECT_EQ(s/coeff, expected);
 }
 
-TEST(State, serialize)
+TEST(State, output_default_is_bracketed)
 {
-  State<ti_t, td_t, ts_t> s(1, 2, "foo");
+  State<ti_t, td_t> s(1, 2);
   std::stringstream sstr;
   sstr << s;
-  EXPECT_EQ(sstr.str(), "1 2 foo");
+  EXPECT_EQ(sstr.str(), "{ti: 1, td: 2}");
 }
 
-TEST(State, deserialize)
+TEST(State, output_in_brackets_explicit)
 {
-  std::stringstream sstr("3 4 baz");
-  State<ti_t, td_t, ts_t> s, expected(3, 4, "baz");
+  State<ti_t, td_t> s(1, 2);
+  std::stringstream sstr;
+  sstr << IO::inBrackets << s;
+  EXPECT_EQ(sstr.str(), "{ti: 1, td: 2}");
+}
+
+TEST(State, output_bare_components)
+{
+  State<ti_t, td_t> s(1, 2);
+  std::stringstream sstr;
+  sstr << IO::bareComps << s;
+  EXPECT_EQ(sstr.str(), "1 2");
+}
+
+TEST(State, input_bare_components)
+{
+  std::stringstream sstr("3 4");
+  State<ti_t, td_t> s, expected(3, 4);
   sstr >> s;
   EXPECT_EQ(s, expected);
 }
 
-TEST(State, pretty_print)
+TEST(State, input_bracketed)
 {
-  State<ti_t, td_t, ts_t> s(1, 2, "foo");
+  std::stringstream sstr("{ti: 3, td: 4}");
+  State<ti_t, td_t> s, expected(3, 4);
+  sstr >> s;
+  EXPECT_EQ(s, expected);
+}
+
+TEST(State, roundtrip_bracketed)
+{
+  State<ti_t, td_t> s1(5, 6), s2;
   std::stringstream sstr;
-  details::print_state(sstr, s);
-  EXPECT_EQ(sstr.str(), "{ti: 1, td: 2, ts: foo}");
+  sstr << s1;
+  sstr >> s2;
+  EXPECT_EQ(s1, s2);
 }
 
-TEST(State, get_function_not_a_state)
+TEST(State, roundtrip_bare)
 {
-  int i = 1;
-  auto s = get(i);
-  EXPECT_EQ(s, i);
-}
-
-TEST(State, get_function_full_state)
-{
-  State<ti_t, td_t, ts_t> s(1, 2, "foo");
-  auto sc = get(s);
-  EXPECT_EQ(sc, s);
-}
-
-TEST(State, get_function_one_comp)
-{
-  int i = 1;
-  double d = 2;
-  string str = "foo";
-  State<ti_t, td_t, ts_t> s(i, d, str);
-  EXPECT_EQ(get<ti_t>(s), i);
-  EXPECT_EQ(get<td_t>(s), d);
-  EXPECT_EQ(get<ts_t>(s), str);
-}
-
-TEST(State, get_function_slice)
-{
-  int i = 1;
-  double d = 2;
-  State<ti_t, td_t, ts_t> s(i, d, "foo");
-  EXPECT_EQ((get<ti_t, td_t>(s)), s);
-  EXPECT_EQ((get<ti_t, ts_t>(s)), s);
-  EXPECT_EQ((get<ts_t, td_t>(s)), s);
+  State<ti_t, td_t> s1(7, 8), s2;
+  std::stringstream sstr;
+  sstr << IO::bareComps << s1;
+  sstr >> s2;
+  EXPECT_EQ(s1, s2);
 }
