@@ -8,8 +8,8 @@
 */
 
 #include "Type.h"
-#include "Mode.h"
 #include "details.h"
+#include "common/IOMode.h"
 #include <cassert>
 
 namespace Math

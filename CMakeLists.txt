@@ -23,6 +23,7 @@ elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "AppleClang")
 endif()
 
 enable_testing()
+add_subdirectory(common)
 add_subdirectory(math)
 add_subdirectory(quantities)
 add_subdirectory(factory)

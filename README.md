@@ -55,6 +55,8 @@ A generic factory pattern implementation:
 ```text
 numkit/
 ├── CMakeLists.txt       # Main build config
+├── common/              # Common library
+│   └── common/          # IOMode
 ├── math/                # Math library
 │   └── math/            # Type, Vector, Tensor
 ├── quantities/          # Quantities library
