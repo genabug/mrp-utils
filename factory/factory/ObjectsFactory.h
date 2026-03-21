@@ -21,10 +21,12 @@ template<class T, class... Args> class ObjectsFactory<T(Args...)>
 {
   using registry = std::unordered_map<std::string, std::function<T(Args...)>>;
 
+  inline static registry *factory_ptr = nullptr;
   static registry& factory()
   {
-    static registry instance;
-    return instance;
+    if (!factory_ptr)
+      factory_ptr = new registry;
+    return *factory_ptr;
   }
 
 public:
