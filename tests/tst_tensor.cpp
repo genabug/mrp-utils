@@ -230,6 +230,24 @@ TEST(Tensor, input_bare_components_two_tensors_non_digit_delim_fails)
   EXPECT_TRUE(ss.fail()); // ',;!ss' is junk before second tensor
 }
 
+TEST(Tensor, roundtrip_bracketed)
+{
+  T2i t1(1, -2, 3, -4), t2;
+  std::stringstream ss;
+  ss << IO::inBrackets << t1;
+  ss >> t2;
+  EXPECT_EQ(t1, t2);
+}
+
+TEST(Tensor, roundtrip_bare)
+{
+  T2i t1(5, 6, 7, 8), t2;
+  std::stringstream ss;
+  ss << IO::bareComps << t1;
+  ss >> t2;
+  EXPECT_EQ(t1, t2);
+}
+
 TEST(Tensor, equality)
 {
   T3i t1(1), t2(1);

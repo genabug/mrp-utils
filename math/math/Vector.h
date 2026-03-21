@@ -7,14 +7,14 @@
   \brief Euclidian vector and componentwise array of arbitrary dimension, definition, documentation and tests.
 */
 
-#include "IOMode.h"
+#include "Type.h"
+#include "Mode.h"
 #include "details.h"
-
-#include <cstddef>
+#include <cassert>
 
 namespace Math
 {
-  template<size_t N, class T = double, bool is_euclidian = true> class Vector
+  template<size_t N, Type T = double, bool is_euclidian = true> class Vector
   {
     T data[N] = {};
     static_assert(N != 0, "Vector of zero size is meaningless.");
@@ -32,9 +32,9 @@ namespace Math
       constexpr explicit Vector(Ts... as) noexcept : data{static_cast<T>(as)...} {}
 
     // converters
-    template<class U>
+    template<Type U>
       constexpr explicit Vector(const Vector<N, U, is_euclidian> &v) noexcept;
-    template<class U>
+    template<Type U>
       constexpr Vector& operator=(const Vector<N, U, is_euclidian> &v) noexcept;
 
     // access
@@ -43,9 +43,9 @@ namespace Math
     static constexpr size_t Z = (N > 2)? 2 : Y;
     static constexpr size_t dim = N;
 
-    constexpr auto operator[](size_t i) && noexcept { return data[i]; }
-    constexpr auto& operator[](size_t i) & noexcept { return data[i]; }
-    constexpr auto& operator[](size_t i) const & noexcept { return data[i]; }
+    constexpr auto operator[](size_t i) && noexcept { assert(i < N); return data[i]; }
+    constexpr auto& operator[](size_t i) & noexcept { assert(i < N); return data[i]; }
+    constexpr auto& operator[](size_t i) const & noexcept { assert(i < N); return data[i]; }
 
     // unary ops (NB! returns a copy!)
     constexpr Vector operator+() const noexcept { return *this; }
@@ -66,65 +66,65 @@ namespace Math
 
   //! Shortcut for non-euclidian vector
   //! i.e. array with componentwise arithmetic, equality and IO operations.
-  template<size_t N, class T = double> using Array = Vector<N, T, false>;
+  template<size_t N, Type T = double> using Array = Vector<N, T, false>;
 
 /*---------------------------------------------------------------------------------------*/
 
   // arithmetic ops
-  template<size_t N, class T, bool B>
+  template<size_t N, Type T, bool B>
     constexpr auto operator+(
       Vector<N, T, B> v1, const Vector<N, T, B> &v2) noexcept { v1 += v2; return v1; }
 
-  template<size_t N, class T, bool B>
+  template<size_t N, Type T, bool B>
     constexpr auto operator-(
       Vector<N, T, B> v1, const Vector<N, T, B> &v2) noexcept { v1 -= v2; return v1; }
 
-  template<size_t N, class T, bool B>
+  template<size_t N, Type T, bool B>
     constexpr auto operator*(const T &a, Vector<N, T, B> v) noexcept { v *= a; return v; }
 
-  template<size_t N, class T, bool B>
+  template<size_t N, Type T, bool B>
     constexpr auto operator*(Vector<N, T, B> v, const T &a) noexcept { v *= a; return v; }
 
-  template<size_t N, class T, bool B>
+  template<size_t N, Type T, bool B>
     constexpr auto operator/(Vector<N, T, B> v, const T &a) noexcept { v /= a; return v; }
 
   // IO ops
   // TODO: should throw an exception in case of unexpected format, symbols, ...
-  template<size_t N, class T, bool B>
+  template<size_t N, Type T, bool B>
     std::istream& operator>>(std::istream &in, Vector<N, T, B> &v);
 
-  template<size_t N, class T, bool B>
+  template<size_t N, Type T, bool B>
     std::ostream& operator<<(std::ostream &out, const Vector<N, T, B> &v);
 
   // useful functions for euclidian vector only! note the lack of third tparam
-  template<size_t N, class T>
+  template<size_t N, Type T>
     constexpr auto operator*(const Vector<N, T> &v1, const Vector<N, T> &v2) noexcept;
 
-  template<size_t N, class T>
+  template<size_t N, Type T>
     constexpr auto sqs(const Vector<N, T> &v) noexcept { return v*v; }
 
-  template<size_t N, class T>
+  template<size_t N, Type T>
     constexpr auto fabs(const Vector<N, T> &v) noexcept { return details::sqrt(v*v); }
 
-  template<size_t N, class T>
+  template<size_t N, Type T>
     constexpr auto cos(const Vector<N, T> &v1, const Vector<N, T> &v2) noexcept;
 
-  template<size_t N, class T>
+  template<size_t N, Type T>
     constexpr auto sin(const Vector<N, T> &v1, const Vector<N, T> &v2) noexcept;
 
-  template<class T>
+  template<Type T>
     constexpr auto operator%(const Vector<2, T> &v1, const Vector<2, T> &v2) noexcept;
 
-  template<class T>
+  template<Type T>
     constexpr auto operator%(const Vector<3, T> &v1, const Vector<3, T> &v2) noexcept;
 
-  template<class T> constexpr auto operator~(const Vector<2, T> &v) noexcept;
+  template<Type T> constexpr auto operator~(const Vector<2, T> &v) noexcept;
 
 /*---------------------------------------------------------------------------------------*/
 /*------------------------------------ definition ---------------------------------------*/
 /*---------------------------------------------------------------------------------------*/
 
-  template<size_t N, class T, bool B>
+  template<size_t N, Type T, bool B>
     template<class U> constexpr Vector<N, T, B>::Vector(const U &a) noexcept
   {
     for (auto &d : data)
@@ -133,8 +133,8 @@ namespace Math
 
 /*---------------------------------------------------------------------------------------*/
 
-  template<size_t N, class T, bool B>
-    template<class U>
+  template<size_t N, Type T, bool B>
+    template<Type U>
       constexpr Vector<N, T, B>::Vector(const Vector<N, U, B> &v) noexcept
   {
     for (size_t i = 0; i < N; ++i)
@@ -143,8 +143,8 @@ namespace Math
 
 /*---------------------------------------------------------------------------------------*/
 
-  template<size_t N, class T, bool B>
-    template<class U>
+  template<size_t N, Type T, bool B>
+    template<Type U>
       constexpr Vector<N, T, B>&
         Vector<N, T, B>::operator=(const Vector<N, U, B> &v) noexcept
   {
@@ -155,7 +155,7 @@ namespace Math
 
 /*---------------------------------------------------------------------------------------*/
 
-  template<size_t N, class T, bool B>
+  template<size_t N, Type T, bool B>
     constexpr Vector<N, T, B>& Vector<N, T, B>::operator/=(const T &a) noexcept
   {
     for (auto &d : data)
@@ -165,7 +165,7 @@ namespace Math
 
 /*---------------------------------------------------------------------------------------*/
 
-  template<size_t N, class T, bool B>
+  template<size_t N, Type T, bool B>
     constexpr Vector<N, T, B>& Vector<N, T, B>::operator*=(const T &a) noexcept
   {
     for (auto &d : data)
@@ -175,7 +175,7 @@ namespace Math
 
 /*---------------------------------------------------------------------------------------*/
 
-  template<size_t N, class T, bool B>
+  template<size_t N, Type T, bool B>
     constexpr Vector<N, T, B>& Vector<N, T, B>::operator+=(const Vector<N, T, B> &v) noexcept
   {
     for (size_t i = 0; i < N; ++i)
@@ -185,7 +185,7 @@ namespace Math
 
 /*---------------------------------------------------------------------------------------*/
 
-  template<size_t N, class T, bool B>
+  template<size_t N, Type T, bool B>
     constexpr Vector<N, T, B>& Vector<N, T, B>::operator-=(const Vector<N, T, B> &v) noexcept
   {
     for (size_t i = 0; i < N; ++i)
@@ -195,7 +195,7 @@ namespace Math
 
 /*---------------------------------------------------------------------------------------*/
 
-  template<size_t N, class T, bool B>
+  template<size_t N, Type T, bool B>
     std::istream& operator>>(std::istream &in, Vector<N, T, B> &v)
   {
     return IO::details::read_values(in, &v[0], N, '(', ')');
@@ -203,7 +203,7 @@ namespace Math
 
 /*---------------------------------------------------------------------------------------*/
 
-  template<size_t N, class T, bool B>
+  template<size_t N, Type T, bool B>
     std::ostream& operator<<(std::ostream &out, const Vector<N, T, B> &v)
   {
     bool brackets = IO::use_brackets(out);
@@ -215,7 +215,7 @@ namespace Math
 
 /*---------------------------------------------------------------------------------------*/
 
-  template<size_t N, class T>
+  template<size_t N, Type T>
   constexpr auto operator*(const Vector<N, T> &v1, const Vector<N, T> &v2) noexcept
   {
     auto t = v1[0] * v2[0];
@@ -226,26 +226,24 @@ namespace Math
 
 /*---------------------------------------------------------------------------------------*/
 
-  template<size_t N, class T>
+  template<size_t N, Type T>
     constexpr auto cos(const Vector<N, T> &v1, const Vector<N, T> &v2) noexcept
   {
-    static_assert(std::is_arithmetic<T>::value, "Component must be of arithmetic type!");
     return v1 * v2 / (fabs(v1) * fabs(v2));
   }
 
 /*---------------------------------------------------------------------------------------*/
 
-  template<size_t N, class T>
+  template<size_t N, Type T>
     constexpr auto sin(const Vector<N, T> &v1, const Vector<N, T> &v2) noexcept
   {
-    static_assert(std::is_arithmetic<T>::value, "Component must be of arithmetic type!");
     auto x = cos(v1, v2);
     return details::sqrt(static_cast<T>(1) - x*x);
   }
 
 /*---------------------------------------------------------------------------------------*/
 
-  template<class T>
+  template<Type T>
     constexpr auto operator%(const Vector<2, T> &v1, const Vector<2, T> &v2) noexcept
   {
     return v1[0]*v2[1] - v1[1]*v2[0];
@@ -253,7 +251,7 @@ namespace Math
 
 /*---------------------------------------------------------------------------------------*/
 
-  template<class T>
+  template<Type T>
     constexpr auto operator%(const Vector<3, T> &v1, const Vector<3, T> &v2) noexcept
   {
     return Vector<3, T>(
@@ -264,7 +262,7 @@ namespace Math
 
 /*---------------------------------------------------------------------------------------*/
 
-  template<class T> constexpr auto operator~(const Vector<2, T> &v) noexcept
+  template<Type T> constexpr auto operator~(const Vector<2, T> &v) noexcept
   {
     return Vector<2, T>(-v[1], v[0]);
   }

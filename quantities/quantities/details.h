@@ -4,15 +4,34 @@
 /*!
   \file Details.h
   \author gennadiy
-  \brief A bunch of helpers to implement Quantities::State.
+  \brief A bunch of helpers to implement Quantities::Traits and Quantities::State.
 */
 
+#include "math/Mode.h"
+
 #include <tuple>
+#include <string>
 #include <ostream>
 #include <istream>
+#include <algorithm>
 
 namespace Quantities::details
 {
+  template<class T> concept has_size = requires { T::size; };
+  template<class T> constexpr int size_of() noexcept
+  {
+    if constexpr (has_size<T>)
+      return T::size;
+    else
+      return 1;
+  }
+  template<int N> struct Name
+  {
+    char data[N] = {};
+    consteval operator const char*() const { return data; }
+    consteval Name(const char (&name)[N]) { std::copy_n(name, N, data); }
+  };
+
   template<size_t N, class Q, class... Qs>
     struct index_of_impl
     {
@@ -43,28 +62,20 @@ namespace Quantities::details
 
 /*---------------------------------------------------------------------------------------*/
 
-  // pretty printer
   template<size_t I = 0, class S>
-    constexpr void print_state(std::ostream &out, const S &state)
-  {
-    if constexpr (I != S::size)
-    {
-      using Q = S::template type_of<I>;
-      out << (I? ", " : "{") << Q::id << ": " << state.template get<I>();
-      print_state<I + 1>(out, state);
-    }
-    else
-    {
-      out << '}';
-      return;
-    }
-  }
-
-/*---------------------------------------------------------------------------------------*/
+    void write_state_bracketed(std::ostream &out, const S &state);
 
   template<size_t I = 0, class S>
-    constexpr void write_state(std::ostream &out, const S &state)
+    void write_state(std::ostream &out, const S &state)
   {
+    if constexpr (I == 0)
+    {
+      if (IO::use_brackets(out))
+      {
+        write_state_bracketed(out, state);
+        return;
+      }
+    }
     if constexpr (I != S::size)
     {
       out << (I? " " : "") << state.template get<I>();
@@ -72,15 +83,78 @@ namespace Quantities::details
     }
   }
 
+  template<size_t I, class S>
+    void write_state_bracketed(std::ostream &out, const S &state)
+  {
+    if constexpr (I != S::size)
+    {
+      using Q = S::template type_of<I>;
+      out << (I? ", " : "{") << Q::id << ": " << state.template get<I>();
+      write_state_bracketed<I + 1>(out, state);
+    }
+    else
+    {
+      out << '}';
+    }
+  }
+
 /*---------------------------------------------------------------------------------------*/
 
   template<size_t I = 0, class S>
-    constexpr void read_state(std::istream &in, S &state)
+    void read_state_bracketed(std::istream &in, S &state);
+
+  template<size_t I = 0, class S>
+    void read_state(std::istream &in, S &state)
   {
+    if constexpr (I == 0)
+    {
+      in >> std::ws;
+      if (in.peek() == '{')
+      {
+        read_state_bracketed(in, state);
+        return;
+      }
+    }
     if constexpr (I != S::size)
     {
       in >> state.template get<I>();
       read_state<I + 1>(in, state);
+    }
+  }
+
+  template<size_t I, class S>
+    void read_state_bracketed(std::istream &in, S &state)
+  {
+    if constexpr (I == 0)
+      in.get(); // consume '{'
+
+    if constexpr (I != S::size)
+    {
+      if constexpr (I > 0)
+      {
+        in >> std::ws;
+        if (in.peek() != ',') { in.setstate(std::ios::failbit); return; }
+        in.get(); // consume ','
+      }
+
+      // skip "name: " — read and discard until ':'
+      in >> std::ws;
+      std::string name;
+      if (!std::getline(in, name, ':')) return;
+      in >> std::ws;
+
+      in >> state.template get<I>();
+      if (!in) return;
+
+      read_state_bracketed<I + 1>(in, state);
+    }
+    else
+    {
+      in >> std::ws;
+      if (in.peek() == '}')
+        in.get();
+      else
+        in.setstate(std::ios::failbit);
     }
   }
 

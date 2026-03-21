@@ -8,11 +8,10 @@
 */
 
 #include "Vector.h"
-#include <cassert>
 
 namespace Math
 {
-  template<size_t N, class T = double> class Tensor
+  template<size_t N, Type T = double> class Tensor
   {
     T data[N][N] = {};
     static_assert(N != 0, "Tensor of zero size is meaningless.");
@@ -28,8 +27,8 @@ namespace Math
     template<class... Ts> constexpr explicit Tensor(const Ts&... as) noexcept;
 
     // converters
-    template<class U> constexpr explicit Tensor(const Tensor<N, U> &t) noexcept;
-    template<class U> constexpr Tensor& operator=(const Tensor<N, U> &t) noexcept;
+    template<Type U> constexpr explicit Tensor(const Tensor<N, U> &t) noexcept;
+    template<Type U> constexpr Tensor& operator=(const Tensor<N, U> &t) noexcept;
 
     // access
     static constexpr size_t dim = N;
@@ -75,85 +74,85 @@ namespace Math
 /*---------------------------------------------------------------------------------------*/
 
   // arithmetic ops
-  template<size_t N, class T>
+  template<size_t N, Type T>
     constexpr auto operator+(Tensor<N, T> A, const Tensor<N, T> &B) noexcept { A += B; return A; }
 
-  template<size_t N, class T>
+  template<size_t N, Type T>
     constexpr auto operator-(Tensor<N, T> A, const Tensor<N, T> &B) noexcept { A -= B; return A; }
 
-  template<size_t N, class T>
+  template<size_t N, Type T>
     constexpr auto operator*(Tensor<N, T> A, const Tensor<N, T> &B) noexcept { A *= B; return A; }
 
-  template<size_t N, class T>
+  template<size_t N, Type T>
     constexpr auto operator*(Tensor<N, T> A, const T &a) noexcept { A *= a; return A; }
 
-  template<size_t N, class T>
+  template<size_t N, Type T>
     constexpr auto operator*(const T &a, Tensor<N, T> A) noexcept { A *= a; return A; }
 
-  template<size_t N, class T>
+  template<size_t N, Type T>
     constexpr auto operator/(Tensor<N, T> A, const T &a) noexcept { A /= a; return A; }
 
-  template<size_t N, class T>
+  template<size_t N, Type T>
     constexpr auto operator/(Tensor<N, T> A, const Tensor<N, T> &B) noexcept { A /= B; return A; }
 
   // io ops
   // TODO: error-handling: throw an exception in case of unexpected symbols, ...
-  template<size_t N, class T>
+  template<size_t N, Type T>
     std::istream& operator>>(std::istream &in, Tensor<N, T> &A);
 
-  template<size_t N, class T>
+  template<size_t N, Type T>
     std::ostream& operator<<(std::ostream &out, const Tensor<N, T> &A);
 
   // ops with vectors
-  template<size_t N, class T>
+  template<size_t N, Type T>
     constexpr auto& operator*=(Vector<N, T> &a, const Tensor<N, T> &A) noexcept;
 
-  template<size_t N, class T>
+  template<size_t N, Type T>
     constexpr auto operator*(Vector<N, T> a, const Tensor<N, T> &A) noexcept { a *= A; return a; }
 
-  template<size_t N, class T>
+  template<size_t N, Type T>
     constexpr auto operator*(const Tensor<N, T> &A, Vector<N, T> a) noexcept { a *= ~A; return a; }
 
-  template<size_t N, class T>
+  template<size_t N, Type T>
     constexpr auto& operator/=(Vector<N, T> &a, const Tensor<N, T> &A) noexcept { return a *= A.invert(); }
 
-  template<size_t N, class T>
+  template<size_t N, Type T>
     constexpr auto operator/(Vector<N, T> a, const Tensor<N, T> &A) noexcept { a /= A; return a; }
 
-  template<size_t N, class T>
+  template<size_t N, Type T>
     constexpr auto operator^(const Vector<N, T> &a, const Vector<N, T> &b) noexcept;
 
   // ops with 2D vectors
-  template<class T>
+  template<Type T>
     constexpr auto operator%(const Tensor<2, T> &A, const Vector<2, T> &a) noexcept;
 
-  template<class T>
+  template<Type T>
     constexpr auto operator%(const Vector<2, T> &a, const Tensor<2, T> &A) noexcept;
 
-  template<class T>
+  template<Type T>
     constexpr auto operator%(const Tensor<2, T> &A, const Tensor<2, T> &B) noexcept;
 
   // ops with 3D vectors
-  template<class T> constexpr Tensor<3, T> operator~(const Vector<3, T> &a) noexcept;
+  template<Type T> constexpr Tensor<3, T> operator~(const Vector<3, T> &a) noexcept;
 
-  template<class T>
+  template<Type T>
     constexpr auto operator%(const Tensor<3, T> &A, const Vector<3, T> &a) noexcept;
 
-  template<class T>
+  template<Type T>
     constexpr auto operator%(const Vector<3, T> &a, const Tensor<3, T> &A) noexcept;
 
 /*---------------------------------------------------------------------------------------*/
 /*------------------------------------ definition ---------------------------------------*/
 /*---------------------------------------------------------------------------------------*/
 
-  template<size_t N, class T> template<class U>
+  template<size_t N, Type T> template<class U>
     constexpr Tensor<N, T>::Tensor(const U &a) noexcept
   {
     for (size_t i = 0; i < N; ++i)
       data[i][i] = static_cast<T>(a);
   }
 
-  template<size_t N, class T> template<class... Ts>
+  template<size_t N, Type T> template<class... Ts>
     constexpr Tensor<N, T>::Tensor(const Ts&... as) noexcept
   {
     constexpr auto n = sizeof...(Ts);
@@ -163,8 +162,8 @@ namespace Math
 
 /*---------------------------------------------------------------------------------------*/
 
-  template<size_t N, class T>
-    template<class U> constexpr Tensor<N, T>::Tensor(const Tensor<N, U> &t) noexcept
+  template<size_t N, Type T>
+    template<Type U> constexpr Tensor<N, T>::Tensor(const Tensor<N, U> &t) noexcept
   {
     for (size_t i = 0; i < N; ++i)
       for (size_t j = 0; j < N; ++j)
@@ -173,8 +172,8 @@ namespace Math
 
 /*---------------------------------------------------------------------------------------*/
 
-  template<size_t N, class T>
-    template<class U> constexpr Tensor<N, T>& Tensor<N, T>::operator=(const Tensor<N, U> &t) noexcept
+  template<size_t N, Type T>
+    template<Type U> constexpr Tensor<N, T>& Tensor<N, T>::operator=(const Tensor<N, U> &t) noexcept
   {
     for (size_t i = 0; i < N; ++i)
       for (size_t j = 0; j < N; ++j)
@@ -184,7 +183,7 @@ namespace Math
 
 /*---------------------------------------------------------------------------------------*/
 
-  template<size_t N, class T>
+  template<size_t N, Type T>
     constexpr Tensor<N, T> Tensor<N, T>::operator-() const noexcept
   {
     Tensor<N, T> A;
@@ -196,7 +195,7 @@ namespace Math
 
 /*---------------------------------------------------------------------------------------*/
 
-  template<size_t N, class T>
+  template<size_t N, Type T>
     constexpr Tensor<N, T>& Tensor<N, T>::operator*=(const T &a) noexcept
   {
     for (size_t i = 0; i < N; ++i)
@@ -207,7 +206,7 @@ namespace Math
 
 /*---------------------------------------------------------------------------------------*/
 
-  template<size_t N, class T>
+  template<size_t N, Type T>
     constexpr Tensor<N, T>& Tensor<N, T>::operator/=(const T &a) noexcept
   {
     for (size_t i = 0; i < N; ++i)
@@ -218,7 +217,7 @@ namespace Math
 
 /*---------------------------------------------------------------------------------------*/
 
-  template<size_t N, class T>
+  template<size_t N, Type T>
     constexpr Tensor<N, T>& Tensor<N, T>::operator+=(const Tensor<N, T> &A) noexcept
   {
     for (size_t i = 0; i < N; ++i)
@@ -229,7 +228,7 @@ namespace Math
 
 /*---------------------------------------------------------------------------------------*/
 
-  template<size_t N, class T>
+  template<size_t N, Type T>
     constexpr Tensor<N, T>& Tensor<N, T>::operator-=(const Tensor<N, T> &A) noexcept
   {
     for (size_t i = 0; i < N; ++i)
@@ -240,7 +239,7 @@ namespace Math
 
 /*---------------------------------------------------------------------------------------*/
 
-  template<size_t N, class T>
+  template<size_t N, Type T>
     constexpr Tensor<N, T>& Tensor<N, T>::operator*=(const Tensor<N, T> &A) noexcept
   {
     auto B = *this;
@@ -256,7 +255,7 @@ namespace Math
 
 /*---------------------------------------------------------------------------------------*/
 
-  template<size_t N, class T> constexpr T Tensor<N, T>::trace() const noexcept
+  template<size_t N, Type T> constexpr T Tensor<N, T>::trace() const noexcept
   {
     T tr = 0;
     for (size_t i = 0; i < N; ++i)
@@ -266,7 +265,7 @@ namespace Math
 
 /*---------------------------------------------------------------------------------------*/
 
-  template<size_t N, class T> constexpr Tensor<N, T> Tensor<N, T>::invert() const noexcept
+  template<size_t N, Type T> constexpr Tensor<N, T> Tensor<N, T>::invert() const noexcept
   {
     // TODO: possible issues:
     // 1. exact equality check (d == 0) is unreliable for floating-point types;
@@ -288,7 +287,7 @@ namespace Math
 
 /*---------------------------------------------------------------------------------------*/
 
-  template<size_t N, class T> constexpr Tensor<N, T> Tensor<N, T>::transpose() const noexcept
+  template<size_t N, Type T> constexpr Tensor<N, T> Tensor<N, T>::transpose() const noexcept
   {
     Tensor<N, T> A;
     for (size_t i = 0; i < N; ++i)
@@ -299,7 +298,7 @@ namespace Math
 
 /*---------------------------------------------------------------------------------------*/
 
-  template<size_t N, class T>
+  template<size_t N, Type T>
     constexpr Tensor<N-1, T> Tensor<N, T>::M(size_t I, size_t J) const noexcept
   {
     Tensor<N-1, T> A;
@@ -315,7 +314,7 @@ namespace Math
 
 /*---------------------------------------------------------------------------------------*/
 
-  template<size_t N, class T>
+  template<size_t N, Type T>
     constexpr auto& operator*=(Vector<N, T> &a, const Tensor<N, T> &A) noexcept
   {
     auto b = a;
@@ -330,7 +329,7 @@ namespace Math
 
 /*---------------------------------------------------------------------------------------*/
 
-  template<size_t N, class U>
+  template<size_t N, Type U>
     std::istream& operator>>(std::istream &in, Tensor<N, U> &A)
   {
     return IO::details::read_values(in, &A[0][0], N*N, '[', ']');
@@ -338,7 +337,7 @@ namespace Math
 
 /*---------------------------------------------------------------------------------------*/
 
-  template<size_t N, class U>
+  template<size_t N, Type U>
     std::ostream& operator<<(std::ostream &out, const Tensor<N, U> &A)
   {
     bool brackets = IO::use_brackets(out);
@@ -356,7 +355,7 @@ namespace Math
 
 /*---------------------------------------------------------------------------------------*/
 
-  template<size_t N, class T>
+  template<size_t N, Type T>
     constexpr auto operator^(const Vector<N, T> &a, const Vector<N, T> &b) noexcept
   {
     Tensor<N, T> t;
@@ -368,7 +367,7 @@ namespace Math
 
 /*---------------------------------------------------------------------------------------*/
 
-  template<class T>
+  template<Type T>
     constexpr auto operator%(const Tensor<2, T> &A, const Vector<2, T> &a) noexcept
   {
     return Vector<2, T>(A[0][0] * a[1] - A[0][1] * a[0],
@@ -377,7 +376,7 @@ namespace Math
 
 /*---------------------------------------------------------------------------------------*/
 
-  template<class T>
+  template<Type T>
     constexpr auto operator%(const Vector<2, T> &a, const Tensor<2, T> &A) noexcept
   {
     return Vector<2, T>(a[0] * A[1][0] - a[1] * A[0][0],
@@ -386,7 +385,7 @@ namespace Math
 
 /*---------------------------------------------------------------------------------------*/
 
-  template<class T>
+  template<Type T>
     constexpr auto operator%(const Tensor<2, T> &A, const Tensor<2, T> &B) noexcept
   {
     Tensor<2, T> R;
@@ -399,7 +398,7 @@ namespace Math
 
 /*---------------------------------------------------------------------------------------*/
 
-  template<class T> constexpr Tensor<3, T> operator~(const Vector<3, T> &a) noexcept
+  template<Type T> constexpr Tensor<3, T> operator~(const Vector<3, T> &a) noexcept
   {
     return Tensor<3, T>(    0,  -a[2],  a[1],
                          a[2],     0, -a[0],
@@ -408,7 +407,7 @@ namespace Math
 
 /*---------------------------------------------------------------------------------------*/
 
-  template<class T>
+  template<Type T>
     constexpr auto operator%(const Tensor<3, T> &A, const Vector<3, T> &a) noexcept
   {
     Tensor<3, T> R;
@@ -423,7 +422,7 @@ namespace Math
 
 /*---------------------------------------------------------------------------------------*/
 
-  template<class T>
+  template<Type T>
     constexpr auto operator%(const Vector<3, T> &a, const Tensor<3, T> &A) noexcept
   {
     Tensor<3, T> R;
@@ -438,7 +437,7 @@ namespace Math
 
 /*---------------------------------------------------------------------------------------*/
 
-  template<size_t N, class T>
+  template<size_t N, Type T>
     constexpr T Tensor<N, T>::det() const noexcept
   {
     if constexpr (N == 1)
@@ -462,14 +461,14 @@ namespace Math
 
 /*---------------------------------------------------------------------------------------*/
 
-  template<size_t N, class T> template<size_t I, class>
+  template<size_t N, Type T> template<size_t I, class>
     constexpr void Tensor<N, T>::init(const Array<N, T> &arr) noexcept
   {
     for (size_t i = 0; i < I; ++i)
       data[i][i] = arr[i];
   }
 
-  template<size_t N, class T> template<size_t I, class, class>
+  template<size_t N, Type T> template<size_t I, class, class>
     constexpr void Tensor<N, T>::init(const Array<N*N, T> &arr) noexcept
   {
     for (size_t i = 0; i < N; ++i)
@@ -581,7 +580,7 @@ namespace Math::Tensors::tests
   \tparam N Spatial dimension (total number of tensor components is N*N).
   \tparam T Type of the components.
 
-  It's quite simple class to represent tensors of rank 2 / square matricies.
+  It's quite simple Type To represent tensors of rank 2 / square matricies.
   A lot of useful methods and operations are defined to make it simple and intuitive
   similar to fundumental ones like int, double, etc. All constructors of the class
   defined as explicit in order to prevent reluctant conversions. It may be inconvenient

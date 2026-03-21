@@ -4,9 +4,17 @@ A C++ header-only library providing low-level mathematical data structures for n
 
 ## Core Components
 
+### Type (`math/Type.h`)
+
+A C++20 concept constraining types eligible for numerical computations:
+
+- Requires default and copy constructibility
+- Requires compound assignment operators (`+=`, `-=`, `*=`, `/=`) and equality (`==`)
+- Intentionally broader than `std::is_arithmetic` to support user-defined numeric types
+
 ### Vector (`math/Vector.h`)
 
-A templated Euclidean vector class for arbitrary dimensions and types:
+A templated Euclidean vector class for arbitrary dimensions and `Math::Type`-constrained types:
 
 - Parameterized by dimension `N`, component type `T`, and a boolean `is_euclidian`
 - Supports standard arithmetic operations (`+`, `-`, `*`, `/`)
@@ -16,7 +24,7 @@ A templated Euclidean vector class for arbitrary dimensions and types:
 
 ### Tensor (`math/Tensor.h`)
 
-A rank-2 tensor (matrix) class for arbitrary dimensions:
+A rank-2 tensor (matrix) class for arbitrary dimensions and `Math::Type`-constrained types:
 
 - Full matrix operations: transpose, inverse, determinant, trace
 - Matrix multiplication, addition, subtraction
@@ -28,8 +36,10 @@ A rank-2 tensor (matrix) class for arbitrary dimensions:
 A heterogeneous tuple of named quantities for scientific state vectors:
 
 - Uses `Traits` for type metadata with compile-time string names
+- Component types are constrained by `Math::Type`
 - Supports arithmetic and comparison operations on states
 - Allows access by index, type-name, or variable
+- IO with `IO::inBrackets` (`{ti: 1, td: 2}`) and `IO::bareComps` (`1 2`) formats
 - Useful for representing physical states (e.g., density, temperature, velocity)
 
 ### ObjectsFactory (`factory/ObjectsFactory.h`)
@@ -46,7 +56,7 @@ A generic factory pattern implementation:
 numkit/
 ├── CMakeLists.txt       # Main build config
 ├── math/                # Math library
-│   └── math/            # Vector, Tensor
+│   └── math/            # Type, Vector, Tensor
 ├── quantities/          # Quantities library
 │   └── quantities/      # State, Traits
 ├── factory/             # Factory pattern implementation
@@ -80,7 +90,6 @@ cd build && ctest
 - No examples :(
 - Materials with deducing this 8) (c++23)
 - GHA to run the tests on PRs
-- State with arithmetic types only? then IO::Mode could be used
 - thread safety
 - units of quantities
 - generate doxygen docs

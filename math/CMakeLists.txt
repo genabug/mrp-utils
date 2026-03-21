@@ -1,5 +1,6 @@
 add_library(math INTERFACE
-  math/IOMode.h
+  math/Mode.h
+  math/Type.h
   math/Tensor.h
   math/details.h
   math/Vector.h
