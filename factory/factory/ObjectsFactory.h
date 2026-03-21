@@ -19,9 +19,13 @@ template<class Factory> class ObjectsFactory;
 /// ...
 template<class T, class... Args> class ObjectsFactory<T(Args...)>
 {
-  inline static std::unordered_map<
-    std::string,
-    std::function<T(Args...)>> factory;
+  using registry = std::unordered_map<std::string, std::function<T(Args...)>>;
+
+  static registry& factory()
+  {
+    static registry instance;
+    return instance;
+  }
 
 public:
   ObjectsFactory() = delete;
@@ -33,10 +37,10 @@ public:
 
   ObjectsFactory(std::string name, std::function<T(Args...)> fun)
   {
-    if (factory.find(name) != factory.end())
+    if (factory().find(name) != factory().end())
       throw std::logic_error(
         "ObjectFactory: id \"" + name + "\" defined more than once!");
-    factory.emplace(name, fun);
+    factory().emplace(name, fun);
   }
 
   /// Build the object registered with label "name".
@@ -47,8 +51,8 @@ public:
       sizeof...(Args) == sizeof...(Ts) &&
       (std::is_same_v<Args, Ts> && ...), "arguments aren't match");
 
-    auto it = factory.find(name);
-    if (it == factory.end())
+    auto it = factory().find(name);
+    if (it == factory().end())
       throw std::runtime_error(
         "ObjectsFactory: id \"" + name + "\" is not registered.");
     return it->second(std::forward<Ts>(args)...);
@@ -56,7 +60,7 @@ public:
 
   template<class Cont> static void dump_names(Cont &cont)
   {
-    for (auto f : factory)
+    for (auto f : factory())
       cont.push_back(f.first);
   }
 }; // class ObjectsFactory<T(Args...)>
