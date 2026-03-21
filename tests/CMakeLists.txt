@@ -16,7 +16,7 @@ function(add_numkit_test tst_name)
   add_executable(${tst_name} ${tst_SOURCES})
   target_link_libraries(${tst_name} PRIVATE GTest::gmock GTest::gtest_main ${tst_DEPENDS})
 
-  gtest_discover_tests(${tst_name})
+  gtest_discover_tests(${tst_name} DISCOVERY_MODE PRE_TEST)
 endfunction()
 
 add_numkit_test(tst_state SOURCES tst_state.cpp DEPENDS quantities)
