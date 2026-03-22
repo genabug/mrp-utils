@@ -1,30 +1,21 @@
 cmake_minimum_required(VERSION 3.23)
 
 project(numkit LANGUAGES CXX)
+include(cmake/FactorySettings.cmake)
 
-set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
+option(NUMKIT_BUILD_TESTS "Build tests" OFF)
+option(NUMKIT_BUILD_DOCS "Build documentation" OFF)
 
-set(CMAKE_CXX_VISIBILITY_PRESET hidden)
-set(CMAKE_VISIBILITY_INLINES_HIDDEN ON)
-set(CMAKE_POSITION_INDEPENDENT_CODE ON)
-
-set(CMAKE_VERBOSE_MAKEFILE ON)
-
-# A dirty hack to force the linker to keep unused variables.
-set(AS_NEEDED ",--as-needed,--no-whole-archive,")
-set(NO_AS_NEEDED ",--no-as-needed,--whole-archive,")
-if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
-  set(AS_NEEDED "")
-  set(NO_AS_NEEDED "/WHOLEARCHIVE:")
-elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "AppleClang")
-  set(AS_NEEDED "")
-  set(NO_AS_NEEDED ",-force_load,")
-endif()
-
-enable_testing()
 add_subdirectory(common)
 add_subdirectory(math)
 add_subdirectory(quantities)
 add_subdirectory(factory)
-add_subdirectory(tests)
+
+if(NUMKIT_BUILD_TESTS)
+  enable_testing()
+  add_subdirectory(tests)
+endif()
+
+if(NUMKIT_BUILD_DOCS)
+  add_subdirectory(docs)
+endif()

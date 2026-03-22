@@ -19,7 +19,6 @@ A templated Euclidean vector class for arbitrary dimensions and `Math::Type`-con
 - Parameterized by dimension `N`, component type `T`, and a boolean `is_euclidian`
 - Supports standard arithmetic operations (`+`, `-`, `*`, `/`)
 - Provides dot product, cross product (`%`), magnitude (`fabs`), and angle functions (`cos`, `sin`)
-- Includes IO support with customizable formatting (brackets vs bare components)
 - Type aliases: `Vector2D`, `Vector3D`, and `Array<N,T>` for simple componentwise arithmetic
 
 ### Tensor (`math/Tensor.h`)
@@ -39,7 +38,6 @@ A heterogeneous tuple of named quantities for scientific state vectors:
 - Component types are constrained by `Math::Type`
 - Supports arithmetic and comparison operations on states
 - Allows access by index, type-name, or variable
-- IO with `IO::inBrackets` (`{ti: 1, td: 2}`) and `IO::bareComps` (`1 2`) formats
 - Useful for representing physical states (e.g., density, temperature, velocity)
 
 ### ObjectsFactory (`factory/ObjectsFactory.h`)
@@ -49,6 +47,12 @@ A generic factory pattern implementation:
 - Creates objects by string identifiers
 - Uses static registration via constructors
 - Supports arbitrary creation functions with typed arguments
+
+### Common library
+
+Common utilities and helpers:
+
+- IOMode provides io manipulators `inBrackets` and `bareComponents` for array-like types (Vector, Tensor, State)
 
 ## Project Structure
 
@@ -93,5 +97,4 @@ cd build && ctest
 - Materials with deducing this 8) (c++23)
 - thread safety
 - units of quantities
-- generate doxygen docs
 - ...
