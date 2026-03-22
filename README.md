@@ -77,19 +77,29 @@ numkit/
 
 ## Build
 
-Requires CMake 3.23+ and a C++20 compatible compiler, as well as google test library.
+Requires CMake 3.23+ and a C++20 compatible compiler. Right now there is nothing to build, it's a header-only library.
+
+### Tests
+
+Requires [Google Test](https://github.com/google/googletest).
 
 ```bash
-mkdir build && cd build &&\
-cmake .. &&\
-make
+cmake -B build -DNUMKIT_BUILD_TESTS=ON
+cmake --build build
+ctest --test-dir build
 ```
 
-## Run Tests
+### Documentation
+
+Requires [Doxygen](https://www.doxygen.nl/).
 
 ```bash
-cd build && ctest
+cmake -B build -DNUMKIT_BUILD_DOCS=ON
+cmake --build build --target doc
 ```
+
+The generated HTML documentation will be available in `build/docs/html/`.
+
 
 ## Known Issues / TODOs
 
