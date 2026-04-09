@@ -1,5 +1,5 @@
-#ifndef TENSOR_H_INCLUDED
-#define TENSOR_H_INCLUDED
+#ifndef MATH_TENSOR_H_INCLUDED
+#define MATH_TENSOR_H_INCLUDED
 
 /*!
   \file Tensor.h
@@ -964,4 +964,4 @@ namespace Math::Tensors::tests
   \return Tensor as a result of vector product of the given vector by tensor in 3D.
 */
 
-#endif // TENSOR_H_INCLUDED
+#endif // MATH_TENSOR_H_INCLUDED

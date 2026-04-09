@@ -1,5 +1,5 @@
-#ifndef VECTOR_H_INCLUDED
-#define VECTOR_H_INCLUDED
+#ifndef MATH_VECTOR_H_INCLUDED
+#define MATH_VECTOR_H_INCLUDED
 
 /*!
   \file Vector.h
@@ -661,4 +661,4 @@ namespace Math::Vectors::tests
     relative to the given one.
 */
 
-#endif // VECTOR_H_INCLUDED
+#endif // MATH_VECTOR_H_INCLUDED

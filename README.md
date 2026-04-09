@@ -16,7 +16,6 @@ A C++20 concept constraining types eligible for numerical computations:
 
 A templated Euclidean vector class for arbitrary dimensions and `Math::Type`-constrained types:
 
-- Parameterized by dimension `N`, component type `T`, and a boolean `is_euclidian`
 - Supports standard arithmetic operations (`+`, `-`, `*`, `/`)
 - Provides dot product, cross product (`%`), magnitude (`fabs`), and angle functions (`cos`, `sin`)
 - Type aliases: `Vector2D`, `Vector3D`, and `Array<N,T>` for simple componentwise arithmetic
@@ -100,11 +99,9 @@ cmake --build build --target doc
 
 The generated HTML documentation will be available in `build/docs/html/`.
 
-
 ## Known Issues / TODOs
 
 - No examples :(
 - Materials with deducing this 8) (c++23)
-- thread safety
 - units of quantities
 - ...
