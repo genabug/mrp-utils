@@ -21,10 +21,9 @@ namespace Math
     static_assert(std::is_default_constructible_v<T>, "Components must be default constructible");
 
   public:
-    // Quantities::Traits
-    static constexpr int size = N;
+    // traits
+    static constexpr int ncomps = N;
 
-  public:
     // ctors
     constexpr Vector() noexcept = default;
     template<class U> constexpr explicit Vector(const U &a) noexcept;
@@ -41,7 +40,6 @@ namespace Math
     static constexpr size_t X = 0;
     static constexpr size_t Y = (N > 1)? 1 : X;
     static constexpr size_t Z = (N > 2)? 2 : Y;
-    static constexpr size_t dim = N;
 
     constexpr auto operator[](size_t i) && noexcept { assert(i < N); return data[i]; }
     constexpr auto& operator[](size_t i) & noexcept { assert(i < N); return data[i]; }

@@ -104,4 +104,5 @@ The generated HTML documentation will be available in `build/docs/html/`.
 - No examples :(
 - Materials with deducing this 8) (c++23)
 - units of quantities
+- states made with traits-variables, not types
 - ...

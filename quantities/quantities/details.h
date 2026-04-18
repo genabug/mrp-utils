@@ -17,11 +17,11 @@
 
 namespace Quantities::details
 {
-  template<class T> concept has_size = requires { T::size; };
-  template<class T> constexpr int size_of() noexcept
+  template<class T> concept has_ncomps = requires { T::ncomps; };
+  template<class T> constexpr int ncomps_of() noexcept
   {
-    if constexpr (has_size<T>)
-      return T::size;
+    if constexpr (has_ncomps<T>)
+      return T::ncomps;
     else
       return 1;
   }
@@ -76,7 +76,7 @@ namespace Quantities::details
         return;
       }
     }
-    if constexpr (I != S::size)
+    if constexpr (I != S::ncomps)
     {
       out << (I? " " : "") << state.template get<I>();
       write_state<I + 1>(out, state);
@@ -86,7 +86,7 @@ namespace Quantities::details
   template<size_t I, class S>
     void write_state_bracketed(std::ostream &out, const S &state)
   {
-    if constexpr (I != S::size)
+    if constexpr (I != S::ncomps)
     {
       using Q = S::template type_of<I>;
       out << (I? ", " : "{") << Q::id << ": " << state.template get<I>();
@@ -115,7 +115,7 @@ namespace Quantities::details
         return;
       }
     }
-    if constexpr (I != S::size)
+    if constexpr (I != S::ncomps)
     {
       in >> state.template get<I>();
       read_state<I + 1>(in, state);
@@ -128,23 +128,29 @@ namespace Quantities::details
     if constexpr (I == 0)
       in.get(); // consume '{'
 
-    if constexpr (I != S::size)
+    if constexpr (I != S::ncomps)
     {
       if constexpr (I > 0)
       {
         in >> std::ws;
-        if (in.peek() != ',') { in.setstate(std::ios::failbit); return; }
+        if (in.peek() != ',')
+        {
+          in.setstate(std::ios::failbit);
+          return;
+        }
         in.get(); // consume ','
       }
 
       // skip "name: " — read and discard until ':'
       in >> std::ws;
       std::string name;
-      if (!std::getline(in, name, ':')) return;
+      if (!std::getline(in, name, ':'))
+        return;
       in >> std::ws;
 
       in >> state.template get<I>();
-      if (!in) return;
+      if (!in)
+        return;
 
       read_state_bracketed<I + 1>(in, state);
     }
@@ -163,7 +169,7 @@ namespace Quantities::details
   template<size_t I = 0, class L, class R>
     constexpr void add_to(L &l, const R &r) noexcept
   {
-    if constexpr (I != L::size)
+    if constexpr (I != L::ncomps)
     {
       using T = L::template type_of<I>;
       static_assert(R::template has<T>, "right-hand state doesn't have a quantity");
@@ -177,7 +183,7 @@ namespace Quantities::details
   template<size_t I = 0, class L, class R>
     constexpr void sub_from(L &l, const R &r) noexcept
   {
-    if constexpr (I != L::size)
+    if constexpr (I != L::ncomps)
     {
       using T = L::template type_of<I>;
       static_assert(R::template has<T>, "right-hand state doesn't have a quantity");
@@ -191,7 +197,7 @@ namespace Quantities::details
   template<size_t I = 0, class S, class T>
     constexpr void mult_by(S &state, T value) noexcept
   {
-    if constexpr (I != S::size)
+    if constexpr (I != S::ncomps)
     {
       state.template get<I>() *= value;
       mult_by<I + 1>(state, value);
@@ -203,7 +209,7 @@ namespace Quantities::details
   template<size_t I = 0, class S, class T>
     constexpr void div_by(S &state, T value) noexcept
   {
-    if constexpr (I != S::size)
+    if constexpr (I != S::ncomps)
     {
       state.template get<I>() /= value;
       div_by<I + 1>(state, value);
@@ -215,7 +221,7 @@ namespace Quantities::details
   template<size_t I = 0, class S, class T>
     constexpr void set_to_value(S &state, T value) noexcept
   {
-    if constexpr (I != S::size)
+    if constexpr (I != S::ncomps)
     {
       using Q_t = S::template type_of<I>::type;
       state.template get<I>() = static_cast<Q_t>(value);
@@ -226,7 +232,7 @@ namespace Quantities::details
   template<size_t I = 0, class L, class R>
     constexpr void set_to_state(L &l, const R &r) noexcept
   {
-    if constexpr (I != L::size)
+    if constexpr (I != L::ncomps)
     {
       using T = L::template type_of<I>;
       static_assert(R::template has<T>, "right-hand state doesn't have a quantity");
@@ -240,7 +246,7 @@ namespace Quantities::details
   template<size_t I = 0, class L, class R>
    constexpr bool equal(const L &l, const R &r) noexcept
   {
-    if constexpr (I != L::size)
+    if constexpr (I != L::ncomps)
     {
       using T = L::template type_of<I>;
       static_assert(R::template has<T>, "right-hand state doesn't have a quantity");
