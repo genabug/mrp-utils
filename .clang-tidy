@@ -1,0 +1,9 @@
+Checks: >
+  bugprone-*,
+  modernize-*,
+  performance-*,
+  cppcoreguidelines-*,
+  readability-redundant-*,
+  readability-const-return-type,
+  -modernize-use-trailing-return-type,
+  -bugprone-easily-swappable-parameters

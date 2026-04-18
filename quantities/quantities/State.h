@@ -28,15 +28,15 @@ namespace Quantities
     std::tuple<typename Qs::type...> data = {};
 
   public:
-    // Traits
-    static constexpr int size = sizeof...(Qs);
+    // traits
+    static constexpr int ncomps = sizeof...(Qs);
 
     // helpers
     template<size_t I> using type_of = details::type_of<I, Qs...>;
     template<IsTraits Q> static constexpr auto index_of = details::index_of<Q, Qs...>;
-    template<IsTraits Q> static constexpr bool has = index_of<Q> < size;
+    template<IsTraits Q> static constexpr bool has = index_of<Q> < ncomps;
 
-  public:
+    // ctors
     constexpr State() noexcept = default;
     constexpr State(IsState auto &&s) noexcept : data(std::move(s).template get<Qs>()...) {}
     constexpr State(const IsState auto &s) noexcept : data(s.template get<Qs>()...) {}
@@ -44,6 +44,7 @@ namespace Quantities
     template<class... Args> requires(sizeof...(Args) == sizeof...(Qs))
       constexpr explicit State(Args... args) noexcept : data(args...) {}
 
+    // ops
     constexpr State& operator=(auto) noexcept;
     constexpr State& operator*=(auto) noexcept;
     constexpr State& operator/=(auto) noexcept;
@@ -54,10 +55,10 @@ namespace Quantities
     constexpr State operator+() const noexcept { return *this; }
 
     // access by index (mainly to implement basic ops, see details)
-    template<size_t I> requires(I < size) constexpr auto& get() & noexcept { return std::get<I>(data); }
-    template<size_t I> requires(I < size) constexpr auto& get() const & noexcept { return std::get<I>(data); }
-    template<size_t I> requires(I < size) constexpr auto&& get() && noexcept { return std::get<I>(std::move(data)); }
-    template<size_t I> requires(I < size) constexpr auto&& get() const && noexcept { return std::get<I>(std::move(data)); }
+    template<size_t I> requires(I < ncomps) constexpr auto& get() & noexcept { return std::get<I>(data); }
+    template<size_t I> requires(I < ncomps) constexpr auto& get() const & noexcept { return std::get<I>(data); }
+    template<size_t I> requires(I < ncomps) constexpr auto&& get() && noexcept { return std::get<I>(std::move(data)); }
+    template<size_t I> requires(I < ncomps) constexpr auto&& get() const && noexcept { return std::get<I>(std::move(data)); }
 
     // access by type-name (for generic code)
     template<IsTraits Q> requires(has<Q>) constexpr auto& get() & noexcept { return get<index_of<Q>>(); };
@@ -248,7 +249,7 @@ namespace Quantities::tests
   static_assert(!S::has<t3>);
   static_assert(S::index_of<t1> == 0);
   static_assert(S::index_of<t2> == 1);
-  static_assert(S::index_of<t3> == 2);
+  static_assert(S::index_of<t3> == S::ncomps);
   static_assert(std::is_same_v<t1, S::type_of<0>>);
   static_assert(std::is_same_v<t2, S::type_of<1>>);
 
@@ -291,10 +292,9 @@ namespace Quantities::tests
   values as a single structure with a set of basic operations (arithmetic, logical, IO)
   on objects of such classes. Set of values of physical nature can be considered
   as a state of matter at some spatial point thus the class is called State.
-  Basic arithmetic operations on such states allows us to consider them as vectors,
-  for example, for flux computations. However the class doesn't limited to work only
-  with physical/arithmetic values and may be considered as heterogeneous collection
-  of data with name access to the elements (named tuple).
+  Basic arithmetic operations with such states allows us to consider them as vectors
+  e.g. for flux computations.
+
   \code
   using HD2T_s = State<rho_t, Te_t, Ti_t, w_t>;
   HD2T_s hd1(1e-6, 1e-3, 1e-3, V3d(0));
@@ -304,24 +304,22 @@ namespace Quantities::tests
   std::cerr << hd3 << '\n';
   \endcode
 
-  There are two ways to get the components of a state: by type-name and by variable
-  of the corresponding type-name. The last one is shorter and uses less parentheses
-  but requires the global variables (see the unit tests file for examples).
+  // TODO: briefly about traits
+
+  There are three ways to get the components of a state: by index, by type-name
+  and a variable of the corresponding type-name. The last one is shorter
+  and uses less parentheses but requires the global variables.
   \code
   s1[rho] = 4;
-  //s1.rho = 4; // this would be perfect: no globals, simple structure syntax.
+  //s1.rho = 4; // this would be perfect (with reflection from c++26?)
   \endcode
-  It's possible to get subset of components at once by specifying their names
-  or simply assigning a state to another state with a subset of quantities.
-  The result is a new state with copies of the original values, for example
-  all of following expressions are equivalent to each other:
+  It's possible to get subset of components at once (slice)
+  by simply assigning a state to another state with required quantities:
   \code
-  auto hd4 = hd1.get(rho, w, Te); // hd6 : State<rho_t, w_t, Te_t>
-  State<rho_t, Ti_t, w_t> hd5 = hd1;
-  auto hd6 = hd1.get<rho_t, Ti_t, w_t>(); // hd6 : State<rho_t, Ti_t, w_t>
+  State<rho_t, Ti_t, w_t> hd4 = hd1;
   \endcode
 
-  Class is accompanying by a set of arithmetic, logical and IO operations.
+  Class is accompanying with a set of arithmetic, logical and IO operations.
   Note that both arithmetic and logical operations are not symmetric!
   This is done in order to allow these operations on states with different sets of components,
   when one set is a subset of the other, or when the order of components is differ.
@@ -331,7 +329,7 @@ namespace Quantities::tests
   //hd1 = hd4; // COMPILE ERROR: Te_t is not presented in the hd4 state
   \endcode
 
-  Also note that all operations with states are constexpr and can be done in compile-time,
+  All operations with states are constexpr and can be done in compile-time,
   thus most of the time misusage of working with states leads to a compilation error.
   For example, access to a component which is not presented in a state,
   mixing states with unmatched list of quantities, etc...

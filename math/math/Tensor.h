@@ -18,10 +18,10 @@ namespace Math
     static_assert(std::is_default_constructible_v<T>, "Components must be default constructible");
 
   public:
-    // Quantities::Traits
-    static constexpr int size = N*N;
+    // traits
+    static constexpr int ncomps = N*N;
 
-  public:
+    // ctors
     constexpr Tensor() noexcept = default;
     template<class U> constexpr explicit Tensor(const U &a) noexcept;
     template<class... Ts> constexpr explicit Tensor(const Ts&... as) noexcept;
@@ -31,7 +31,6 @@ namespace Math
     template<Type U> constexpr Tensor& operator=(const Tensor<N, U> &t) noexcept;
 
     // access
-    static constexpr size_t dim = N;
     constexpr T* operator[](size_t i) && noexcept = delete;
     constexpr T* operator[](size_t i) & noexcept { assert(i < N); return data[i]; }
     constexpr const T* operator[](size_t i) const & noexcept { assert(i < N); return data[i]; }
@@ -58,7 +57,7 @@ namespace Math
     constexpr Tensor invert() const noexcept;
     constexpr Tensor transpose() const noexcept;
 
-    private:
+  private:
     constexpr Tensor<N-1, T> M(size_t I, size_t J) const noexcept;
 
     // init helpers
