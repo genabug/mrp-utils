@@ -21,6 +21,11 @@ namespace Math
     // traits
     static constexpr int ncomps = N*N;
 
+    constexpr auto* begin() noexcept { return &data[0][0]; }
+    constexpr auto* end() noexcept { return begin() + ncomps; }
+    constexpr auto* begin() const noexcept { return &data[0][0]; }
+    constexpr auto* end() const noexcept { return begin() + ncomps; }
+
     // ctors
     constexpr Tensor() noexcept = default;
     template<class U> constexpr explicit Tensor(const U &a) noexcept;
@@ -331,7 +336,8 @@ namespace Math
   template<size_t N, Type U>
     std::istream& operator>>(std::istream &in, Tensor<N, U> &A)
   {
-    return IO::details::read_values(in, &A[0][0], N*N, '[', ']');
+    IO::read_values(in, A, '[', ']');
+    return in;
   }
 
 /*---------------------------------------------------------------------------------------*/
@@ -339,17 +345,8 @@ namespace Math
   template<size_t N, Type U>
     std::ostream& operator<<(std::ostream &out, const Tensor<N, U> &A)
   {
-    bool brackets = IO::use_brackets(out);
-
-    out << (brackets? "[" : "") << A[0][0];
-    for (size_t j = 1; j < N; ++j)
-      out << (brackets? ", " : " ") << A[0][j];
-
-    for (size_t i = 1; i < N; ++i)
-      for (size_t j = 0; j < N; ++j)
-        out << (brackets? ", " : " ") << A[i][j];
-
-    return out << (brackets? "]" : "");
+    IO::write_values(out, A, '[', ']');
+    return out;
   }
 
 /*---------------------------------------------------------------------------------------*/
@@ -482,6 +479,8 @@ namespace Math
 
 namespace Math::Tensors::tests
 {
+  static_assert(std::ranges::range<Tensor3D>, "tensor is not a range");
+
   using T2d = Tensor<2>;
   using T2i = Tensor<2, int>;
   using T3i = Tensor<3, int>;

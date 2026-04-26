@@ -270,58 +270,100 @@ TEST(State, div_state_by_coeff)
   EXPECT_EQ(s/coeff, expected);
 }
 
-TEST(State, output_default_is_bracketed)
+TEST(State, output_default_in_brackets)
 {
   State<ti_t, td_t> s(1, 2);
   std::stringstream sstr;
   sstr << s;
-  EXPECT_EQ(sstr.str(), "{ti: 1, td: 2}");
+  EXPECT_EQ(sstr.str(), "{ti 1, td 2}");
 }
 
-TEST(State, output_in_brackets_explicit)
+TEST(State, output_in_brackets)
 {
   State<ti_t, td_t> s(1, 2);
   std::stringstream sstr;
   sstr << IO::inBrackets << s;
-  EXPECT_EQ(sstr.str(), "{ti: 1, td: 2}");
+  EXPECT_EQ(sstr.str(), "{ti 1, td 2}");
 }
 
-TEST(State, output_bare_components)
+TEST(State, output_bare_comps)
 {
-  State<ti_t, td_t> s(1, 2);
+  State<ti_t, td_t> s(-1, 2);
   std::stringstream sstr;
   sstr << IO::bareComps << s;
-  EXPECT_EQ(sstr.str(), "1 2");
+  EXPECT_EQ(sstr.str(), "-1 2");
 }
 
-TEST(State, input_bare_components)
+TEST(State, input_in_brackets)
 {
-  std::stringstream sstr("3 4");
+  std::stringstream sstr("{ti 3, td 4}");
   State<ti_t, td_t> s, expected(3, 4);
   sstr >> s;
   EXPECT_EQ(s, expected);
 }
 
-TEST(State, input_bracketed)
+TEST(State, input_in_brackets_unexpected_name)
 {
-  std::stringstream sstr("{ti: 3, td: 4}");
+  State<ti_t, td_t> s;
+  std::stringstream sstr("{td 3, ti 4}");
+  EXPECT_TRUE(!(sstr >> s));
+}
+
+TEST(State, input_in_brackets_missing_closing_bracket)
+{
+  State<ti_t, td_t> s;
+  std::stringstream sstr("{ti 3, td 4");
+  EXPECT_TRUE(!(sstr >> s));
+}
+
+TEST(State, input_in_brackets_extra_comma)
+{
+  State<ti_t, td_t> s;
+  std::stringstream sstr("{ti 3, td 4,");
+  EXPECT_TRUE(!(sstr >> s));
+}
+
+TEST(State, input_in_brackets_missing_values)
+{
+  State<ti_t, td_t> s;
+  std::stringstream sstr("{ti 3}");
+  EXPECT_TRUE(!(sstr >> s));
+}
+
+TEST(State, input_in_brackets_extra_values)
+{
+  State<ti_t, td_t> s;
+  std::stringstream sstr("{ti 3, td 4, tf 5}");
+  EXPECT_TRUE(!(sstr >> s));
+}
+
+TEST(State, input_bare_comps)
+{
+  std::stringstream sstr("+3 4");
   State<ti_t, td_t> s, expected(3, 4);
   sstr >> s;
   EXPECT_EQ(s, expected);
 }
 
-TEST(State, roundtrip_bracketed)
+TEST(State, input_bare_comps_missing_value)
 {
-  State<ti_t, td_t> s1(5, 6), s2;
+  State<ti_t, td_t> s;
+  std::stringstream sstr("+3");
+  EXPECT_TRUE(!(sstr >> s));
+}
+
+TEST(State, roundtrip_io_in_brackets)
+{
+  State<ti_t, td_t> s1(-5, +6), s2;
   std::stringstream sstr;
   sstr << s1;
   sstr >> s2;
   EXPECT_EQ(s1, s2);
 }
 
-TEST(State, roundtrip_bare)
+TEST(State, roundtrip_io_bare_comps)
 {
-  State<ti_t, td_t> s1(7, 8), s2;
+  State<ti_t, td_t> s1(+7, -8), s2;
   std::stringstream sstr;
   sstr << IO::bareComps << s1;
   sstr >> s2;

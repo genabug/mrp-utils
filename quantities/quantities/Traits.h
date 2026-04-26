@@ -53,9 +53,9 @@ namespace Quantities::tests
   };
   static_assert(Math::Type<HD>);
 
-  using HD_t = Traits<HD, 0, "HD">;
+  using HD_t = Traits<HD, 22, "HD">;
   static_assert(std::is_same_v<HD_t::type, HD>);
-  static_assert(HD_t::dim == 0);
+  static_assert(HD_t::dim == 22);
   static_assert(HD_t::ncomps == HD::ncomps);
   static_assert(std::string_view(HD_t::id) == "HD");
 
@@ -78,9 +78,10 @@ namespace Quantities::tests
   \tparam Name String ID of the quantity.
   \brief Type traits of a quantity.
 
-  Quantity's traits type is its main identifier in the system. It is used to create and
-  access the values of a state. It is also used to implement all kinds of additional utilities
-  (transport, (de)serialization, vector of state) to make them user-friendly.
+  Quantity's traits is the main identifier of a quantity within the system.
+  They are used to create and access the values of a state, see \Quantities::State.
+  They are also used to implement all kinds of additional utilities
+  like (de)serialization, arithmetic and boolean operations.
 
   Apart from user-defined traits the class contains an additional one, four in all:
   * type (user-defined): type of the quantitiy, usually double, Vector3D or even State
@@ -91,31 +92,6 @@ namespace Quantities::tests
   Traits::ncomps is a number of components of the quantity. For a simple quantity it's 1,
   while for a compound one it's greater than 1. It's defined based on whether the field
   of the same name is presented in Type (then it equals to it) or not (and then it's 1).
-
-  Quantity's traits defines as follows:
-  \code
-  using w_t = Traits<Vector3D, 2, "w">; // ncomps == 3
-  using rho_t = Traits<double, 3, "rho">; // ncomps == 1
-
-  constexpr w_t w;
-  constexpr rho_t rho;
-  \endcode
-  In the example above vector of velocity ("w") vector is defined on faces (Dim=2)
-  and scalar density ("rho") is defined in cells (Dim=3).
-  \c w_t and \c rho_t are now so-called type-names of the corresponding quantities.
-  It's also recommended to define variable-names of the quantities \c w and \c rho
-  which can be used to access a state' component in user-code.
-  \code
-  State<rho_t, w_t> s;
-  s.get<rho_t>() = 1;
-  s[rho] = 2;
-  \endcode
-  Variable-names should be used in end-user code like solvers,
-  while type-names are intended to be used in generic code like approximations.
-  Defined quantity's type-names and variable-names must be visible to all users
-  in order to organize collaborative work between different computational objects.
-
-  \see Quantities::State
 */
 
 #endif // QUANTITIES_TRAITS_H_INCLUDED
