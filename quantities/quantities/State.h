@@ -295,6 +295,23 @@ namespace Quantities::tests
   Basic arithmetic operations with such states allows us to consider them as vectors
   e.g. for flux computations.
 
+  Quantity's traits (\see Quantities::Traits) must be defined in order to build a state.
+  \code
+  using w_t = Traits<Vector3D, 2, "w">; // ncomps == 3
+  using rho_t = Traits<double, 3, "rho">; // ncomps == 1
+
+  constexpr w_t w;
+  constexpr rho_t rho;
+  \endcode
+  In the example above vector of velocity ("w") vector is defined on faces (Dim=2)
+  and scalar density ("rho") is defined in cells (Dim=3).
+  \c w_t and \c rho_t are now so-called type-names which are used to build the state.
+  They also used for access the corresponding values in a state
+  though it's recommended to define variable-names \c w and \c rho for access.
+  Variable-names are supposed to be used in end-user code like solvers,
+  while type-names are intended to be used in generic code like approximations.
+
+  When traits are defined, a state can be made:
   \code
   using HD2T_s = State<rho_t, Te_t, Ti_t, w_t>;
   HD2T_s hd1(1e-6, 1e-3, 1e-3, V3d(0));
@@ -303,8 +320,6 @@ namespace Quantities::tests
   auto hd3 = (hd1 + hd2) / 2;
   std::cerr << hd3 << '\n';
   \endcode
-
-  // TODO: briefly about traits
 
   There are three ways to get the components of a state: by index, by type-name
   and a variable of the corresponding type-name. The last one is shorter

@@ -11,6 +11,7 @@
 #include <locale>
 #include <istream>
 #include <ostream>
+#include <ranges>
 
 namespace IO
 {
@@ -50,60 +51,49 @@ namespace IO
     std::use_facet<Mode>(stream.getloc()).use_brackets(true);
     return stream;
   }
-  namespace details
+
+  template<std::ranges::range R>
+    void write_values(std::ostream &out, const R &data, char open, char close)
   {
-    template<class T>
-      std::istream& read_values(std::istream &in, T *data, size_t count, char open, char close)
+    bool in_brackets = use_brackets(out);
+    if (in_brackets)
+      out << open;
+
+    auto it = data.begin();
+    if (it != data.end())
+      out << *(it++);
+    for (; it != data.end(); ++it)
+      out << (in_brackets? ", " : " ") << *it;
+
+    if (in_brackets)
+      out << close;
+  }
+
+  template<std::ranges::range R>
+    void read_values(std::istream &in, R &data, char open, char close)
+  {
+    in >> std::ws;
+    bool in_brackets = (in.peek() == open);
+    if (in_brackets)
+      in.get();
+
+    const auto size = std::distance(data.begin(), data.end());
+    for (size_t i = 0; auto &value : data)
     {
-      in >> std::ws;
-
-      auto ch = in.peek();
-      if (ch == std::char_traits<char>::eof())
+      if (!(in >> value))
+        return;
+      if (in_brackets)
       {
-        in.setstate(std::ios::failbit);
-        return in;
-      }
-
-      auto c = static_cast<char>(ch);
-      bool bracketed = (c == open);
-
-      if (bracketed)
-        in.get();
-      else if (!std::isdigit(c) && c != '-' && c != '+' && c != '.')
-      {
-        in.setstate(std::ios::failbit);
-        return in;
-      }
-
-      for (size_t i = 0; i < count; ++i)
-      {
-        if (bracketed && i > 0)
+        ++i;
+        if (int c = in.get(); (c != ',' && i != size) || (c != close && i == size))
         {
-          in >> std::ws;
-          if (in.peek() == ',')
-            in.get();
-          else
-          {
-            in.setstate(std::ios::failbit);
-            return in;
-          }
-        }
-        if (!(in >> data[i]))
-          return in;
-      }
-
-      if (bracketed)
-      {
-        in >> std::ws;
-        if (in.peek() == close)
-          in.get();
-        else
           in.setstate(std::ios::failbit);
+          return;
+        }
       }
-
-      return in;
     }
-  } // namespace details
+  }
+
 } // namespace IO
 
 #endif // IO_MODE_H_INCLUDED

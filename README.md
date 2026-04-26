@@ -51,7 +51,7 @@ A generic factory pattern implementation:
 
 Common utilities and helpers:
 
-- IOMode provides io manipulators `inBrackets` and `bareComponents` for array-like types (Vector, Tensor, State)
+- IOMode provides io manipulators `inBrackets` and `bareComponents` and functions for range-like types
 
 ## Project Structure
 

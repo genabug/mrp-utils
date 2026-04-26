@@ -24,6 +24,11 @@ namespace Math
     // traits
     static constexpr int ncomps = N;
 
+    constexpr auto* begin() noexcept { return data; }
+    constexpr auto* end() noexcept { return data + ncomps; }
+    constexpr auto* begin() const noexcept { return data; }
+    constexpr auto* end() const noexcept { return data + ncomps; }
+
     // ctors
     constexpr Vector() noexcept = default;
     template<class U> constexpr explicit Vector(const U &a) noexcept;
@@ -196,7 +201,8 @@ namespace Math
   template<size_t N, Type T, bool B>
     std::istream& operator>>(std::istream &in, Vector<N, T, B> &v)
   {
-    return IO::details::read_values(in, &v[0], N, '(', ')');
+    IO::read_values(in, v, '(', ')');
+    return in;
   }
 
 /*---------------------------------------------------------------------------------------*/
@@ -204,11 +210,8 @@ namespace Math
   template<size_t N, Type T, bool B>
     std::ostream& operator<<(std::ostream &out, const Vector<N, T, B> &v)
   {
-    bool brackets = IO::use_brackets(out);
-    out << (brackets? "(" : "") << v[0];
-    for (size_t i = 1; i < N; ++i)
-      out << (brackets? ", " : " ") << v[i];
-    return out << (brackets? ")" : "");
+    IO::write_values(out, v, '(', ')');
+    return out;
   }
 
 /*---------------------------------------------------------------------------------------*/
@@ -272,6 +275,8 @@ namespace Math
 
 namespace Math::Vectors::tests
 {
+  static_assert(std::ranges::range<Vector3D>, "vector is not a range");
+
   using V2d = Vector<2>;
   using V3d = Vector<3>;
   using V2i = Vector<2, int>;

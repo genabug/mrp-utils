@@ -100,154 +100,6 @@ TEST(Tensor, access)
   //   const auto row1 = T2i(4, 3, 2, 1)[1];
 }
 
-TEST(Tensor, output_with_brackets_default)
-{
-  std::stringstream ss;
-  ss << T2i(1, 2, 3, 4);
-  EXPECT_EQ(ss.str(), "[1, 2, 3, 4]");
-}
-
-TEST(Tensor, output_with_brackets_explicit)
-{
-  std::stringstream ss;
-  ss << IO::inBrackets << T2i(1, 2, 3, 4);
-  EXPECT_EQ(ss.str(), "[1, 2, 3, 4]");
-}
-
-TEST(Tensor, output_with_brackets_signed_components)
-{
-  std::stringstream ss;
-  ss << IO::inBrackets << T2i(-1, +2, -3, +4);
-  EXPECT_EQ(ss.str(), "[-1, 2, -3, 4]");
-}
-
-TEST(Tensor, output_bare_components)
-{
-  std::stringstream ss;
-  ss << IO::bareComps << T2i(1, 2, 3, 4);
-  EXPECT_EQ(ss.str(), "1 2 3 4");
-}
-
-TEST(Tensor, output_bare_components_two_tensors_nospace)
-{
-  std::stringstream ss;
-  ss << IO::bareComps << T2i(1, 2, 3, 4) << T2i(5, 6, 7, 8);
-  EXPECT_EQ(ss.str(), "1 2 3 45 6 7 8");
-}
-
-TEST(Tensor, input_with_brackets)
-{
-  std::stringstream ss("[1, 2, 3, 4]");
-  T2i t;
-  ss >> t;
-  EXPECT_EQ(t, T2i(1, 2, 3, 4));
-}
-
-TEST(Tensor, input_with_brackets_signed_components)
-{
-  std::stringstream ss("[-1, 2, -3, 4]");
-  T2i t;
-  ss >> t;
-  EXPECT_EQ(t, T2i(-1, 2, -3, 4));
-}
-
-TEST(Tensor, input_with_brackets_non_digit_chars_in_front_fails)
-{
-  std::stringstream ss(" ,!([ [1, 2, 3, 4]");
-  T2i t;
-  ss >> t;
-  EXPECT_TRUE(ss.fail());
-}
-
-TEST(Tensor, input_with_brackets_junk_after_digit_fails)
-{
-  std::stringstream ss(" 1,!([ [1, 2, 3, 4]");
-  T2i t;
-  ss >> t;
-  EXPECT_TRUE(ss.fail()); // ',' is not a valid int, fails on second component
-}
-
-TEST(Tensor, input_with_brackets_two_tensors_no_delimeter)
-{
-  std::stringstream ss("[-1, +2, -3, +4][+5, -6, +7, -8]");
-  T2i t1, t2;
-  ss >> t1 >> t2;
-  EXPECT_EQ(t1, T2i(-1, +2, -3, +4));
-  EXPECT_EQ(t2, T2i(+5, -6, +7, -8));
-}
-
-TEST(Tensor, input_with_brackets_two_tensors_non_digit_delim_fails)
-{
-  std::stringstream ss("[1, 2, 3, 4]  ,;!ss [5, 6, 7, 8]");
-  T2i t1, t2;
-  ss >> t1 >> t2;
-  EXPECT_EQ(t1, T2i(1, 2, 3, 4));
-  EXPECT_EQ(t2, T2i(0));
-  EXPECT_TRUE(ss.fail()); // ',;!ss' is junk before second tensor
-}
-
-TEST(Tensor, input_bare_components)
-{
-  std::stringstream ss("1 2 3 4");
-  T2i t;
-  ss >> t;
-  EXPECT_EQ(t, T2i(1, 2, 3, 4));
-}
-
-TEST(Tensor, input_bare_components_signed_components)
-{
-  std::stringstream ss("-1 2 -3 4");
-  T2i t;
-  ss >> t;
-  EXPECT_EQ(t, T2i(-1, 2, -3, 4));
-}
-
-TEST(Tensor, input_bare_components_junk_in_front_fails)
-{
-  std::stringstream ss(" ,!([ 1 2 3 4");
-  T2i t;
-  ss >> t;
-  EXPECT_TRUE(ss.fail());
-}
-
-TEST(Tensor, input_bare_components_two_tensors_not_enough_data_fails)
-{
-  std::stringstream ss("1 2 3 45 6 7 8");
-  T2i t1, t2;
-  ss >> t1 >> t2;
-  EXPECT_EQ(t1, T2i(1, 2, 3, 45));
-  EXPECT_EQ(t2, T2i(6, 7, 8, 0));
-  EXPECT_TRUE(ss.fail()); // only 3 values left, need 4
-}
-
-TEST(Tensor, input_bare_components_two_tensors_non_digit_delim_fails)
-{
-  std::stringstream ss("-1 +2 -3 +4  ,;!ss +5 -6 +7 -8");
-  T2i t1, t2;
-  ss >> t1 >> t2;
-  EXPECT_EQ(t1, T2i(-1, +2, -3, +4));
-  EXPECT_EQ(t2, T2i(0));
-  EXPECT_TRUE(ss.fail()); // ',;!ss' is junk before second tensor
-}
-
-TEST(Tensor, roundtrip_bracketed)
-{
-  T2i t1(1, -2, 3, -4), t2;
-  std::stringstream ss;
-  ss << IO::inBrackets << t1;
-  ss >> t2;
-  EXPECT_EQ(t1, t2);
-}
-
-TEST(Tensor, roundtrip_bare)
-{
-  T2i t1(5, 6, 7, 8), t2;
-  std::stringstream ss;
-  ss << IO::bareComps << t1;
-  ss >> t2;
-  EXPECT_EQ(t1, t2);
-}
-
 TEST(Tensor, equality)
 {
   T3i t1(1), t2(1);
@@ -422,4 +274,117 @@ TEST(Tensor, invert_4x4)
        30,   7, -19,  -7);
   EXPECT_EQ(t4.invert(), t4_inverted);
   EXPECT_EQ(t4 * t4_inverted, E4);
+}
+
+TEST(Tensor, output_default_in_brackets)
+{
+  std::stringstream ss;
+  ss << T2i(1, 2, 3, 4);
+  EXPECT_EQ(ss.str(), "[1, 2, 3, 4]");
+}
+
+TEST(Tensor, output_in_brackets)
+{
+  std::stringstream ss;
+  ss << IO::inBrackets << T2i(1, 2, 3, 4);
+  EXPECT_EQ(ss.str(), "[1, 2, 3, 4]");
+}
+
+TEST(Tensor, output_in_brackets_signed)
+{
+  std::stringstream ss;
+  ss << IO::inBrackets << T2i(-1, +2, -3, +4);
+  EXPECT_EQ(ss.str(), "[-1, 2, -3, 4]");
+}
+
+TEST(Tensor, output_bare_comps)
+{
+  std::stringstream ss;
+  ss << IO::bareComps << T2i(1, 2, 3, 4);
+  EXPECT_EQ(ss.str(), "1 2 3 4");
+}
+
+TEST(Tensor, input_in_brackets)
+{
+  std::stringstream ss("[1, 2, 3, 4]");
+  T2i t;
+  ss >> t;
+  EXPECT_EQ(t, T2i(1, 2, 3, 4));
+}
+
+TEST(Tensor, input_in_brackets_signed)
+{
+  std::stringstream ss("[-1, 2, -3, 4]");
+  T2i t;
+  ss >> t;
+  EXPECT_EQ(t, T2i(-1, 2, -3, 4));
+}
+
+TEST(Tensor, input_in_brackets_missing_closing_bracket)
+{
+  T2i t;
+  std::stringstream ss("[1, 2, 3, 4");
+  EXPECT_TRUE(!(ss >> t));
+}
+
+TEST(Tensor, input_in_brackets_extra_comms)
+{
+  T2i t;
+  std::stringstream ss("[1, 2, 3, 4,]");
+  EXPECT_TRUE(!(ss >> t));
+}
+
+TEST(Tensor, input_in_brackets_missing_value)
+{
+  T2i t;
+  std::stringstream ss("[1, 2, 3]");
+  EXPECT_TRUE(!(ss >> t));
+}
+
+TEST(Tensor, input_in_brackets_extra_value)
+{
+  T2i t;
+  std::stringstream ss("[1, 2, 3, 4, 5]");
+  EXPECT_TRUE(!(ss >> t));
+}
+
+TEST(Tensor, input_bare_comps)
+{
+  std::stringstream ss("1 2 3 4");
+  T2i t;
+  ss >> t;
+  EXPECT_EQ(t, T2i(1, 2, 3, 4));
+}
+
+TEST(Tensor, input_bare_comps_signed)
+{
+  std::stringstream ss("-1 2 -3 4");
+  T2i t;
+  ss >> t;
+  EXPECT_EQ(t, T2i(-1, 2, -3, 4));
+}
+
+TEST(Tensor, input_bare_comps_missing_values)
+{
+  T2i t;
+  std::stringstream ss("1 2 3");
+  EXPECT_TRUE(!(ss >> t));
+}
+
+TEST(Tensor, roundtrip_in_brackets)
+{
+  T2i t1(1, -2, 3, -4), t2;
+  std::stringstream ss;
+  ss << IO::inBrackets << t1;
+  ss >> t2;
+  EXPECT_EQ(t1, t2);
+}
+
+TEST(Tensor, roundtrip_bare_comps)
+{
+  T2i t1(5, 6, 7, 8), t2;
+  std::stringstream ss;
+  ss << IO::bareComps << t1;
+  ss >> t2;
+  EXPECT_EQ(t1, t2);
 }

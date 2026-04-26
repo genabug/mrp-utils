@@ -63,105 +63,83 @@ namespace Quantities::details
 /*---------------------------------------------------------------------------------------*/
 
   template<size_t I = 0, class S>
-    void write_state_bracketed(std::ostream &out, const S &state);
-
-  template<size_t I = 0, class S>
-    void write_state(std::ostream &out, const S &state)
-  {
-    if constexpr (I == 0)
-    {
-      if (IO::use_brackets(out))
-      {
-        write_state_bracketed(out, state);
-        return;
-      }
-    }
-    if constexpr (I != S::ncomps)
-    {
-      out << (I? " " : "") << state.template get<I>();
-      write_state<I + 1>(out, state);
-    }
-  }
-
-  template<size_t I, class S>
-    void write_state_bracketed(std::ostream &out, const S &state)
+    void write_state_in_brackets(std::ostream &out, const S &state)
   {
     if constexpr (I != S::ncomps)
     {
       using Q = S::template type_of<I>;
-      out << (I? ", " : "{") << Q::id << ": " << state.template get<I>();
-      write_state_bracketed<I + 1>(out, state);
+      out << (I? ", " : "{") << Q::id << " " << state.template get<I>();
+      write_state_in_brackets<I + 1>(out, state);
     }
-    else
+  }
+
+  template<size_t I = 0, class S>
+    void write_state_bare_comps(std::ostream &out, const S &state)
+  {
+    if constexpr (I != S::ncomps)
     {
+      out << (I? " " : "") << state.template get<I>();
+      write_state_bare_comps<I + 1>(out, state);
+    }
+  }
+
+  template<size_t I = 0, class S>
+    void write_state(std::ostream &out, const S &state)
+  {
+    if (IO::use_brackets(out))
+    {
+      write_state_in_brackets(out, state);
       out << '}';
     }
+    else
+      write_state_bare_comps(out, state);
   }
 
 /*---------------------------------------------------------------------------------------*/
 
   template<size_t I = 0, class S>
-    void read_state_bracketed(std::istream &in, S &state);
+    void read_state_in_brackets(std::istream &in, S &state)
+  {
+    if constexpr (I != S::ncomps)
+    {
+      using Q = typename S::template type_of<I>;
+      if (std::string name; !(in >> name) || name != std::string(Q::id))
+      {
+        in.setstate(std::ios::failbit);
+        return;
+      }
+      if (!(in >> state.template get<I>()))
+        return;
+      if (int ch = in.get(); (ch != ',' && I != S::ncomps - 1) || (ch != '}' && I == S::ncomps - 1))
+      {
+        in.setstate(std::ios::failbit);
+        return;
+      }
+      read_state_in_brackets<I + 1>(in, state);
+    }
+  }
+
+  template<size_t I = 0, class S>
+    void read_state_bare_comps(std::istream &in, S &state)
+  {
+    if constexpr (I != S::ncomps)
+    {
+      in >> state.template get<I>();
+      read_state_bare_comps<I + 1>(in, state);
+    }
+  }
 
   template<size_t I = 0, class S>
     void read_state(std::istream &in, S &state)
   {
-    if constexpr (I == 0)
+    in >> std::ws;
+    if (in.peek() == '{')
     {
-      in >> std::ws;
-      if (in.peek() == '{')
-      {
-        read_state_bracketed(in, state);
-        return;
-      }
-    }
-    if constexpr (I != S::ncomps)
-    {
-      in >> state.template get<I>();
-      read_state<I + 1>(in, state);
-    }
-  }
-
-  template<size_t I, class S>
-    void read_state_bracketed(std::istream &in, S &state)
-  {
-    if constexpr (I == 0)
-      in.get(); // consume '{'
-
-    if constexpr (I != S::ncomps)
-    {
-      if constexpr (I > 0)
-      {
-        in >> std::ws;
-        if (in.peek() != ',')
-        {
-          in.setstate(std::ios::failbit);
-          return;
-        }
-        in.get(); // consume ','
-      }
-
-      // skip "name: " — read and discard until ':'
-      in >> std::ws;
-      std::string name;
-      if (!std::getline(in, name, ':'))
-        return;
-      in >> std::ws;
-
-      in >> state.template get<I>();
-      if (!in)
-        return;
-
-      read_state_bracketed<I + 1>(in, state);
+      in.get();
+      read_state_in_brackets(in, state);
     }
     else
-    {
-      in >> std::ws;
-      if (in.peek() == '}')
-        in.get();
-      else
-        in.setstate(std::ios::failbit);
-    }
+      read_state_bare_comps(in, state);
   }
 
 /*---------------------------------------------------------------------------------------*/

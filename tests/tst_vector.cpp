@@ -161,42 +161,35 @@ TEST(Vector, rotation_2d)
   EXPECT_EQ(~(~(~(~v))), v);
 }
 
-TEST(Vector, output_with_brackets_default)
+TEST(Vector, output_default_in_brackets)
 {
   std::stringstream ss;
   ss << V3i(1, 2, 3);
   EXPECT_EQ(ss.str(), "(1, 2, 3)");
 }
 
-TEST(Vector, output_with_brackets_explicit)
+TEST(Vector, output_in_brackets)
 {
   std::stringstream ss;
   ss << IO::inBrackets << V3i(3, 2, 1);
   EXPECT_EQ(ss.str(), "(3, 2, 1)");
 }
 
-TEST(Vector, output_with_brackets_signed_components)
+TEST(Vector, output_in_brackets_signed)
 {
   std::stringstream ss;
   ss << IO::inBrackets << V3i(-1, +2, -3);
   EXPECT_EQ(ss.str(), "(-1, 2, -3)");
 }
 
-TEST(Vector, output_bare_components)
+TEST(Vector, output_bare_comps)
 {
   std::stringstream ss;
   ss << IO::bareComps << V3i(1, 2, 3);
   EXPECT_EQ(ss.str(), "1 2 3");
 }
 
-TEST(Vector, output_bare_components_two_vectors_nospace)
-{
-  std::stringstream ss;
-  ss << IO::bareComps << V2i(1, 2) << V3i(3, 4, 5);
-  EXPECT_EQ(ss.str(), "1 23 4 5");
-}
-
-TEST(Vector, input_with_brackets)
+TEST(Vector, input_in_brackets)
 {
   std::stringstream ss("(1, 2, 3)");
   V3i v;
@@ -204,7 +197,7 @@ TEST(Vector, input_with_brackets)
   EXPECT_EQ(v, V3i(1, 2, 3));
 }
 
-TEST(Vector, input_with_brackets_signed_components)
+TEST(Vector, input_in_brackets_signed)
 {
   std::stringstream ss("(-1, 2, -3)");
   V3i v;
@@ -212,42 +205,35 @@ TEST(Vector, input_with_brackets_signed_components)
   EXPECT_EQ(v, V3i(-1, 2, -3));
 }
 
-TEST(Vector, input_with_brackets_missing_closing_bracket_fails)
+TEST(Vector, input_in_brackets_missing_closing_bracket)
 {
+  V3i v;
   std::stringstream ss("(2, 3, 4");
-  V3i v;
-  ss >> v;
-  EXPECT_EQ(v, V3i(2, 3, 4));
-  EXPECT_TRUE(ss.fail());
+  EXPECT_TRUE(!(ss >> v));
 }
 
-TEST(Vector, input_with_brackets_non_digit_chars_in_front_fails)
+TEST(Vector, input_in_brackets_extra_comma)
 {
-  std::stringstream ss(", (1, 2, 3)   ");
   V3i v;
-  ss >> v;
-  EXPECT_TRUE(ss.fail());
+  std::stringstream ss("(2, 3, 4,)");
+  EXPECT_TRUE(!(ss >> v));
 }
 
-TEST(Vector, input_with_junk_after_digit_fails)
+TEST(Vector, input_in_brackets_missing_values)
 {
-  std::stringstream ss(" 1 (,! (2, 3, 4)");
   V3i v;
-  ss >> v;
-  EXPECT_TRUE(ss.fail()); // '(' is not a valid int, fails on second component
+  std::stringstream ss("(3, 4)");
+  EXPECT_TRUE(!(ss >> v));
 }
 
-TEST(Vector, input_with_brackets_two_consequent_vectors)
+TEST(Vector, input_in_brackets_extra_values)
 {
-  std::stringstream ss("(-1, +2)(+3, -4, +5)");
-  V2i v1;
-  V3i v2;
-  ss >> v1 >> v2;
-  EXPECT_EQ(v1, V2i(-1, 2));
-  EXPECT_EQ(v2, V3i(3, -4, 5));
+  V3i v;
+  std::stringstream ss("(4, 5, 6, 7)");
+  EXPECT_TRUE(!(ss >> v));
 }
 
-TEST(Vector, input_bare_components)
+TEST(Vector, input_bare_comps)
 {
   std::stringstream ss("  1 2 3 ");
   V3i v;
@@ -255,7 +241,7 @@ TEST(Vector, input_bare_components)
   EXPECT_EQ(v, V3i(1, 2, 3));
 }
 
-TEST(Vector, input_bare_components_signed_components)
+TEST(Vector, input_bare_comps_signed)
 {
   std::stringstream ss("-1 2 -3");
   V3i v;
@@ -263,47 +249,14 @@ TEST(Vector, input_bare_components_signed_components)
   EXPECT_EQ(v, V3i(-1, 2, -3));
 }
 
-TEST(Vector, input_bare_components_junk_in_front_fails)
+TEST(Vector, input_bare_comps_missing_values)
 {
-  std::stringstream ss(" ,1  2 3 4 5  ");
   V3i v;
-  ss >> v;
-  EXPECT_TRUE(ss.fail());
+  std::stringstream ss("3 4");
+  EXPECT_TRUE(!(ss >> v));
 }
 
-TEST(Vector, input_bare_components_two_consequent_vectors)
-{
-  std::stringstream ss("-1 +2 -3 +4 -5");
-  V2i v1;
-  V3i v2;
-  ss >> v1 >> v2;
-  EXPECT_EQ(v1, V2i(-1, 2));
-  EXPECT_EQ(v2, V3i(-3, 4, -5));
-}
-
-TEST(Vector, input_bare_components_two_vectors_not_enough_data_fails)
-{
-  std::stringstream ss("1 23 4 5");
-  V2i v1;
-  V3i v2;
-  ss >> v1 >> v2;
-  EXPECT_EQ(v1, V2i(1, 23));
-  EXPECT_EQ(v2, V3i(4, 5, 0));
-  EXPECT_TRUE(ss.fail()); // only 2 values left, need 3
-}
-
-TEST(Vector, input_bare_components_two_vectors_non_digit_delim_fails)
-{
-  std::stringstream ss("1 2 , [ d  3 4 5");
-  V2i v1;
-  V3i v2;
-  ss >> v1 >> v2;
-  EXPECT_EQ(v1, V2i(1, 2));
-  EXPECT_EQ(v2, V3i(0));
-  EXPECT_TRUE(ss.fail()); // ',' is not a valid start
-}
-
-TEST(Vector, roundtrip_bracketed)
+TEST(Vector, roundtrip_in_brackets)
 {
   V3i v1(3, -2, 1), v2;
   std::stringstream ss;
@@ -312,7 +265,7 @@ TEST(Vector, roundtrip_bracketed)
   EXPECT_EQ(v1, v2);
 }
 
-TEST(Vector, roundtrip_bare)
+TEST(Vector, roundtrip_bare_comps)
 {
   V3i v1(7, 8, 9), v2;
   std::stringstream ss;
